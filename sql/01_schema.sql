@@ -93,6 +93,10 @@ create table if not exists public.esg_acidentes (
   grupo_analise jsonb not null default '[]'::jsonb,   -- [{nome, setor, assinatura}]
   local_data    text,
 
+  -- ── Conclusão do preenchimento (snapshot calculado ao salvar) ──
+  completude       smallint,             -- % de campos preenchidos (0–100)
+  campos_pendentes jsonb not null default '[]'::jsonb,  -- rótulos ainda em branco
+
   created_at        timestamptz not null default now(),
   created_by        uuid default auth.uid(),
   updated_at        timestamptz not null default now()

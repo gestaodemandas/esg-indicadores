@@ -250,6 +250,23 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .act-btn.del:hover{background:var(--neg-l);border-color:var(--neg)}
 .act-btn.del:hover svg{stroke:var(--neg)}
 
+/* TABELA — seta de expandir + barra de conclusão + linha de detalhe */
+.exp-btn{width:22px;height:22px;border-radius:5px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.exp-btn:hover{background:var(--bdr)}
+.exp-btn svg{width:12px;height:12px;fill:none;stroke:var(--txt2);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.exp-btn.open svg{transform:rotate(90deg)}
+.tbl-comp{display:flex;align-items:center;gap:.5rem;min-width:120px}
+.tbl-comp-bar{flex:1;height:6px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.tbl-comp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acid),#d65a67)}
+.tbl-comp-fill.complete{background:linear-gradient(90deg,var(--pos),#9dc98a)}
+.tbl-comp-pct{font-size:.66rem;font-weight:800;color:var(--txt2);min-width:30px;text-align:right}
+.detail-row>td{padding:0!important;background:var(--frame-bg);border-bottom:1px solid var(--bdr)}
+.detail-box{padding:.9rem 1.2rem 1rem 3rem}
+.detail-title{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--txt3);margin-bottom:.55rem;display:flex;align-items:center;gap:.4rem}
+.detail-title.ok{color:var(--pos)}
+.detail-chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.detail-chip{font-size:.66rem;font-weight:600;color:var(--acid);background:var(--acid-l);border:1px solid rgba(181,45,57,.2);border-radius:20px;padding:.2rem .65rem;white-space:nowrap}
+
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(3px)}
 .modal-overlay.open{display:flex}
@@ -353,6 +370,17 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
 .confirm-cancel:hover{border-color:var(--txt);color:var(--txt)}
 .confirm-ok{flex:1;max-width:160px;padding:.55rem;border-radius:var(--rs);border:none;background:var(--neg);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
 .confirm-ok:hover{opacity:.88}
+.confirm-icon.warn{background:var(--warn-l)}
+.confirm-icon.warn svg{stroke:#a68a1e}
+/* Diálogo de cancelamento — 3 opções empilhadas */
+.confirm-actions.col{flex-direction:column;gap:.5rem}
+.confirm-actions.col .cbtn{max-width:none;width:100%;padding:.6rem;border-radius:var(--rs);font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;border:1px solid var(--bdr)}
+.cbtn-primary{background:var(--esg);border-color:var(--esg)!important;color:#fff}
+.cbtn-primary:hover{opacity:.9}
+.cbtn-danger{background:var(--frame-bg);color:var(--neg);border-color:rgba(189,35,53,.3)!important}
+.cbtn-danger:hover{background:var(--neg-l);border-color:var(--neg)!important}
+.cbtn-ghost{background:none;color:var(--txt2)}
+.cbtn-ghost:hover{border-color:var(--txt);color:var(--txt)}
 
 /* TOAST */
 #toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:600;display:flex;flex-direction:column;gap:.5rem;align-items:flex-end}
@@ -638,8 +666,8 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <div class="tbl-scroll">
               <table class="tbl">
                 <thead><tr>
-                  <th>Data</th><th>Filial</th><th>Nome</th><th>Ocorrência</th><th>Tipo Acidente</th>
-                  <th>Colaborador</th><th>Atestado</th><th>CAT</th><th>Status</th><th></th>
+                  <th style="width:26px"></th><th>Data</th><th>Filial</th><th>Nome</th><th>Ocorrência</th><th>Tipo Acidente</th>
+                  <th>Colaborador</th><th>Conclusão</th><th>Status</th><th></th>
                 </tr></thead>
                 <tbody id="tbl-body"></tbody>
               </table>
@@ -656,14 +684,14 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
 </div>
 
 <!-- MODAL: NOVO / EDITAR ACIDENTE -->
-<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)tryCloseModal()">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title">
         <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span id="modal-title-txt">Registrar Ocorrência</span>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="tryCloseModal()">✕</button>
     </div>
     <div class="modal-progress">
       <div class="modal-progress-bar"><div class="modal-progress-fill" id="modal-progress-fill"></div></div>
@@ -761,7 +789,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row">
           <div class="field">
             <label>Setor</label>
-            <input type="text" id="f-setor" placeholder="Setor do colaborador">
+            <input type="text" id="f-setor" placeholder="Setor de lotação do colaborador">
           </div>
         </div>
         <div class="form-row">
@@ -848,8 +876,8 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         </div>
         <div class="form-row">
           <div class="field">
-            <label>Local</label>
-            <input type="text" id="f-local" placeholder="Onde ocorreu (setor, área, via…)">
+            <label>Local do Acidente</label>
+            <input type="text" id="f-local" placeholder="Ponto exato — ex.: rampa de carga, corredor 3">
           </div>
           <div class="field">
             <label>Status do Registro</label>
@@ -866,7 +894,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
           </div>
           <div class="field" style="grid-column:span 2">
             <label>Endereço</label>
-            <input type="text" id="f-endereco" placeholder="Endereço onde ocorreu">
+            <input type="text" id="f-endereco" placeholder="Endereço completo, se fora da filial">
           </div>
         </div>
         <div class="form-row-3">
@@ -956,8 +984,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <label>Dias de Afastamento</label>
             <input type="text" id="f-dias-afastamento" placeholder="Número ou N/A">
             <div class="err-msg">Apenas número ou N/A.</div>
-            <!-- ABERTO: pode se sobrepor a "Qtd. Dias de Atestado" — confirmar se é o mesmo dado -->
-            <div class="hint">Confirmar se é o mesmo dado de "Qtd. Dias de Atestado"</div>
+            <!-- ABERTO (dev): pode se sobrepor a "Qtd. Dias de Atestado" — confirmar com SST se é o mesmo dado -->
           </div>
           <div class="field" id="fw-dias-internacao">
             <label>Dias em Internação</label>
@@ -988,8 +1015,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="field full">
           <label>Causa</label>
           <textarea id="f-causa" placeholder="Causa identificada"></textarea>
-          <!-- ABERTO: pode ficar redundante com Situação Geradora + Agente Causador — confirmar com SST -->
-          <div class="hint">Confirmar se não é redundante com Situação Geradora + Agente Causador</div>
+          <!-- ABERTO (dev): pode ficar redundante com Situação Geradora + Agente Causador — confirmar com SST -->
         </div>
 
         <div class="fs-divider"><span>Lesão</span></div>
@@ -1092,7 +1118,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
     <div class="modal-footer">
       <div class="modal-msg" id="modal-msg"></div>
       <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-cancel" onclick="tryCloseModal()">Cancelar</button>
         <button class="btn-save" id="btn-save" onclick="saveAcidente()">Salvar Registro</button>
       </div>
     </div>
@@ -1128,6 +1154,20 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <button class="btn-cancel" onclick="closePerfil()">Cancelar</button>
         <button class="btn-save" onclick="savePerfil()">Salvar Perfil</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM CANCELAR — salvar rascunho / descartar / continuar -->
+<div class="confirm-overlay" id="cancel-overlay">
+  <div class="confirm-card">
+    <div class="confirm-icon warn"><svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+    <div class="confirm-title">Sair sem salvar?</div>
+    <div class="confirm-desc">Você fez alterações neste registro. O que deseja fazer com o progresso?</div>
+    <div class="confirm-actions col">
+      <button class="cbtn cbtn-primary" onclick="cancelSaveDraft()">Salvar rascunho</button>
+      <button class="cbtn cbtn-danger" onclick="cancelDiscard()">Descartar alterações</button>
+      <button class="cbtn cbtn-ghost" onclick="cancelKeepEditing()">Continuar editando</button>
     </div>
   </div>
 </div>
@@ -1178,6 +1218,7 @@ let DS = []            // dataset de acidentes
 let editId = null      // id em edição (null = novo)
 let deleteId = null
 let cidConfirmed = null // {codigo, descricao} selecionado no autocomplete
+let formDirty = false  // usuário alterou algo desde a abertura do modal
 
 const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes' }
 
@@ -1395,17 +1436,30 @@ function renderAcidentes(){
   $('tbl-empty').style.display='none'
   tb.innerHTML = rows.map(r=>{
     const stPill = r.status==='Finalizado' ? '<span class="pill green">Finalizado</span>' : '<span class="pill warn">Pendente</span>'
-    const cat = r.emitida_cat==='Sim' ? '<span class="pill info">Sim</span>' : (r.emitida_cat==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
-    const at  = r.atestado_medico==='Sim' ? '<span class="pill info">Sim</span>' : (r.atestado_medico==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
+    const pct = (typeof r.completude === 'number') ? r.completude : null
+    const pend = Array.isArray(r.campos_pendentes) ? r.campos_pendentes : []
+    const compCell = pct===null
+      ? '<span class="pill muted">—</span>'
+      : `<div class="tbl-comp"><div class="tbl-comp-bar"><div class="tbl-comp-fill${pct===100?' complete':''}" style="width:${pct}%"></div></div><span class="tbl-comp-pct">${pct}%</span></div>`
+    const canExpand = pend.length > 0
+    const arrowCell = canExpand
+      ? `<button class="exp-btn" id="exp-${r.id}" title="Ver campos pendentes" onclick="event.stopPropagation();toggleDetail(${r.id})"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>`
+      : ''
+    const detailRow = canExpand
+      ? `<tr class="detail-row" id="detail-${r.id}" style="display:none"><td colspan="10"><div class="detail-box">
+          <div class="detail-title">${pend.length} campo${pend.length===1?'':'s'} pendente${pend.length===1?'':'s'} de preenchimento</div>
+          <div class="detail-chips">${pend.map(p=>`<span class="detail-chip">${esc(p)}</span>`).join('')}</div>
+        </div></td></tr>`
+      : ''
     return `<tr onclick="openModal(${r.id})">
+      <td onclick="event.stopPropagation()">${arrowCell}</td>
       <td class="strong">${fmtData(r.data_acidente)}</td>
       <td><span class="pill muted">${esc(r.filial)}</span></td>
       <td class="strong" style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${esc(r.nome)}</td>
       <td>${esc(r.tipo_ocorrencia)}</td>
       <td>${esc(r.tipo_acidente)}</td>
       <td>${esc(r.tipo_colaborador)}</td>
-      <td>${at}</td>
-      <td>${cat}</td>
+      <td>${compCell}</td>
       <td>${stPill}</td>
       <td onclick="event.stopPropagation()">
         <div class="row-actions">
@@ -1413,9 +1467,17 @@ function renderAcidentes(){
           <button class="act-btn del" title="Excluir" onclick="askDelete(${r.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </div>
       </td>
-    </tr>`
+    </tr>${detailRow}`
   }).join('')
 }
+function toggleDetail(id){
+  const row = $('detail-'+id), btn = $('exp-'+id)
+  if(!row) return
+  const open = row.style.display==='none'
+  row.style.display = open ? '' : 'none'
+  if(btn) btn.classList.toggle('open', open)
+}
+window.toggleDetail = toggleDetail
 window.renderAcidentes = renderAcidentes
 
 // ── MEU PERFIL (técnico de segurança) ────────────────────────────────────────
@@ -1471,6 +1533,25 @@ function scopeProgress(container){
   const total = els.length
   const filled = els.filter(el => touchedFields.has(el.id) && String(el.value||'').trim() !== '').length
   return { total, filled, pct: total ? Math.round(filled/total*100) : 100 }
+}
+// Rótulo limpo de um campo (usa o <label> do .field; para campos aninhados
+// como Anos/Meses, prefixa com o rótulo do grupo pai → "Tempo na Empresa — Anos")
+function fieldLabel(el){
+  const f = el.closest('.field')
+  let lbl = (f && f.querySelector(':scope > label')) ? f.querySelector(':scope > label').textContent.replace('*','').trim() : el.id
+  const parent = f && f.parentElement ? f.parentElement.closest('.field') : null
+  if(parent){
+    const pl = parent.querySelector(':scope > label')
+    if(pl) lbl = pl.textContent.replace('*','').trim() + ' — ' + lbl
+  }
+  return lbl
+}
+// Conclusão do formulário ao vivo: % + lista de rótulos ainda pendentes
+function computeCompletion(){
+  const els = fieldsInScope($('form'))
+  const pend = els.filter(el => !(touchedFields.has(el.id) && String(el.value||'').trim() !== ''))
+  const total = els.length
+  return { pct: total ? Math.round((total-pend.length)/total*100) : 100, pendentes: pend.map(fieldLabel) }
 }
 
 function renderTabs(){
@@ -1745,16 +1826,34 @@ function openModal(id){
   }
   $('modal-overlay').classList.add('open')
   updateProgress()
+  formDirty = false   // pré-preenchimentos automáticos não contam como alteração do usuário
 }
 window.openModal = openModal
 function onFormChange(e){
   if(e.target && e.target.id && e.target.id.startsWith('f-')) touchedFields.add(e.target.id)
+  formDirty = true
   updateProgress()
 }
 $('form').addEventListener('input', onFormChange)
 $('form').addEventListener('change', onFormChange)
-function closeModal(){ $('modal-overlay').classList.remove('open'); editId=null }
+function closeModal(){ $('modal-overlay').classList.remove('open'); editId=null; formDirty=false }
 window.closeModal = closeModal
+
+// Fecha com guarda: se houver alterações não salvas, oferece salvar rascunho / descartar
+function tryCloseModal(){
+  if(!formDirty){ closeModal(); return }
+  $('cancel-overlay').classList.add('show')
+}
+window.tryCloseModal = tryCloseModal
+function cancelKeepEditing(){ $('cancel-overlay').classList.remove('show') }
+window.cancelKeepEditing = cancelKeepEditing
+function cancelDiscard(){ $('cancel-overlay').classList.remove('show'); closeModal() }
+window.cancelDiscard = cancelDiscard
+async function cancelSaveDraft(){
+  $('cancel-overlay').classList.remove('show')
+  await saveDraft()
+}
+window.cancelSaveDraft = cancelSaveDraft
 
 // ── SALVAR ────────────────────────────────────────────────────────────────────
 function markErr(id, on){ $(id).classList.toggle('err', !!on); return !!on }
@@ -1785,6 +1884,21 @@ async function saveAcidente(){
     $('modal-msg').className='modal-msg err'; return
   }
 
+  const rec = buildRec()
+  await persistRec(rec, editId? 'Registro atualizado.' : 'Ocorrência registrada.')
+}
+window.saveAcidente = saveAcidente
+
+// Salva rascunho sem exigir campos obrigatórios (status forçado a Pendente)
+async function saveDraft(){
+  const rec = buildRec()
+  rec.status = 'Pendente'
+  await persistRec(rec, 'Rascunho salvo.')
+}
+window.saveDraft = saveDraft
+
+// Lê todos os campos do formulário para um objeto (sem validação)
+function buildRec(){
   const norm = v => String(v).trim().toUpperCase()==='N/A' ? 'N/A' : String(v).trim()
   const rec = {
     filial: $('f-filial').value,
@@ -1865,7 +1979,14 @@ async function saveAcidente(){
     grupo_analise: collectGrupoRows(),
     local_data: $('f-local-data').value.trim() || null
   }
+  const comp = computeCompletion()
+  rec.completude = comp.pct
+  rec.campos_pendentes = comp.pendentes
+  return rec
+}
 
+// Persiste (insert/update) e trata retorno + UI
+async function persistRec(rec, okMsg){
   $('btn-save').disabled=true; $('btn-save').textContent='Salvando…'
   let error
   if(editId){ ({error} = await dbUpdate(editId, rec)) }
@@ -1877,11 +1998,10 @@ async function saveAcidente(){
     $('modal-msg').className='modal-msg err'
     return
   }
-  toast(editId? 'Registro atualizado.' : 'Ocorrência registrada.')
+  toast(okMsg)
   closeModal()
   loadAcidentes()
 }
-window.saveAcidente = saveAcidente
 
 // ── EXCLUIR ───────────────────────────────────────────────────────────────────
 function askDelete(id){
