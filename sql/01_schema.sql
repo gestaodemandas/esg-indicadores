@@ -1,6 +1,13 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- APLICATIVO ESG — Módulo Acidentes
 -- Executar no SQL Editor do Supabase (projeto configurado no index.html)
+--
+-- PENDÊNCIAS A VALIDAR COM SST ANTES DE FIXAR REGRAS DE NEGÓCIO:
+--   1. Causa (texto livre) x Situação Geradora + Agente Causador — possível redundância.
+--   2. Dias de Afastamento x Qtd. Dias de Atestado — confirmar se é o mesmo dado.
+--   3. Domínios pendentes (sem check constraint ainda): Espécie, Situação Geradora,
+--      Agente Causador, Natureza da Lesão, Gravidade (escala Leve/Moderada/Grave).
+--   4. Opção "Cliente" em Tipo de Ocorrência/Tipo de Colaborador — aplicabilidade ao PGR.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── 1. Tabela de registros de acidentes/ocorrências ─────────────────────────
@@ -30,6 +37,60 @@ create table if not exists public.esg_acidentes (
   parte_corpo       text,
   acao_corretiva    text,
   status            text not null default 'Pendente' check (status in ('Pendente','Finalizado')),
+
+  -- ── Dados do Comunicado ──
+  tecnico_seguranca      text,
+  matricula_tecnico      text,        -- número ou 'N/A'
+  data_comunicado        date,
+  responsavel_comunicado text,
+  data_relatorio         date,
+  informacao_preliminar  text,
+
+  -- ── Identificação — complemento ──
+  setor                  text,
+  tempo_empresa          text,
+  tempo_cargo            text,
+  lideranca_imediata     text,
+  matricula_lideranca    text,        -- número ou 'N/A'
+  habilitacao            text,
+  lateralidade_dominante text not null default 'N/A' check (lateralidade_dominante in ('N/A','Destro','Canhoto','Ambidestro')),
+
+  -- ── Classificação — complemento ──
+  horario_acidente  time,
+  endereco          text,
+  -- ABERTO: domínio oficial ainda não definido (Espécie, Situação Geradora, Agente Causador) — sem check constraint até então
+  especie           text,
+  situacao_geradora text,
+  agente_causador   text,
+  trabalho_habitual text not null default 'N/A' check (trabalho_habitual in ('N/A','Sim','Não')),
+  utilizou_epi      text not null default 'N/A' check (utilizou_epi in ('N/A','Sim','Não')),
+
+  -- ── Atestado — bloco médico ──
+  nome_medico       text,
+  crm_uf            text,
+  data_atendimento  date,
+  dias_afastamento  text,   -- número ou 'N/A' — ABERTO: confirmar se é o mesmo dado de qtd_dias_atestado
+  dias_internacao   text,   -- número ou 'N/A'
+
+  -- ── Lesão ──
+  -- ABERTO: domínio oficial de Natureza da Lesão ainda não definido
+  natureza_lesao     text,
+  lateralidade_lesao text not null default 'N/A' check (lateralidade_lesao in ('N/A','Direito','Esquerdo','Bilateral')),
+  gravidade          text check (gravidade is null or gravidade in ('Leve','Moderada','Grave')), -- ABERTO: escala pendente de confirmação com SST
+
+  -- ── Análise — 5 Porquês ──
+  problema_5p text,
+  porque_1    text,
+  porque_2    text,
+  porque_3    text,
+  porque_4    text,
+  porque_5    text,
+
+  -- ── Plano de Ação / Grupo de Análise (listas dinâmicas) ──
+  plano_acao    jsonb not null default '[]'::jsonb,   -- [{acao, responsavel, prazo}]
+  grupo_analise jsonb not null default '[]'::jsonb,   -- [{nome, setor, assinatura}]
+  local_data    text,
+
   created_at        timestamptz not null default now(),
   created_by        uuid default auth.uid(),
   updated_at        timestamptz not null default now()

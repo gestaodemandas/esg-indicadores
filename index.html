@@ -20,10 +20,11 @@
   --pos:#7d8f64;--pos-l:rgba(125,143,100,.08);
   --warn:#c9a839;--warn-l:rgba(201,168,57,.10);
   --esg:#4a7c59;--esg-l:rgba(74,124,89,.10);
-  --sb-bg:#EBEBEB;--sb-hover:rgba(0,0,0,.06);--sb-active:rgba(74,124,89,.09);
+  --acid:#b52d39;--acid-l:rgba(181,45,57,.10);
+  --sb-bg:#EBEBEB;--sb-hover:rgba(0,0,0,.06);--sb-active:rgba(181,45,57,.08);
   --sb-bdr:rgba(0,0,0,.10);--sb-brand:#666666;--sb-brand-sub:#999;
   --sb-section-lbl:#999;--sb-item:#555;--sb-item-hover:#666666;
-  --sb-item-active:#4a7c59;--sb-icon-active:#4a7c59;--sb-active-border:#4a7c59;
+  --sb-item-active:#b52d39;--sb-icon-active:#b52d39;--sb-active-border:#b52d39;
   --sb-user-name:#666666;--sb-user-role:#999;
   --tb-btn-clr:#555;--tb-btn-hover:rgba(0,0,0,.05);--tb-btn-hover-clr:#666666;
   --tb-bdr:rgba(0,0,0,.07);--tb-bc:#999;--tb-bc-active:#666666;
@@ -34,10 +35,11 @@ body.dark{
   --bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.07);
   --sh:0 1px 3px rgba(0,0,0,.3);--shm:0 4px 12px rgba(0,0,0,.4);
   --pri-l:rgba(107,114,128,.15);--neg-l:rgba(189,35,53,.15);--pos-l:rgba(125,143,100,.15);--esg-l:rgba(74,124,89,.18);
+  --acid-l:rgba(181,45,57,.18);
   --sb-bg:#1E1E22;--sb-hover:rgba(255,255,255,.05);--sb-active:rgba(255,255,255,.07);
   --sb-bdr:rgba(255,255,255,.07);--sb-brand:#F0F0F0;--sb-brand-sub:#666;
   --sb-section-lbl:#666;--sb-item:#AAAAAA;--sb-item-hover:#F0F0F0;
-  --sb-item-active:#8fbb9d;--sb-icon-active:#8fbb9d;--sb-active-border:#8fbb9d;
+  --sb-item-active:#e0808a;--sb-icon-active:#e0808a;--sb-active-border:#e0808a;
   --sb-user-name:#F0F0F0;--sb-user-role:#666;
   --tb-btn-clr:#AAAAAA;--tb-btn-hover:rgba(255,255,255,.05);--tb-btn-hover-clr:#F0F0F0;
   --tb-bdr:rgba(255,255,255,.07);--tb-bc:#666;--tb-bc-active:#F0F0F0;
@@ -159,6 +161,7 @@ body.dark #sec-home::before{background-image:radial-gradient(circle at 1px 1px, 
 .hc-panel{position:relative;overflow:hidden;height:66%;flex-shrink:0;transition:height .38s cubic-bezier(.22,1,.36,1)}
 .home-card:hover:not(.hc-soon) .hc-panel{height:72%}
 .hcp-green{background:var(--esg)}
+.hcp-red{background:var(--acid)}
 .hcp-gray{background:#9ca3af}
 .hc-chevron{position:absolute;top:0;right:0;width:45%;height:100%;pointer-events:none}
 .hc-chevron::before{content:'';position:absolute;inset:0;left:20%;background:rgba(0,0,0,.28);clip-path:polygon(35% 0,100% 0,100% 100%,0 100%)}
@@ -171,7 +174,7 @@ body.dark #sec-home::before{background-image:radial-gradient(circle at 1px 1px, 
 .hc-body{flex:1;padding:.85rem 1.3rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:#fff;transition:background .2s}
 .hc-tagline{font-size:.65rem;color:#888;line-height:1.55;flex:1}
 .hc-btn{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s cubic-bezier(.22,1,.36,1)}
-.home-card:hover:not(.hc-soon) .hc-btn{background:var(--esg);transform:translateX(3px)}
+.home-card:hover:not(.hc-soon) .hc-btn{background:var(--acid);transform:translateX(3px)}
 .hc-btn svg{width:13px;height:13px;stroke:#888;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s}
 .home-card:hover:not(.hc-soon) .hc-btn svg{stroke:#fff}
 body.dark .home-card,body.dark .hc-body{background:var(--card)}
@@ -216,16 +219,16 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .flt{display:flex;align-items:center;gap:.4rem}
 .flt label{font-size:.55rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap}
 .flt select,.flt input{background:var(--frame-bg);border:1px solid var(--bdr);border-radius:7px;padding:.35rem .65rem;font-size:.72rem;font-weight:600;color:var(--txt);cursor:pointer;font-family:inherit;outline:none;transition:all .2s}
-.flt select:hover,.flt select:focus,.flt input:focus{border-color:var(--esg)}
+.flt select:hover,.flt select:focus,.flt input:focus{border-color:var(--acid)}
 .flt input{cursor:text;min-width:170px}
-.btn-new{display:inline-flex;align-items:center;gap:.45rem;background:var(--esg);color:#fff;border:none;border-radius:var(--rs);padding:.5rem 1.1rem;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
+.btn-new{display:inline-flex;align-items:center;gap:.45rem;background:var(--acid);color:#fff;border:none;border-radius:var(--rs);padding:.5rem 1.1rem;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
 .btn-io{width:32px;height:32px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--frame-bg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
 .btn-io svg{width:14px;height:14px;fill:none;stroke:var(--txt3);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
-.btn-io:hover{border-color:var(--esg);background:var(--esg-l)}
-.btn-io:hover svg{stroke:var(--esg)}
+.btn-io:hover{border-color:var(--acid);background:var(--acid-l)}
+.btn-io:hover svg{stroke:var(--acid)}
 .mode-chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.62rem;font-weight:700;color:#a68a1e;background:var(--warn-l);border:1px solid rgba(201,168,57,.25);border-radius:20px;padding:.28rem .75rem;white-space:nowrap}
 .mode-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--warn)}
-.btn-new:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(74,124,89,.35)}
+.btn-new:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(181,45,57,.35)}
 .btn-new svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .tbl-scroll{overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse}
@@ -239,8 +242,8 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .row-actions{display:flex;gap:.3rem}
 .act-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--bdr);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
 .act-btn svg{width:12px;height:12px;fill:none;stroke:var(--txt3);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
-.act-btn.edit:hover{background:var(--esg-l);border-color:var(--esg)}
-.act-btn.edit:hover svg{stroke:var(--esg)}
+.act-btn.edit:hover{background:var(--acid-l);border-color:var(--acid)}
+.act-btn.edit:hover svg{stroke:var(--acid)}
 .act-btn.del:hover{background:var(--neg-l);border-color:var(--neg)}
 .act-btn.del:hover svg{stroke:var(--neg)}
 
@@ -251,7 +254,7 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .modal-title{font-size:1rem;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:.6rem}
-.modal-title svg{width:18px;height:18px;stroke:var(--esg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.modal-title svg{width:18px;height:18px;stroke:var(--acid);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .modal-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--bdr);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt3);transition:all .2s;font-size:.8rem}
 .modal-close:hover{background:var(--neg);border-color:var(--neg);color:#fff}
 .modal-body{flex:1;overflow-y:auto;padding:1.5rem}
@@ -265,7 +268,7 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .field label{font-size:.6rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px}
 .field label .req{color:var(--neg)}
 .field input,.field select,.field textarea{width:100%;padding:.5rem .75rem;background:var(--frame-bg);border:1px solid var(--bdr);border-radius:var(--rs);font-size:.8rem;color:var(--txt);font-family:inherit;outline:none;transition:border-color .2s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--esg);background:var(--card)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--acid);background:var(--card)}
 .field input[readonly],.field input:disabled,.field select:disabled{opacity:.55;cursor:not-allowed;background:var(--frame-bg)}
 .field textarea{min-height:72px;resize:vertical;line-height:1.6}
 .field .hint{font-size:.6rem;color:var(--txt3)}
@@ -275,26 +278,41 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .fs-divider{display:flex;align-items:center;gap:.7rem;margin:.4rem 0 .1rem}
 .fs-divider span{font-size:.58rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
 .fs-divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.dyn-table{display:flex;flex-direction:column;gap:.4rem}
+.dyn-head{display:flex;gap:.6rem;padding:0 .1rem;font-size:.58rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.2px}
+.dyn-rows{display:flex;flex-direction:column;gap:.5rem}
+.dyn-row{display:flex;gap:.6rem;align-items:flex-start}
+.dyn-row input{flex:1;min-width:0;padding:.45rem .65rem;background:var(--frame-bg);border:1px solid var(--bdr);border-radius:var(--rs);font-size:.78rem;color:var(--txt);font-family:inherit;outline:none;transition:border-color .2s}
+.dyn-row input:focus{border-color:var(--acid);background:var(--card)}
+.dyn-row .dr-prazo{flex:none;width:150px}
+.dyn-row .dr-rm{width:32px;height:32px;flex-shrink:0;border-radius:var(--rs);border:1px solid var(--bdr);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.dyn-row .dr-rm svg{width:12px;height:12px;stroke:var(--txt3);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.dyn-row .dr-rm:hover{background:var(--neg-l);border-color:var(--neg)}
+.dyn-row .dr-rm:hover svg{stroke:var(--neg)}
+.dyn-empty{font-size:.72rem;color:var(--txt3);padding:.4rem .1rem}
+.dyn-add{display:inline-flex;align-items:center;gap:.4rem;align-self:flex-start;background:none;border:1px dashed var(--bdr);border-radius:var(--rs);padding:.4rem .8rem;font-size:.72rem;font-weight:600;color:var(--txt3);cursor:pointer;font-family:inherit;transition:all .2s}
+.dyn-add:hover{border-color:var(--acid);color:var(--acid);background:var(--acid-l)}
+.dyn-add svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 /* CID autocomplete */
 .cid-wrap{position:relative}
 .cid-sug{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--bdr);border-radius:var(--rs);box-shadow:var(--shm);z-index:20;max-height:220px;overflow-y:auto;display:none}
 .cid-sug.open{display:block}
 .cid-sug-item{padding:.55rem .8rem;cursor:pointer;font-size:.75rem;border-bottom:1px solid var(--bdr);transition:background .12s}
 .cid-sug-item:last-child{border-bottom:none}
-.cid-sug-item:hover{background:var(--esg-l)}
-.cid-sug-item .code{font-weight:700;color:var(--esg);margin-right:.4rem}
+.cid-sug-item:hover{background:var(--acid-l)}
+.cid-sug-item .code{font-weight:700;color:var(--acid);margin-right:.4rem}
 .cid-sug-item .desc{color:var(--txt2)}
 .cid-sug-empty{padding:.55rem .8rem;font-size:.72rem;color:var(--txt3)}
-.cid-confirm{display:none;margin-top:.45rem;padding:.6rem .8rem;border-radius:var(--rs);background:var(--esg-l);border:1px solid rgba(74,124,89,.25);font-size:.74rem;color:var(--txt);line-height:1.5}
+.cid-confirm{display:none;margin-top:.45rem;padding:.6rem .8rem;border-radius:var(--rs);background:var(--acid-l);border:1px solid rgba(181,45,57,.25);font-size:.74rem;color:var(--txt);line-height:1.5}
 .cid-confirm.show{display:block}
-.cid-confirm .code{font-weight:800;color:var(--esg)}
+.cid-confirm .code{font-weight:800;color:var(--acid)}
 .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:.75rem}
 .modal-msg{font-size:.72rem;font-weight:600;min-height:1.2rem}
 .modal-msg.ok{color:var(--esg)}.modal-msg.err{color:var(--neg)}
 .modal-actions{display:flex;gap:.6rem}
 .btn-cancel{padding:.5rem 1rem;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--frame-bg);color:var(--txt2);font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
 .btn-cancel:hover{border-color:var(--txt);color:var(--txt)}
-.btn-save{padding:.5rem 1.4rem;border-radius:var(--rs);border:none;background:var(--esg);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-save{padding:.5rem 1.4rem;border-radius:var(--rs);border:none;background:var(--acid);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
 .btn-save:hover{opacity:.9}.btn-save:disabled{opacity:.5;cursor:not-allowed}
 
 /* CONFIRM DELETE */
@@ -457,7 +475,7 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 
             <!-- 02 Acidentes (ativo) -->
             <div class="home-card" onclick="showSection('acidentes')">
-              <div class="hc-panel hcp-green">
+              <div class="hc-panel hcp-red">
                 <span class="hc-ghost">02</span>
                 <div class="hc-chevron"></div>
                 <div class="hc-inner">
@@ -624,6 +642,37 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
     <div class="modal-body">
       <div class="form" id="form">
 
+        <div class="fs-divider"><span>Dados do Comunicado</span></div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Técnico de Segurança</label>
+            <input type="text" id="f-tec-seg" placeholder="Nome do técnico">
+          </div>
+          <div class="field" id="fw-matricula-tec">
+            <label>Matrícula do Técnico</label>
+            <input type="text" id="f-matricula-tec" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+          </div>
+          <div class="field">
+            <label>Data do Comunicado</label>
+            <input type="date" id="f-data-comunicado">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Responsável pelo Comunicado</label>
+            <input type="text" id="f-resp-comunicado" placeholder="NOME DO RESPONSÁVEL" style="text-transform:uppercase">
+          </div>
+          <div class="field">
+            <label>Data do Relatório</label>
+            <input type="date" id="f-data-relatorio">
+          </div>
+        </div>
+        <div class="field full">
+          <label>Informação Preliminar</label>
+          <textarea id="f-info-preliminar" placeholder="Primeiras informações recebidas sobre a ocorrência…"></textarea>
+        </div>
+
         <div class="fs-divider"><span>Identificação</span></div>
         <div class="form-row-3">
           <div class="field" id="fw-filial">
@@ -659,6 +708,8 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
               <option>Próprio</option><option>Terceirizado</option><option>Cliente</option>
             </select>
             <div class="err-msg">Selecione o tipo.</div>
+            <!-- ABERTO: aplicabilidade de "Cliente" ao PGR pendente de confirmação com SST -->
+            <div class="hint">Opção "Cliente" pendente de confirmação de aplicabilidade ao PGR</div>
           </div>
         </div>
         <div class="form-row">
@@ -671,6 +722,43 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
             <label>Função</label>
             <input type="text" id="f-funcao" placeholder="Cargo do colaborador">
             <div class="hint" id="hint-funcao"></div>
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Setor</label>
+            <input type="text" id="f-setor" placeholder="Setor do colaborador">
+          </div>
+          <div class="field">
+            <label>Tempo na Empresa</label>
+            <input type="text" id="f-tempo-empresa" placeholder="Ex.: 2 anos e 3 meses">
+          </div>
+          <div class="field">
+            <label>Tempo no Cargo</label>
+            <input type="text" id="f-tempo-cargo" placeholder="Ex.: 8 meses">
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Liderança Imediata</label>
+            <input type="text" id="f-lideranca" placeholder="NOME DA LIDERANÇA" style="text-transform:uppercase">
+          </div>
+          <div class="field" id="fw-matricula-lideranca">
+            <label>Matrícula da Liderança</label>
+            <input type="text" id="f-matricula-lideranca" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+          </div>
+          <div class="field">
+            <label>Habilitação / Autorização</label>
+            <input type="text" id="f-habilitacao" placeholder="Ex.: CNH categoria B, NR-11…">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Lateralidade Dominante</label>
+            <select id="f-lateralidade-dom">
+              <option>N/A</option><option>Destro</option><option>Canhoto</option><option>Ambidestro</option>
+            </select>
           </div>
         </div>
 
@@ -711,6 +799,46 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
             <div class="hint">Pendente enquanto houver etapas em aberto</div>
           </div>
         </div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Horário do Acidente</label>
+            <input type="time" id="f-horario">
+          </div>
+          <div class="field" style="grid-column:span 2">
+            <label>Endereço</label>
+            <input type="text" id="f-endereco" placeholder="Endereço onde ocorreu">
+          </div>
+        </div>
+        <div class="form-row-3">
+          <!-- ABERTO: domínio oficial de Espécie ainda não definido — dropdown deixado vazio propositalmente -->
+          <div class="field">
+            <label>Espécie</label>
+            <select id="f-especie" disabled><option value="">A definir</option></select>
+            <div class="hint">Lista oficial pendente de definição</div>
+          </div>
+          <!-- ABERTO: domínio oficial de Situação Geradora ainda não definido -->
+          <div class="field">
+            <label>Situação Geradora</label>
+            <select id="f-situacao-geradora" disabled><option value="">A definir</option></select>
+            <div class="hint">Lista oficial pendente de definição</div>
+          </div>
+          <!-- ABERTO: domínio oficial de Agente Causador ainda não definido -->
+          <div class="field">
+            <label>Agente Causador</label>
+            <select id="f-agente-causador" disabled><option value="">A definir</option></select>
+            <div class="hint">Lista oficial pendente de definição</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Trabalho Habitual?</label>
+            <select id="f-trabalho-habitual"><option>N/A</option><option>Sim</option><option>Não</option></select>
+          </div>
+          <div class="field">
+            <label>Utilizou EPI?</label>
+            <select id="f-epi"><option>N/A</option><option>Sim</option><option>Não</option></select>
+          </div>
+        </div>
 
         <div class="fs-divider"><span>Atestado &amp; CID</span></div>
         <div class="form-row-3">
@@ -747,6 +875,34 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
             <div class="cid-confirm" id="cid-confirm"></div>
           </div>
         </div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Nome do Médico</label>
+            <input type="text" id="f-nome-medico" placeholder="NOME DO MÉDICO" style="text-transform:uppercase">
+          </div>
+          <div class="field">
+            <label>CRM / UF</label>
+            <input type="text" id="f-crm-uf" placeholder="Ex.: 12345/PE">
+          </div>
+          <div class="field">
+            <label>Data do Atendimento</label>
+            <input type="date" id="f-data-atendimento">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field" id="fw-dias-afastamento">
+            <label>Dias de Afastamento</label>
+            <input type="text" id="f-dias-afastamento" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+            <!-- ABERTO: pode se sobrepor a "Qtd. Dias de Atestado" — confirmar se é o mesmo dado -->
+            <div class="hint">Confirmar se é o mesmo dado de "Qtd. Dias de Atestado"</div>
+          </div>
+          <div class="field" id="fw-dias-internacao">
+            <label>Dias em Internação</label>
+            <input type="text" id="f-dias-internacao" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+          </div>
+        </div>
 
         <div class="fs-divider"><span>CAT</span></div>
         <div class="form-row">
@@ -760,24 +916,108 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
           </div>
         </div>
 
-        <div class="fs-divider"><span>Descrição &amp; Tratativa</span></div>
+        <div class="fs-divider"><span>Relato e Causa</span></div>
         <div class="field full">
-          <label>Descrição Sumária</label>
+          <label>Descrição Sumária (Como Aconteceu)</label>
           <textarea id="f-desc" placeholder="Descreva resumidamente o que aconteceu…"></textarea>
         </div>
+        <div class="field full">
+          <label>Causa</label>
+          <textarea id="f-causa" placeholder="Causa identificada"></textarea>
+          <!-- ABERTO: pode ficar redundante com Situação Geradora + Agente Causador — confirmar com SST -->
+          <div class="hint">Confirmar se não é redundante com Situação Geradora + Agente Causador</div>
+        </div>
+
+        <div class="fs-divider"><span>Lesão</span></div>
         <div class="form-row">
-          <div class="field">
-            <label>Causa</label>
-            <input type="text" id="f-causa" placeholder="Causa identificada">
-          </div>
           <div class="field">
             <label>Parte do Corpo Atingida</label>
             <input type="text" id="f-parte-corpo" placeholder="Ex.: mão direita, tornozelo…">
+            <div class="hint">Lista padronizada pendente — preenchimento livre por ora</div>
+          </div>
+          <!-- ABERTO: domínio oficial de Natureza da Lesão ainda não definido -->
+          <div class="field">
+            <label>Natureza da Lesão</label>
+            <select id="f-natureza-lesao" disabled><option value="">A definir</option></select>
+            <div class="hint">Lista oficial pendente de definição</div>
           </div>
         </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Lateralidade da Lesão</label>
+            <select id="f-lateralidade-lesao">
+              <option>N/A</option><option>Direito</option><option>Esquerdo</option><option>Bilateral</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Gravidade</label>
+            <select id="f-gravidade">
+              <option value="">Selecione…</option>
+              <option>Leve</option><option>Moderada</option><option>Grave</option>
+            </select>
+            <!-- ABERTO: escala de gravidade (Leve/Moderada/Grave) pendente de confirmação com SST -->
+            <div class="hint">Escala pendente de confirmação com SST</div>
+          </div>
+        </div>
+
+        <div class="fs-divider"><span>Ação Corretiva</span></div>
         <div class="field full">
           <label>Ação Corretiva</label>
           <textarea id="f-acao" placeholder="Ação corretiva definida ou executada…"></textarea>
+        </div>
+
+        <div class="fs-divider"><span>Análise — 5 Porquês</span></div>
+        <div class="field full">
+          <label>Problema</label>
+          <textarea id="f-5p-problema" placeholder="Descreva o problema central a ser analisado…"></textarea>
+        </div>
+        <div class="field full">
+          <label>Por quê? (1)</label>
+          <textarea id="f-5p-1"></textarea>
+        </div>
+        <div class="field full">
+          <label>Por quê? (2)</label>
+          <textarea id="f-5p-2"></textarea>
+        </div>
+        <div class="field full">
+          <label>Por quê? (3)</label>
+          <textarea id="f-5p-3"></textarea>
+        </div>
+        <div class="field full">
+          <label>Por quê? (4)</label>
+          <textarea id="f-5p-4"></textarea>
+        </div>
+        <div class="field full">
+          <label>Por quê? (5)</label>
+          <textarea id="f-5p-5"></textarea>
+        </div>
+
+        <div class="fs-divider"><span>Plano de Ação</span></div>
+        <div class="dyn-table" id="dyn-plano">
+          <div class="dyn-head">
+            <span style="flex:2">Ação</span><span style="flex:1.2">Responsável</span><span style="width:150px">Prazo</span><span style="width:32px"></span>
+          </div>
+          <div class="dyn-rows" id="dyn-plano-rows"></div>
+        </div>
+        <button type="button" class="dyn-add" onclick="addPlanoRow()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar linha
+        </button>
+
+        <div class="fs-divider"><span>Grupo de Análise</span></div>
+        <div class="dyn-table" id="dyn-grupo">
+          <div class="dyn-head">
+            <span style="flex:1.4">Nome</span><span style="flex:1">Setor</span><span style="flex:1">Assinatura</span><span style="width:32px"></span>
+          </div>
+          <div class="dyn-rows" id="dyn-grupo-rows"></div>
+        </div>
+        <button type="button" class="dyn-add" onclick="addGrupoRow()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar linha
+        </button>
+        <div class="field" style="max-width:320px">
+          <label>Local e Data</label>
+          <input type="text" id="f-local-data" placeholder="Ex.: Recife, 08/07/2026">
         </div>
 
       </div>
@@ -1080,6 +1320,54 @@ window.renderAcidentes = renderAcidentes
 // ── REGRAS DO FORMULÁRIO ──────────────────────────────────────────────────────
 // Nome sempre maiúsculo
 $('f-nome').addEventListener('input', function(){ this.value = this.value.toUpperCase() })
+;['f-resp-comunicado','f-lideranca','f-nome-medico'].forEach(id=>{
+  $(id).addEventListener('input', function(){ this.value = this.value.toUpperCase() })
+})
+
+// ── TABELAS DINÂMICAS (Plano de Ação / Grupo de Análise) ─────────────────────
+function addPlanoRow(data){
+  data = data || {}
+  const row = document.createElement('div')
+  row.className = 'dyn-row'
+  row.innerHTML = `
+    <input type="text" class="dp-acao" placeholder="Ação" value="${esc(data.acao||'')}">
+    <input type="text" class="dp-resp" placeholder="RESPONSÁVEL" style="text-transform:uppercase" value="${esc(data.responsavel||'')}" oninput="this.value=this.value.toUpperCase()">
+    <input type="date" class="dp-prazo dr-prazo" value="${esc(data.prazo||'')}">
+    <button type="button" class="dr-rm" title="Remover linha" onclick="this.closest('.dyn-row').remove()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+  $('dyn-plano-rows').appendChild(row)
+}
+window.addPlanoRow = addPlanoRow
+
+function addGrupoRow(data){
+  data = data || {}
+  const row = document.createElement('div')
+  row.className = 'dyn-row'
+  row.innerHTML = `
+    <input type="text" class="dg-nome" placeholder="NOME" style="text-transform:uppercase" value="${esc(data.nome||'')}" oninput="this.value=this.value.toUpperCase()">
+    <input type="text" class="dg-setor" placeholder="Setor" value="${esc(data.setor||'')}">
+    <input type="text" class="dg-assinatura" placeholder="Assinatura" value="${esc(data.assinatura||'')}">
+    <button type="button" class="dr-rm" title="Remover linha" onclick="this.closest('.dyn-row').remove()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+  $('dyn-grupo-rows').appendChild(row)
+}
+window.addGrupoRow = addGrupoRow
+
+function renderPlanoRows(arr){ $('dyn-plano-rows').innerHTML=''; (arr||[]).forEach(addPlanoRow) }
+function renderGrupoRows(arr){ $('dyn-grupo-rows').innerHTML=''; (arr||[]).forEach(addGrupoRow) }
+
+function collectPlanoRows(){
+  return [...document.querySelectorAll('#dyn-plano-rows .dyn-row')].map(r=>({
+    acao: r.querySelector('.dp-acao').value.trim(),
+    responsavel: r.querySelector('.dp-resp').value.trim(),
+    prazo: r.querySelector('.dp-prazo').value
+  })).filter(r=>r.acao||r.responsavel||r.prazo)
+}
+function collectGrupoRows(){
+  return [...document.querySelectorAll('#dyn-grupo-rows .dyn-row')].map(r=>({
+    nome: r.querySelector('.dg-nome').value.trim(),
+    setor: r.querySelector('.dg-setor').value.trim(),
+    assinatura: r.querySelector('.dg-assinatura').value.trim()
+  })).filter(r=>r.nome||r.setor||r.assinatura)
+}
 
 // Tipo de Ocorrência ≠ Acidente → Tipo de Acidente = N/A (travado)
 function ruleOcorrencia(){
@@ -1145,16 +1433,20 @@ function cidPick(codigo, descricao){
   $('f-cid').value = codigo
   $('cid-sug').classList.remove('open')
   const c = $('cid-confirm')
-  c.innerHTML = `<span class="code">${esc(codigo)}</span> — ${esc(descricao)} <span style="color:var(--esg);font-weight:700">✓ confirmado</span>`
+  c.innerHTML = `<span class="code">${esc(codigo)}</span> — ${esc(descricao)} <span style="color:var(--pos);font-weight:700">✓ confirmado</span>`
   c.classList.add('show')
 }
 window.cidPick = cidPick
 document.addEventListener('click', e=>{ if(!e.target.closest('.cid-wrap')) $('cid-sug').classList.remove('open') })
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
+// Selects com domínio ainda não definido — permanecem desabilitados após reset
+const DOMINIO_PENDENTE = ['f-especie','f-situacao-geradora','f-agente-causador','f-natureza-lesao']
+
 function resetForm(){
   document.querySelectorAll('#form input, #form textarea').forEach(i=>{ i.value=''; i.readOnly=false })
   document.querySelectorAll('#form select').forEach(s=>{ s.disabled=false; s.selectedIndex=0 })
+  DOMINIO_PENDENTE.forEach(id=>{ $(id).disabled=true })
   document.querySelectorAll('#form .field').forEach(f=>f.classList.remove('err'))
   $('f-status').value='Pendente'
   cidConfirmed=null
@@ -1162,6 +1454,7 @@ function resetForm(){
   $('cid-sug').classList.remove('open')
   $('fw-cid').style.display='none'
   $('hint-empresa').textContent=''; $('hint-funcao').textContent=''; $('hint-tipo-acid').textContent=''
+  renderPlanoRows([]); renderGrupoRows([])
   $('modal-msg').textContent=''; $('modal-msg').className='modal-msg'
 }
 
@@ -1194,12 +1487,52 @@ function openModal(id){
     $('f-causa').value=r.causa||''
     $('f-parte-corpo').value=r.parte_corpo||''
     $('f-acao').value=r.acao_corretiva||''
+    // Dados do Comunicado
+    $('f-tec-seg').value=r.tecnico_seguranca||''
+    $('f-matricula-tec').value=r.matricula_tecnico||''
+    $('f-data-comunicado').value=r.data_comunicado||''
+    $('f-resp-comunicado').value=r.responsavel_comunicado||''
+    $('f-data-relatorio').value=r.data_relatorio||''
+    $('f-info-preliminar').value=r.informacao_preliminar||''
+    // Identificação — complemento
+    $('f-setor').value=r.setor||''
+    $('f-tempo-empresa').value=r.tempo_empresa||''
+    $('f-tempo-cargo').value=r.tempo_cargo||''
+    $('f-lideranca').value=r.lideranca_imediata||''
+    $('f-matricula-lideranca').value=r.matricula_lideranca||''
+    $('f-habilitacao').value=r.habilitacao||''
+    $('f-lateralidade-dom').value=r.lateralidade_dominante||'N/A'
+    // Classificação — complemento
+    $('f-horario').value=r.horario_acidente||''
+    $('f-endereco').value=r.endereco||''
+    $('f-trabalho-habitual').value=r.trabalho_habitual||'N/A'
+    $('f-epi').value=r.utilizou_epi||'N/A'
+    // Atestado — bloco médico
+    $('f-nome-medico').value=r.nome_medico||''
+    $('f-crm-uf').value=r.crm_uf||''
+    $('f-data-atendimento').value=r.data_atendimento||''
+    $('f-dias-afastamento').value=r.dias_afastamento??'N/A'
+    $('f-dias-internacao').value=r.dias_internacao??'N/A'
+    // Lesão
+    $('f-lateralidade-lesao').value=r.lateralidade_lesao||'N/A'
+    $('f-gravidade').value=r.gravidade||''
+    // 5 Porquês
+    $('f-5p-problema').value=r.problema_5p||''
+    $('f-5p-1').value=r.porque_1||''
+    $('f-5p-2').value=r.porque_2||''
+    $('f-5p-3').value=r.porque_3||''
+    $('f-5p-4').value=r.porque_4||''
+    $('f-5p-5').value=r.porque_5||''
+    // Plano de Ação / Grupo de Análise
+    renderPlanoRows(r.plano_acao||[])
+    renderGrupoRows(r.grupo_analise||[])
+    $('f-local-data').value=r.local_data||''
     ruleOcorrencia(); ruleColaborador(); ruleAtestado(); ruleCid()
     if(r.cid_informado==='Sim' && r.cid_codigo){
       $('f-cid').value=r.cid_codigo
       cidConfirmed={codigo:r.cid_codigo, descricao:r.cid_descricao||''}
       const c=$('cid-confirm')
-      c.innerHTML=`<span class="code">${esc(r.cid_codigo)}</span> — ${esc(r.cid_descricao||'')} <span style="color:var(--esg);font-weight:700">✓ confirmado</span>`
+      c.innerHTML=`<span class="code">${esc(r.cid_codigo)}</span> — ${esc(r.cid_descricao||'')} <span style="color:var(--pos);font-weight:700">✓ confirmado</span>`
       c.classList.add('show')
     }
   }
@@ -1211,6 +1544,7 @@ window.closeModal = closeModal
 
 // ── SALVAR ────────────────────────────────────────────────────────────────────
 function markErr(id, on){ $(id).classList.toggle('err', !!on); return !!on }
+function isNumOuNAOuVazio(v){ v=String(v).trim(); return v==='' || isNumOuNA(v) }
 
 async function saveAcidente(){
   let bad = false
@@ -1222,6 +1556,10 @@ async function saveAcidente(){
   bad = markErr('fw-tipo-ocor', !$('f-tipo-ocor').value) || bad
   bad = markErr('fw-qtd-atest', !isNumOuNA($('f-qtd-atest').value)) || bad
   bad = markErr('fw-qtd-dias', !isNumOuNA($('f-qtd-dias').value)) || bad
+  bad = markErr('fw-matricula-tec', !isNumOuNAOuVazio($('f-matricula-tec').value)) || bad
+  bad = markErr('fw-matricula-lideranca', !isNumOuNAOuVazio($('f-matricula-lideranca').value)) || bad
+  bad = markErr('fw-dias-afastamento', !isNumOuNAOuVazio($('f-dias-afastamento').value)) || bad
+  bad = markErr('fw-dias-internacao', !isNumOuNAOuVazio($('f-dias-internacao').value)) || bad
   if(bad){ $('modal-msg').textContent='Corrija os campos destacados.'; $('modal-msg').className='modal-msg err'; return }
 
   if($('f-cid-inf').value==='Sim' && !cidConfirmed){
@@ -1254,7 +1592,58 @@ async function saveAcidente(){
     causa: $('f-causa').value.trim() || null,
     parte_corpo: $('f-parte-corpo').value.trim() || null,
     acao_corretiva: $('f-acao').value.trim() || null,
-    status: $('f-status').value
+    status: $('f-status').value,
+
+    // Dados do Comunicado
+    tecnico_seguranca: $('f-tec-seg').value.trim() || null,
+    matricula_tecnico: $('f-matricula-tec').value.trim() ? norm($('f-matricula-tec').value) : null,
+    data_comunicado: $('f-data-comunicado').value || null,
+    responsavel_comunicado: $('f-resp-comunicado').value.trim().toUpperCase() || null,
+    data_relatorio: $('f-data-relatorio').value || null,
+    informacao_preliminar: $('f-info-preliminar').value.trim() || null,
+
+    // Identificação — complemento
+    setor: $('f-setor').value.trim() || null,
+    tempo_empresa: $('f-tempo-empresa').value.trim() || null,
+    tempo_cargo: $('f-tempo-cargo').value.trim() || null,
+    lideranca_imediata: $('f-lideranca').value.trim().toUpperCase() || null,
+    matricula_lideranca: $('f-matricula-lideranca').value.trim() ? norm($('f-matricula-lideranca').value) : null,
+    habilitacao: $('f-habilitacao').value.trim() || null,
+    lateralidade_dominante: $('f-lateralidade-dom').value,
+
+    // Classificação — complemento
+    horario_acidente: $('f-horario').value || null,
+    endereco: $('f-endereco').value.trim() || null,
+    especie: null,            // ABERTO: domínio pendente de definição
+    situacao_geradora: null,  // ABERTO: domínio pendente de definição
+    agente_causador: null,    // ABERTO: domínio pendente de definição
+    trabalho_habitual: $('f-trabalho-habitual').value,
+    utilizou_epi: $('f-epi').value,
+
+    // Atestado — bloco médico
+    nome_medico: $('f-nome-medico').value.trim().toUpperCase() || null,
+    crm_uf: $('f-crm-uf').value.trim() || null,
+    data_atendimento: $('f-data-atendimento').value || null,
+    dias_afastamento: $('f-dias-afastamento').value.trim() ? norm($('f-dias-afastamento').value) : null,
+    dias_internacao: $('f-dias-internacao').value.trim() ? norm($('f-dias-internacao').value) : null,
+
+    // Lesão
+    natureza_lesao: null,     // ABERTO: domínio pendente de definição
+    lateralidade_lesao: $('f-lateralidade-lesao').value,
+    gravidade: $('f-gravidade').value || null,
+
+    // Análise — 5 Porquês
+    problema_5p: $('f-5p-problema').value.trim() || null,
+    porque_1: $('f-5p-1').value.trim() || null,
+    porque_2: $('f-5p-2').value.trim() || null,
+    porque_3: $('f-5p-3').value.trim() || null,
+    porque_4: $('f-5p-4').value.trim() || null,
+    porque_5: $('f-5p-5').value.trim() || null,
+
+    // Plano de Ação / Grupo de Análise
+    plano_acao: collectPlanoRows(),
+    grupo_analise: collectGrupoRows(),
+    local_data: $('f-local-data').value.trim() || null
   }
 
   $('btn-save').disabled=true; $('btn-save').textContent='Salvando…'
