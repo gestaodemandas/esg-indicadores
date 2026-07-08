@@ -693,7 +693,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row">
           <div class="field">
             <label>Responsável pelo Comunicado</label>
-            <input type="text" id="f-resp-comunicado" placeholder="NOME DO RESPONSÁVEL" style="text-transform:uppercase">
+            <input type="text" id="f-resp-comunicado" placeholder="Nome do responsável" style="text-transform:uppercase">
           </div>
           <div class="field">
             <label>Data do Relatório</label>
@@ -732,7 +732,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row">
           <div class="field" id="fw-nome">
             <label>Nome <span class="req">*</span></label>
-            <input type="text" id="f-nome" placeholder="NOME DE QUEM SOFREU O ACIDENTE" style="text-transform:uppercase">
+            <input type="text" id="f-nome" placeholder="Nome de quem sofreu o acidente" style="text-transform:uppercase">
             <div class="err-msg">Informe o nome.</div>
           </div>
           <div class="field" id="fw-tipo-colab">
@@ -799,7 +799,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row-3">
           <div class="field">
             <label>Liderança Imediata</label>
-            <input type="text" id="f-lideranca" placeholder="NOME DA LIDERANÇA" style="text-transform:uppercase">
+            <input type="text" id="f-lideranca" placeholder="Nome da liderança" style="text-transform:uppercase">
           </div>
           <div class="field" id="fw-matricula-lideranca">
             <label>Matrícula da Liderança</label>
@@ -940,7 +940,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row-3">
           <div class="field">
             <label>Nome do Médico</label>
-            <input type="text" id="f-nome-medico" placeholder="NOME DO MÉDICO" style="text-transform:uppercase">
+            <input type="text" id="f-nome-medico" placeholder="Nome do médico" style="text-transform:uppercase">
           </div>
           <div class="field">
             <label>CRM / UF</label>
@@ -1515,7 +1515,7 @@ function addPlanoRow(data){
   row.className = 'dyn-row'
   row.innerHTML = `
     <input type="text" class="dp-acao" placeholder="Ação" value="${esc(data.acao||'')}">
-    <input type="text" class="dp-resp" placeholder="RESPONSÁVEL" style="text-transform:uppercase" value="${esc(data.responsavel||'')}" oninput="this.value=this.value.toUpperCase()">
+    <input type="text" class="dp-resp" placeholder="Responsável" style="text-transform:uppercase" value="${esc(data.responsavel||'')}" oninput="this.value=this.value.toUpperCase()">
     <input type="date" class="dp-prazo dr-prazo" value="${esc(data.prazo||'')}">
     <button type="button" class="dr-rm" title="Remover linha" onclick="this.closest('.dyn-row').remove()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
   $('dyn-plano-rows').appendChild(row)
@@ -1527,7 +1527,7 @@ function addGrupoRow(data){
   const row = document.createElement('div')
   row.className = 'dyn-row'
   row.innerHTML = `
-    <input type="text" class="dg-nome" placeholder="NOME" style="text-transform:uppercase" value="${esc(data.nome||'')}" oninput="this.value=this.value.toUpperCase()">
+    <input type="text" class="dg-nome" placeholder="Nome" style="text-transform:uppercase" value="${esc(data.nome||'')}" oninput="this.value=this.value.toUpperCase()">
     <input type="text" class="dg-setor" placeholder="Setor" value="${esc(data.setor||'')}">
     <input type="text" class="dg-assinatura" placeholder="Assinatura" value="${esc(data.assinatura||'')}">
     <button type="button" class="dr-rm" title="Remover linha" onclick="this.closest('.dyn-row').remove()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
