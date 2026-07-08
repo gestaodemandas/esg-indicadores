@@ -257,8 +257,10 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .exp-btn.open svg{transform:rotate(90deg)}
 .tbl-comp{display:flex;align-items:center;gap:.5rem;min-width:120px}
 .tbl-comp-bar{flex:1;height:6px;background:var(--bdr);border-radius:4px;overflow:hidden}
-.tbl-comp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acid),#d65a67)}
-.tbl-comp-fill.complete{background:linear-gradient(90deg,var(--pos),#9dc98a)}
+.tbl-comp-fill{height:100%;border-radius:4px;transition:width .3s}
+.tbl-comp-fill.lvl-low{background:linear-gradient(90deg,#8b1a1d,var(--acid))}
+.tbl-comp-fill.lvl-mid{background:linear-gradient(90deg,var(--warn),#dcc15a)}
+.tbl-comp-fill.lvl-full{background:linear-gradient(90deg,var(--pos),#9dc98a)}
 .tbl-comp-pct{font-size:.66rem;font-weight:800;color:var(--txt2);min-width:30px;text-align:right}
 .detail-row>td{padding:0!important;background:var(--frame-bg);border-bottom:1px solid var(--bdr)}
 .detail-box{padding:.9rem 1.2rem 1rem 3rem}
@@ -1410,6 +1412,42 @@ function filteredData(){
   })
 }
 
+// Conjunto canônico de campos que contam para a conclusão de um registro.
+// Exclui os 4 de domínio pendente (Espécie/Situação Geradora/Agente Causador/
+// Natureza da Lesão) e as listas dinâmicas (Plano de Ação/Grupo de Análise).
+const FIELD_DEFS = [
+  ['tecnico_seguranca','Técnico de Segurança'],['matricula_tecnico','Matrícula do Técnico'],
+  ['data_comunicado','Data do Comunicado'],['responsavel_comunicado','Responsável pelo Comunicado'],
+  ['data_relatorio','Data do Relatório'],['informacao_preliminar','Informação Preliminar'],
+  ['filial','Filial'],['data_acidente','Data do Acidente'],['matricula','Matrícula'],['nome','Nome'],
+  ['tipo_colaborador','Tipo de Colaborador'],['empresa','Empresa'],['funcao','Função'],['setor','Setor'],
+  ['tempo_empresa_anos','Tempo na Empresa (anos)'],['tempo_empresa_meses','Tempo na Empresa (meses)'],
+  ['tempo_cargo_anos','Tempo no Cargo (anos)'],['tempo_cargo_meses','Tempo no Cargo (meses)'],
+  ['lideranca_imediata','Liderança Imediata'],['matricula_lideranca','Matrícula da Liderança'],
+  ['habilitacao','Habilitação / Autorização'],['lateralidade_dominante','Lateralidade Dominante'],
+  ['tipo_ocorrencia','Tipo de Ocorrência'],['tipo_acidente','Tipo de Acidente'],['tipo_equipamento','Tipo de Equipamento'],
+  ['local','Local do Acidente'],['status','Status do Registro'],['horario_acidente','Horário do Acidente'],
+  ['endereco','Endereço'],['trabalho_habitual','Trabalho Habitual'],['utilizou_epi','Utilizou EPI'],
+  ['atestado_medico','Atestado Médico'],['qtd_atestados','Qtd. Atestados'],['qtd_dias_atestado','Qtd. Dias de Atestado'],
+  ['cid_informado','CID Informado'],['nome_medico','Nome do Médico'],['crm_uf','CRM / UF'],
+  ['data_atendimento','Data do Atendimento'],['dias_afastamento','Dias de Afastamento'],['dias_internacao','Dias em Internação'],
+  ['emitida_cat','Emitida CAT'],['recibo_cat','Recibo CAT'],
+  ['descricao_sumaria','Descrição Sumária'],['causa','Causa'],['parte_corpo','Parte do Corpo Atingida'],
+  ['lateralidade_lesao','Lateralidade da Lesão'],['gravidade','Gravidade'],['acao_corretiva','Ação Corretiva'],
+  ['problema_5p','Problema (5 Porquês)'],['porque_1','Por quê? (1)'],['porque_2','Por quê? (2)'],
+  ['porque_3','Por quê? (3)'],['porque_4','Por quê? (4)'],['porque_5','Por quê? (5)'],['local_data','Local e Data']
+]
+// Calcula conclusão a partir do registro (fallback para registros sem snapshot salvo)
+function recCompletion(r){
+  // campo "CID" (código) entra na conta apenas quando cid_informado === 'Sim'
+  const list = r.cid_informado==='Sim' ? FIELD_DEFS.concat([['cid_codigo','CID']]) : FIELD_DEFS
+  const filled = v => v!==null && v!==undefined && String(v).trim()!==''
+  const pendentes = list.filter(([k]) => !filled(r[k])).map(([,label]) => label)
+  const total = list.length
+  const pct = total ? Math.round((total-pendentes.length)/total*100) : 100
+  return { pct, pendentes }
+}
+
 function renderAcidentes(){
   const rows = filteredData()
 
@@ -1438,11 +1476,12 @@ function renderAcidentes(){
   $('tbl-empty').style.display='none'
   tb.innerHTML = rows.map(r=>{
     const stPill = r.status==='Finalizado' ? '<span class="pill green">Finalizado</span>' : '<span class="pill warn">Pendente</span>'
-    const pct = (typeof r.completude === 'number') ? r.completude : null
-    const pend = Array.isArray(r.campos_pendentes) ? r.campos_pendentes : []
-    const compCell = pct===null
-      ? '<span class="pill muted">—</span>'
-      : `<div class="tbl-comp"><div class="tbl-comp-bar"><div class="tbl-comp-fill${pct===100?' complete':''}" style="width:${pct}%"></div></div><span class="tbl-comp-pct">${pct}%</span></div>`
+    // Conclusão: usa o snapshot salvo (mais fiel, baseado nos campos que o usuário
+    // visitou); se ausente (registros antigos/importados), calcula do próprio registro.
+    const c = (typeof r.completude === 'number') ? { pct:r.completude, pendentes: Array.isArray(r.campos_pendentes)?r.campos_pendentes:[] } : recCompletion(r)
+    const pct = c.pct, pend = c.pendentes
+    const lvl = pct>=100 ? 'lvl-full' : (pct>=50 ? 'lvl-mid' : 'lvl-low')
+    const compCell = `<div class="tbl-comp"><div class="tbl-comp-bar"><div class="tbl-comp-fill ${lvl}" style="width:${pct}%"></div></div><span class="tbl-comp-pct">${pct}%</span></div>`
     const cat = r.emitida_cat==='Sim' ? '<span class="pill info">Sim</span>' : (r.emitida_cat==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
     const at  = r.atestado_medico==='Sim' ? '<span class="pill info">Sim</span>' : (r.atestado_medico==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
     const canExpand = pend.length > 0
