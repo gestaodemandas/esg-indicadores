@@ -1454,6 +1454,11 @@ const TAB_DEFS = [
   {id:'analise',       label:'Análise & Plano'}
 ]
 let activeTab = 'comunicado'
+// IDs de campos "de fato" preenchidos: por interação do usuário (input/change) ou
+// preenchimento automático legítimo (perfil, data de hoje, regras automáticas).
+// Sem isso, selects com valor padrão "N/A" (não vazio) contariam como preenchidos
+// mesmo num formulário em branco, inflando o % antes de qualquer ação do usuário.
+let touchedFields = new Set()
 
 function fieldsInScope(container){
   return [...container.querySelectorAll('input,select,textarea')]
@@ -1464,7 +1469,7 @@ function fieldsInScope(container){
 function scopeProgress(container){
   const els = fieldsInScope(container)
   const total = els.length
-  const filled = els.filter(el => String(el.value||'').trim() !== '').length
+  const filled = els.filter(el => touchedFields.has(el.id) && String(el.value||'').trim() !== '').length
   return { total, filled, pct: total ? Math.round(filled/total*100) : 100 }
 }
 
@@ -1552,8 +1557,9 @@ function collectGrupoRows(){
 function ruleOcorrencia(){
   const v = $('f-tipo-ocor').value
   const ta = $('f-tipo-acid')
-  if(v && v!=='Acidente'){ ta.value='N/A'; ta.disabled=true; $('hint-tipo-acid').textContent='N/A — ocorrência não é acidente' }
+  if(v && v!=='Acidente'){ ta.value='N/A'; ta.disabled=true; $('hint-tipo-acid').textContent='N/A — ocorrência não é acidente'; touchedFields.add('f-tipo-acid') }
   else { ta.disabled=false; $('hint-tipo-acid').textContent='' }
+  updateProgress()
 }
 
 // Colaborador Próprio → Empresa=FC travada; não-Próprio → Função=N/A travada
@@ -1561,24 +1567,26 @@ function ruleColaborador(){
   const v = $('f-tipo-colab').value
   const emp = $('f-empresa'), fun = $('f-funcao')
   if(v==='Próprio'){
-    emp.value='FC'; emp.readOnly=true; $('hint-empresa').textContent='Colaborador próprio — empresa FC'
-    fun.readOnly=false; if(fun.value==='N/A') fun.value=''; $('hint-funcao').textContent=''
+    emp.value='FC'; emp.readOnly=true; $('hint-empresa').textContent='Colaborador próprio — empresa FC'; touchedFields.add('f-empresa')
+    fun.readOnly=false; if(fun.value==='N/A'){ fun.value=''; touchedFields.delete('f-funcao') } ; $('hint-funcao').textContent=''
   } else if(v){
-    emp.readOnly=false; if(emp.value==='FC') emp.value=''; $('hint-empresa').textContent=''
-    fun.value='N/A'; fun.readOnly=true; $('hint-funcao').textContent='Não é colaborador próprio — função N/A'
+    emp.readOnly=false; if(emp.value==='FC'){ emp.value=''; touchedFields.delete('f-empresa') }; $('hint-empresa').textContent=''
+    fun.value='N/A'; fun.readOnly=true; $('hint-funcao').textContent='Não é colaborador próprio — função N/A'; touchedFields.add('f-funcao')
   } else {
     emp.readOnly=false; fun.readOnly=false
     $('hint-empresa').textContent=''; $('hint-funcao').textContent=''
   }
+  updateProgress()
 }
 
 // Atestado: Não → qtds = 0 travadas; N/A → qtds = N/A travadas; Sim → livre
 function ruleAtestado(){
   const v = $('f-atestado').value
   const a = $('f-qtd-atest'), d = $('f-qtd-dias')
-  if(v==='Não'){ a.value='0'; d.value='0'; a.readOnly=true; d.readOnly=true }
-  else if(v==='N/A'){ a.value='N/A'; d.value='N/A'; a.readOnly=true; d.readOnly=true }
-  else { a.readOnly=false; d.readOnly=false; if(a.value==='N/A')a.value=''; if(d.value==='N/A')d.value='' }
+  if(v==='Não'){ a.value='0'; d.value='0'; a.readOnly=true; d.readOnly=true; touchedFields.add('f-qtd-atest'); touchedFields.add('f-qtd-dias') }
+  else if(v==='N/A'){ a.value='N/A'; d.value='N/A'; a.readOnly=true; d.readOnly=true; touchedFields.add('f-qtd-atest'); touchedFields.add('f-qtd-dias') }
+  else { a.readOnly=false; d.readOnly=false; if(a.value==='N/A'){a.value='';touchedFields.delete('f-qtd-atest')}; if(d.value==='N/A'){d.value='';touchedFields.delete('f-qtd-dias')} }
+  updateProgress()
 }
 
 // CID informado = Sim → mostra campo CID com autocomplete
@@ -1587,6 +1595,7 @@ function ruleCid(){
   const show = v==='Sim'
   $('fw-cid').style.display = show?'':'none'
   if(!show){ $('f-cid').value=''; cidConfirmed=null; $('cid-confirm').classList.remove('show'); $('cid-sug').classList.remove('open') }
+  updateProgress()
 }
 
 // Autocomplete CID (consulta esg_cid10 no Supabase)
@@ -1610,10 +1619,12 @@ function cidSearch(){
 function cidPick(codigo, descricao){
   cidConfirmed = {codigo, descricao}
   $('f-cid').value = codigo
+  touchedFields.add('f-cid')
   $('cid-sug').classList.remove('open')
   const c = $('cid-confirm')
   c.innerHTML = `<span class="code">${esc(codigo)}</span> — ${esc(descricao)} <span style="color:var(--pos);font-weight:700">✓ confirmado</span>`
   c.classList.add('show')
+  updateProgress()
 }
 window.cidPick = cidPick
 document.addEventListener('click', e=>{ if(!e.target.closest('.cid-wrap')) $('cid-sug').classList.remove('open') })
@@ -1623,6 +1634,7 @@ document.addEventListener('click', e=>{ if(!e.target.closest('.cid-wrap')) $('ci
 const DOMINIO_PENDENTE = ['f-especie','f-situacao-geradora','f-agente-causador','f-natureza-lesao']
 
 function resetForm(){
+  touchedFields = new Set()
   document.querySelectorAll('#form input, #form textarea').forEach(i=>{ i.value=''; i.readOnly=false })
   document.querySelectorAll('#form select').forEach(s=>{ s.disabled=false; s.selectedIndex=0 })
   DOMINIO_PENDENTE.forEach(id=>{ $(id).disabled=true })
@@ -1719,18 +1731,28 @@ function openModal(id){
       c.innerHTML=`<span class="code">${esc(r.cid_codigo)}</span> — ${esc(r.cid_descricao||'')} <span style="color:var(--pos);font-weight:700">✓ confirmado</span>`
       c.classList.add('show')
     }
+    // Edição: todo campo com valor salvo já é considerado preenchido
+    document.querySelectorAll('#form input,#form select,#form textarea').forEach(el=>{
+      if(el.id && el.id.startsWith('f-') && String(el.value||'').trim()!=='') touchedFields.add(el.id)
+    })
   } else {
     // Registro novo: pré-preenche a partir do perfil salvo e data de hoje
     const p = getPerfil()
-    if(p){ $('f-tec-seg').value = p.nome||''; $('f-matricula-tec').value = p.matricula||'' }
+    if(p && p.nome){ $('f-tec-seg').value = p.nome; touchedFields.add('f-tec-seg') }
+    if(p && p.matricula){ $('f-matricula-tec').value = p.matricula; touchedFields.add('f-matricula-tec') }
     $('f-data-comunicado').value = new Date().toISOString().slice(0,10)
+    touchedFields.add('f-data-comunicado')
   }
   $('modal-overlay').classList.add('open')
   updateProgress()
 }
 window.openModal = openModal
-$('form').addEventListener('input', updateProgress)
-$('form').addEventListener('change', updateProgress)
+function onFormChange(e){
+  if(e.target && e.target.id && e.target.id.startsWith('f-')) touchedFields.add(e.target.id)
+  updateProgress()
+}
+$('form').addEventListener('input', onFormChange)
+$('form').addEventListener('change', onFormChange)
 function closeModal(){ $('modal-overlay').classList.remove('open'); editId=null }
 window.closeModal = closeModal
 
