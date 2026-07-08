@@ -48,8 +48,10 @@ create table if not exists public.esg_acidentes (
 
   -- ── Identificação — complemento ──
   setor                  text,
-  tempo_empresa          text,
-  tempo_cargo            text,
+  tempo_empresa_anos     text,   -- número ou 'N/A'
+  tempo_empresa_meses    text,   -- número ou 'N/A'
+  tempo_cargo_anos       text,   -- número ou 'N/A'
+  tempo_cargo_meses      text,   -- número ou 'N/A'
   lideranca_imediata     text,
   matricula_lideranca    text,        -- número ou 'N/A'
   habilitacao            text,

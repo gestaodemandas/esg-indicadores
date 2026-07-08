@@ -193,6 +193,7 @@ body.dark .hc-btn{background:rgba(255,255,255,.08)}
 .card.card-warn{border-top-color:var(--warn)}
 .card.card-pos{border-top-color:var(--esg)}
 .card.card-info{border-top-color:#2A6478}
+.card.card-neutral{border-top-color:var(--pri)}
 .card-header{display:grid;grid-template-columns:1fr auto;align-items:start;gap:.4rem;margin-bottom:.9rem}
 .card-title{font-size:.6rem;font-weight:700;color:var(--txt3);text-transform:uppercase;line-height:1.4;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-value{font-weight:700;font-size:2rem;line-height:1.2;margin-bottom:.3rem;color:var(--txt)}
@@ -207,6 +208,8 @@ body.dark .tag.muted{background:rgba(255,255,255,.06)}
 .pill.red{background:var(--neg-l);color:var(--neg)}
 .pill.green{background:var(--esg-l);color:var(--esg)}
 .pill.warn{background:var(--warn-l);color:#a68a1e}
+.pill.info{background:#EBF2F8;color:#2A6478}
+body.dark .pill.info{background:rgba(42,100,120,.2);color:#7fb3c9}
 .pill.muted{background:rgba(0,0,0,.06);color:var(--txt3)}
 body.dark .pill.muted{background:rgba(255,255,255,.07)}
 
@@ -276,8 +279,28 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .field .err-msg{font-size:.62rem;color:var(--neg);display:none}
 .field.err .err-msg{display:block}
 .fs-divider{display:flex;align-items:center;gap:.7rem;margin:.4rem 0 .1rem}
-.fs-divider span{font-size:.58rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
-.fs-divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.fs-divider span{font-size:.6rem;font-weight:800;color:var(--acid);text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
+.fs-divider::after{content:'';flex:1;height:1px;background:rgba(181,45,57,.3)}
+body.dark .fs-divider::after{background:rgba(181,45,57,.4)}
+
+/* TABS DO FORMULÁRIO */
+.modal-progress{display:flex;align-items:center;gap:.7rem;padding:.55rem 1.5rem;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.modal-progress-bar{flex:1;height:6px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.modal-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acid),#d65a67);transition:width .3s ease;width:0%}
+.modal-progress-fill.complete{background:linear-gradient(90deg,var(--pos),#9dc98a)}
+.modal-progress-pct{font-size:.68rem;font-weight:800;color:var(--txt2);min-width:36px;text-align:right}
+.modal-tabs{display:flex;gap:.35rem;padding:.6rem 1.5rem;border-bottom:1px solid var(--bdr);overflow-x:auto;flex-shrink:0;background:var(--frame-bg)}
+.modal-tabs::-webkit-scrollbar{height:3px}.modal-tabs::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+.modal-tab{display:flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:20px;border:1px solid var(--bdr);background:var(--card);font-size:.68rem;font-weight:600;color:var(--txt2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.modal-tab:hover{border-color:var(--acid);color:var(--acid)}
+.modal-tab.active{background:var(--acid);border-color:var(--acid);color:#fff}
+.modal-tab .mt-pct{font-size:.6rem;font-weight:800;padding:.05rem .42rem;border-radius:10px;background:rgba(0,0,0,.08);color:inherit}
+body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
+.modal-tab.active .mt-pct{background:rgba(255,255,255,.25)}
+.modal-tab.mt-complete .mt-pct{background:var(--pos-l);color:var(--pos)}
+.modal-tab.active.mt-complete .mt-pct{background:rgba(255,255,255,.3);color:#fff}
+.tab-pane{display:none;flex-direction:column;gap:1rem}
+.tab-pane.active{display:flex}
 .dyn-table{display:flex;flex-direction:column;gap:.4rem}
 .dyn-head{display:flex;gap:.6rem;padding:0 .1rem;font-size:.58rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.2px}
 .dyn-rows{display:flex;flex-direction:column;gap:.5rem}
@@ -434,6 +457,9 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
       <div class="topbar-spacer"></div>
       <span class="mode-chip" id="mode-chip" style="display:none" title="Os dados ficam salvos neste navegador. Use Exportar para gerar backup em JSON."><span class="dot"></span> Dados locais</span>
       <div class="tb-actions">
+        <button class="tb-btn" onclick="openPerfil()" title="Meu Perfil (técnico de segurança)">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
         <button class="tb-btn" onclick="toggleTheme()" title="Alternar tema">
           <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
@@ -576,8 +602,8 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
               <div class="card-value" id="kpi-tipico">–</div>
               <div class="card-comp"><span id="kpi-tipico-pct">–</span> do total</div>
             </div>
-            <div class="card card-pos">
-              <div class="card-header"><div class="card-title">Pendentes de Finalização</div><span class="tag good">Status</span></div>
+            <div class="card card-neutral">
+              <div class="card-header"><div class="card-title">Pendentes de Finalização</div><span class="tag muted">Status</span></div>
               <div class="card-value" id="kpi-pend">–</div>
               <div class="card-comp">registros com pendências</div>
             </div>
@@ -639,9 +665,15 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
       </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
+    <div class="modal-progress">
+      <div class="modal-progress-bar"><div class="modal-progress-fill" id="modal-progress-fill"></div></div>
+      <span class="modal-progress-pct" id="modal-progress-pct">0%</span>
+    </div>
+    <div class="modal-tabs" id="modal-tabs"></div>
     <div class="modal-body">
       <div class="form" id="form">
 
+        <div class="tab-pane active" data-tab="comunicado">
         <div class="fs-divider"><span>Dados do Comunicado</span></div>
         <div class="form-row-3">
           <div class="field">
@@ -672,7 +704,9 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
           <label>Informação Preliminar</label>
           <textarea id="f-info-preliminar" placeholder="Primeiras informações recebidas sobre a ocorrência…"></textarea>
         </div>
+        </div><!-- /tab-pane comunicado -->
 
+        <div class="tab-pane" data-tab="identificacao">
         <div class="fs-divider"><span>Identificação</span></div>
         <div class="form-row-3">
           <div class="field" id="fw-filial">
@@ -724,18 +758,42 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
             <div class="hint" id="hint-funcao"></div>
           </div>
         </div>
-        <div class="form-row-3">
+        <div class="form-row">
           <div class="field">
             <label>Setor</label>
             <input type="text" id="f-setor" placeholder="Setor do colaborador">
           </div>
+        </div>
+        <div class="form-row">
           <div class="field">
             <label>Tempo na Empresa</label>
-            <input type="text" id="f-tempo-empresa" placeholder="Ex.: 2 anos e 3 meses">
+            <div class="form-row-3" style="gap:.5rem">
+              <div class="field" id="fw-tempo-empresa-anos">
+                <label style="font-size:.55rem">Anos</label>
+                <input type="text" id="f-tempo-empresa-anos" placeholder="Número ou N/A">
+                <div class="err-msg">Apenas número ou N/A.</div>
+              </div>
+              <div class="field" id="fw-tempo-empresa-meses">
+                <label style="font-size:.55rem">Meses</label>
+                <input type="text" id="f-tempo-empresa-meses" placeholder="Número ou N/A">
+                <div class="err-msg">Apenas número ou N/A.</div>
+              </div>
+            </div>
           </div>
           <div class="field">
             <label>Tempo no Cargo</label>
-            <input type="text" id="f-tempo-cargo" placeholder="Ex.: 8 meses">
+            <div class="form-row-3" style="gap:.5rem">
+              <div class="field" id="fw-tempo-cargo-anos">
+                <label style="font-size:.55rem">Anos</label>
+                <input type="text" id="f-tempo-cargo-anos" placeholder="Número ou N/A">
+                <div class="err-msg">Apenas número ou N/A.</div>
+              </div>
+              <div class="field" id="fw-tempo-cargo-meses">
+                <label style="font-size:.55rem">Meses</label>
+                <input type="text" id="f-tempo-cargo-meses" placeholder="Número ou N/A">
+                <div class="err-msg">Apenas número ou N/A.</div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="form-row-3">
@@ -761,7 +819,9 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
             </select>
           </div>
         </div>
+        </div><!-- /tab-pane identificacao -->
 
+        <div class="tab-pane" data-tab="classificacao">
         <div class="fs-divider"><span>Classificação</span></div>
         <div class="form-row-3">
           <div class="field" id="fw-tipo-ocor">
@@ -839,7 +899,9 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
             <select id="f-epi"><option>N/A</option><option>Sim</option><option>Não</option></select>
           </div>
         </div>
+        </div><!-- /tab-pane classificacao -->
 
+        <div class="tab-pane" data-tab="atestado">
         <div class="fs-divider"><span>Atestado &amp; CID</span></div>
         <div class="form-row-3">
           <div class="field">
@@ -915,7 +977,9 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
             <select id="f-cat-rec"><option>N/A</option><option>Sim</option><option>Não</option></select>
           </div>
         </div>
+        </div><!-- /tab-pane atestado -->
 
+        <div class="tab-pane" data-tab="relato">
         <div class="fs-divider"><span>Relato e Causa</span></div>
         <div class="field full">
           <label>Descrição Sumária (Como Aconteceu)</label>
@@ -965,7 +1029,9 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
           <label>Ação Corretiva</label>
           <textarea id="f-acao" placeholder="Ação corretiva definida ou executada…"></textarea>
         </div>
+        </div><!-- /tab-pane relato -->
 
+        <div class="tab-pane" data-tab="analise">
         <div class="fs-divider"><span>Análise — 5 Porquês</span></div>
         <div class="field full">
           <label>Problema</label>
@@ -1019,6 +1085,7 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
           <label>Local e Data</label>
           <input type="text" id="f-local-data" placeholder="Ex.: Recife, 08/07/2026">
         </div>
+        </div><!-- /tab-pane analise -->
 
       </div>
     </div>
@@ -1027,6 +1094,39 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
         <button class="btn-save" id="btn-save" onclick="saveAcidente()">Salvar Registro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MEU PERFIL -->
+<div class="modal-overlay" id="perfil-overlay" onclick="if(event.target===this)closePerfil()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Meu Perfil</span>
+      </div>
+      <button class="modal-close" onclick="closePerfil()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form">
+        <div class="field">
+          <label>Técnico de Segurança (seu nome)</label>
+          <input type="text" id="pf-nome" placeholder="Nome do técnico de segurança">
+          <div class="hint">Preenche automaticamente novos registros de acidente</div>
+        </div>
+        <div class="field">
+          <label>Matrícula</label>
+          <input type="text" id="pf-matricula" placeholder="Número ou N/A">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-msg" id="perfil-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closePerfil()">Cancelar</button>
+        <button class="btn-save" onclick="savePerfil()">Salvar Perfil</button>
       </div>
     </div>
   </div>
@@ -1060,6 +1160,7 @@ const sb = (MODE === 'supabase' && SB_URL && window.supabase) ? window.supabase.
 const TBL_ACIDENTES = 'esg_acidentes'
 const TBL_CID = 'esg_cid10'
 const LS_KEY = 'esg_acidentes_v1'
+const PERFIL_KEY = 'esg_perfil_v1'
 
 // CID-10 no modo local: carrega cid10.json da pasta do app (fallback mínimo embutido)
 let CID_LOCAL = [
@@ -1294,8 +1395,8 @@ function renderAcidentes(){
   $('tbl-empty').style.display='none'
   tb.innerHTML = rows.map(r=>{
     const stPill = r.status==='Finalizado' ? '<span class="pill green">Finalizado</span>' : '<span class="pill warn">Pendente</span>'
-    const cat = r.emitida_cat==='Sim' ? '<span class="pill green">Sim</span>' : (r.emitida_cat==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
-    const at  = r.atestado_medico==='Sim' ? '<span class="pill green">Sim</span>' : (r.atestado_medico==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
+    const cat = r.emitida_cat==='Sim' ? '<span class="pill info">Sim</span>' : (r.emitida_cat==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
+    const at  = r.atestado_medico==='Sim' ? '<span class="pill info">Sim</span>' : (r.atestado_medico==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
     return `<tr onclick="openModal(${r.id})">
       <td class="strong">${fmtData(r.data_acidente)}</td>
       <td><span class="pill muted">${esc(r.filial)}</span></td>
@@ -1316,6 +1417,84 @@ function renderAcidentes(){
   }).join('')
 }
 window.renderAcidentes = renderAcidentes
+
+// ── MEU PERFIL (técnico de segurança) ────────────────────────────────────────
+function getPerfil(){ try{ return JSON.parse(localStorage.getItem(PERFIL_KEY)||'null') }catch(e){ return null } }
+function openPerfil(){
+  const p = getPerfil()
+  $('pf-nome').value = p?.nome || ''
+  $('pf-matricula').value = p?.matricula || ''
+  $('perfil-msg').textContent=''; $('perfil-msg').className='modal-msg'
+  $('perfil-overlay').classList.add('open')
+}
+window.openPerfil = openPerfil
+function closePerfil(){ $('perfil-overlay').classList.remove('open') }
+window.closePerfil = closePerfil
+function savePerfil(){
+  const matricula = $('pf-matricula').value.trim()
+  if(matricula && !isNumOuNA(matricula) && matricula.toUpperCase()!=='N/A'){
+    $('perfil-msg').textContent='Matrícula deve ser número ou N/A.'; $('perfil-msg').className='modal-msg err'; return
+  }
+  localStorage.setItem(PERFIL_KEY, JSON.stringify({
+    nome: $('pf-nome').value.trim().toUpperCase(),
+    matricula: matricula ? (matricula.toUpperCase()==='N/A'?'N/A':matricula) : 'N/A'
+  }))
+  toast('Perfil salvo.')
+  closePerfil()
+}
+window.savePerfil = savePerfil
+
+// ── ABAS DO FORMULÁRIO + BARRA DE PROGRESSO ──────────────────────────────────
+const TAB_DEFS = [
+  {id:'comunicado',    label:'Comunicado'},
+  {id:'identificacao', label:'Identificação'},
+  {id:'classificacao', label:'Classificação'},
+  {id:'atestado',      label:'Atestado & CAT'},
+  {id:'relato',        label:'Relato & Lesão'},
+  {id:'analise',       label:'Análise & Plano'}
+]
+let activeTab = 'comunicado'
+
+function fieldsInScope(container){
+  return [...container.querySelectorAll('input,select,textarea')]
+    .filter(el => el.id && el.id.startsWith('f-'))
+    .filter(el => !DOMINIO_PENDENTE.includes(el.id))
+    .filter(el => { const f = el.closest('.field'); return !f || f.style.display !== 'none' })
+}
+function scopeProgress(container){
+  const els = fieldsInScope(container)
+  const total = els.length
+  const filled = els.filter(el => String(el.value||'').trim() !== '').length
+  return { total, filled, pct: total ? Math.round(filled/total*100) : 100 }
+}
+
+function renderTabs(){
+  $('modal-tabs').innerHTML = TAB_DEFS.map(t=>`<button type="button" class="modal-tab" data-tab="${t.id}" onclick="switchTab('${t.id}')">${t.label} <span class="mt-pct">0%</span></button>`).join('')
+}
+function switchTab(id){
+  activeTab = id
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active', p.dataset.tab===id))
+  document.querySelectorAll('.modal-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===id))
+  $('content') // no-op, keeps scroll untouched
+  const body = document.querySelector('.modal-body')
+  if(body) body.scrollTop = 0
+}
+window.switchTab = switchTab
+
+function updateProgress(){
+  document.querySelectorAll('.modal-tab').forEach(btn=>{
+    const id = btn.dataset.tab
+    const pane = document.querySelector(`.tab-pane[data-tab="${id}"]`)
+    if(!pane) return
+    const { pct } = scopeProgress(pane)
+    btn.querySelector('.mt-pct').textContent = pct+'%'
+    btn.classList.toggle('mt-complete', pct===100)
+  })
+  const overall = scopeProgress($('form'))
+  $('modal-progress-fill').style.width = overall.pct+'%'
+  $('modal-progress-fill').classList.toggle('complete', overall.pct===100)
+  $('modal-progress-pct').textContent = overall.pct+'%'
+}
 
 // ── REGRAS DO FORMULÁRIO ──────────────────────────────────────────────────────
 // Nome sempre maiúsculo
@@ -1456,6 +1635,9 @@ function resetForm(){
   $('hint-empresa').textContent=''; $('hint-funcao').textContent=''; $('hint-tipo-acid').textContent=''
   renderPlanoRows([]); renderGrupoRows([])
   $('modal-msg').textContent=''; $('modal-msg').className='modal-msg'
+  renderTabs()
+  switchTab('comunicado')
+  updateProgress()
 }
 
 function openModal(id){
@@ -1496,8 +1678,10 @@ function openModal(id){
     $('f-info-preliminar').value=r.informacao_preliminar||''
     // Identificação — complemento
     $('f-setor').value=r.setor||''
-    $('f-tempo-empresa').value=r.tempo_empresa||''
-    $('f-tempo-cargo').value=r.tempo_cargo||''
+    $('f-tempo-empresa-anos').value=r.tempo_empresa_anos??''
+    $('f-tempo-empresa-meses').value=r.tempo_empresa_meses??''
+    $('f-tempo-cargo-anos').value=r.tempo_cargo_anos??''
+    $('f-tempo-cargo-meses').value=r.tempo_cargo_meses??''
     $('f-lideranca').value=r.lideranca_imediata||''
     $('f-matricula-lideranca').value=r.matricula_lideranca||''
     $('f-habilitacao').value=r.habilitacao||''
@@ -1535,10 +1719,18 @@ function openModal(id){
       c.innerHTML=`<span class="code">${esc(r.cid_codigo)}</span> — ${esc(r.cid_descricao||'')} <span style="color:var(--pos);font-weight:700">✓ confirmado</span>`
       c.classList.add('show')
     }
+  } else {
+    // Registro novo: pré-preenche a partir do perfil salvo e data de hoje
+    const p = getPerfil()
+    if(p){ $('f-tec-seg').value = p.nome||''; $('f-matricula-tec').value = p.matricula||'' }
+    $('f-data-comunicado').value = new Date().toISOString().slice(0,10)
   }
   $('modal-overlay').classList.add('open')
+  updateProgress()
 }
 window.openModal = openModal
+$('form').addEventListener('input', updateProgress)
+$('form').addEventListener('change', updateProgress)
 function closeModal(){ $('modal-overlay').classList.remove('open'); editId=null }
 window.closeModal = closeModal
 
@@ -1560,6 +1752,10 @@ async function saveAcidente(){
   bad = markErr('fw-matricula-lideranca', !isNumOuNAOuVazio($('f-matricula-lideranca').value)) || bad
   bad = markErr('fw-dias-afastamento', !isNumOuNAOuVazio($('f-dias-afastamento').value)) || bad
   bad = markErr('fw-dias-internacao', !isNumOuNAOuVazio($('f-dias-internacao').value)) || bad
+  bad = markErr('fw-tempo-empresa-anos', !isNumOuNAOuVazio($('f-tempo-empresa-anos').value)) || bad
+  bad = markErr('fw-tempo-empresa-meses', !isNumOuNAOuVazio($('f-tempo-empresa-meses').value)) || bad
+  bad = markErr('fw-tempo-cargo-anos', !isNumOuNAOuVazio($('f-tempo-cargo-anos').value)) || bad
+  bad = markErr('fw-tempo-cargo-meses', !isNumOuNAOuVazio($('f-tempo-cargo-meses').value)) || bad
   if(bad){ $('modal-msg').textContent='Corrija os campos destacados.'; $('modal-msg').className='modal-msg err'; return }
 
   if($('f-cid-inf').value==='Sim' && !cidConfirmed){
@@ -1604,8 +1800,10 @@ async function saveAcidente(){
 
     // Identificação — complemento
     setor: $('f-setor').value.trim() || null,
-    tempo_empresa: $('f-tempo-empresa').value.trim() || null,
-    tempo_cargo: $('f-tempo-cargo').value.trim() || null,
+    tempo_empresa_anos: $('f-tempo-empresa-anos').value.trim() ? norm($('f-tempo-empresa-anos').value) : null,
+    tempo_empresa_meses: $('f-tempo-empresa-meses').value.trim() ? norm($('f-tempo-empresa-meses').value) : null,
+    tempo_cargo_anos: $('f-tempo-cargo-anos').value.trim() ? norm($('f-tempo-cargo-anos').value) : null,
+    tempo_cargo_meses: $('f-tempo-cargo-meses').value.trim() ? norm($('f-tempo-cargo-meses').value) : null,
     lideranca_imediata: $('f-lideranca').value.trim().toUpperCase() || null,
     matricula_lideranca: $('f-matricula-lideranca').value.trim() ? norm($('f-matricula-lideranca').value) : null,
     habilitacao: $('f-habilitacao').value.trim() || null,
