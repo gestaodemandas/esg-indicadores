@@ -667,7 +667,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
               <table class="tbl">
                 <thead><tr>
                   <th style="width:26px"></th><th>Data</th><th>Filial</th><th>Nome</th><th>Ocorrência</th><th>Tipo Acidente</th>
-                  <th>Colaborador</th><th>Conclusão</th><th>Status</th><th></th>
+                  <th>Colaborador</th><th>Atestado</th><th>CAT</th><th>Conclusão</th><th>Status</th><th></th>
                 </tr></thead>
                 <tbody id="tbl-body"></tbody>
               </table>
@@ -1441,12 +1441,14 @@ function renderAcidentes(){
     const compCell = pct===null
       ? '<span class="pill muted">—</span>'
       : `<div class="tbl-comp"><div class="tbl-comp-bar"><div class="tbl-comp-fill${pct===100?' complete':''}" style="width:${pct}%"></div></div><span class="tbl-comp-pct">${pct}%</span></div>`
+    const cat = r.emitida_cat==='Sim' ? '<span class="pill info">Sim</span>' : (r.emitida_cat==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
+    const at  = r.atestado_medico==='Sim' ? '<span class="pill info">Sim</span>' : (r.atestado_medico==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
     const canExpand = pend.length > 0
     const arrowCell = canExpand
       ? `<button class="exp-btn" id="exp-${r.id}" title="Ver campos pendentes" onclick="event.stopPropagation();toggleDetail(${r.id})"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>`
       : ''
     const detailRow = canExpand
-      ? `<tr class="detail-row" id="detail-${r.id}" style="display:none"><td colspan="10"><div class="detail-box">
+      ? `<tr class="detail-row" id="detail-${r.id}" style="display:none"><td colspan="12"><div class="detail-box">
           <div class="detail-title">${pend.length} campo${pend.length===1?'':'s'} pendente${pend.length===1?'':'s'} de preenchimento</div>
           <div class="detail-chips">${pend.map(p=>`<span class="detail-chip">${esc(p)}</span>`).join('')}</div>
         </div></td></tr>`
@@ -1459,6 +1461,8 @@ function renderAcidentes(){
       <td>${esc(r.tipo_ocorrencia)}</td>
       <td>${esc(r.tipo_acidente)}</td>
       <td>${esc(r.tipo_colaborador)}</td>
+      <td>${at}</td>
+      <td>${cat}</td>
       <td>${compCell}</td>
       <td>${stPill}</td>
       <td onclick="event.stopPropagation()">
