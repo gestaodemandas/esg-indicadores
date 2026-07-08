@@ -1,0 +1,8 @@
+# Backups de dados — contêm nomes e dados pessoais (LGPD): nunca publicar
+dados/
+*.backup.json
+esg_acidentes_*.json
+
+# Sistema
+Thumbs.db
+desktop.ini

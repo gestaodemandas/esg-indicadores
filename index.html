@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESG — Gestão de Indicadores | Ferreira Costa</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --sw:260px;--swc:72px;--th:64px;
+  --bg:#fafafa;--card:#ffffff;
+  --txt:#666666;--txt2:#555;--txt3:#999;
+  --bdr:rgba(0,0,0,.07);--bdr2:rgba(0,0,0,.07);
+  --sh:0 1px 3px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.06);
+  --shm:0 4px 12px rgba(0,0,0,.06);
+  --r:12px;--rs:8px;
+  --tr:all .25s cubic-bezier(.4,0,.2,1);
+  --pri:#6b7280;--pri-l:rgba(107,114,128,.1);
+  --neg:#bd2335;--neg-l:rgba(189,35,53,.08);
+  --pos:#7d8f64;--pos-l:rgba(125,143,100,.08);
+  --warn:#c9a839;--warn-l:rgba(201,168,57,.10);
+  --esg:#4a7c59;--esg-l:rgba(74,124,89,.10);
+  --sb-bg:#EBEBEB;--sb-hover:rgba(0,0,0,.06);--sb-active:rgba(74,124,89,.09);
+  --sb-bdr:rgba(0,0,0,.10);--sb-brand:#666666;--sb-brand-sub:#999;
+  --sb-section-lbl:#999;--sb-item:#555;--sb-item-hover:#666666;
+  --sb-item-active:#4a7c59;--sb-icon-active:#4a7c59;--sb-active-border:#4a7c59;
+  --sb-user-name:#666666;--sb-user-role:#999;
+  --tb-btn-clr:#555;--tb-btn-hover:rgba(0,0,0,.05);--tb-btn-hover-clr:#666666;
+  --tb-bdr:rgba(0,0,0,.07);--tb-bc:#999;--tb-bc-active:#666666;
+  --hbar-clr:#555;--frame-bg:#F5F3F0;
+}
+body.dark{
+  --bg:#141416;--card:#1E1E22;--txt:#F0F0F0;--txt2:#AAAAAA;--txt3:#666;
+  --bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.07);
+  --sh:0 1px 3px rgba(0,0,0,.3);--shm:0 4px 12px rgba(0,0,0,.4);
+  --pri-l:rgba(107,114,128,.15);--neg-l:rgba(189,35,53,.15);--pos-l:rgba(125,143,100,.15);--esg-l:rgba(74,124,89,.18);
+  --sb-bg:#1E1E22;--sb-hover:rgba(255,255,255,.05);--sb-active:rgba(255,255,255,.07);
+  --sb-bdr:rgba(255,255,255,.07);--sb-brand:#F0F0F0;--sb-brand-sub:#666;
+  --sb-section-lbl:#666;--sb-item:#AAAAAA;--sb-item-hover:#F0F0F0;
+  --sb-item-active:#8fbb9d;--sb-icon-active:#8fbb9d;--sb-active-border:#8fbb9d;
+  --sb-user-name:#F0F0F0;--sb-user-role:#666;
+  --tb-btn-clr:#AAAAAA;--tb-btn-hover:rgba(255,255,255,.05);--tb-btn-hover-clr:#F0F0F0;
+  --tb-bdr:rgba(255,255,255,.07);--tb-bc:#666;--tb-bc-active:#F0F0F0;
+  --hbar-clr:#AAAAAA;--frame-bg:#141416;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{height:100%}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--frame-bg);color:var(--txt);height:100%;transition:background .3s,color .3s;overflow-x:hidden}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d1710 0%,#1c332a 50%,#0d1710 100%)}
+.login-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);border-radius:20px;padding:2.8rem 2.4rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.login-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#2f5e40,#4a7c59);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.72rem;margin:0 auto 1.4rem;letter-spacing:1.5px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.login-card h2{text-align:center;color:#fff;font-size:1.25rem;font-weight:700;margin-bottom:.3rem}
+.login-card p{text-align:center;color:#64748b;font-size:.82rem;margin-bottom:2rem}
+.lfield{margin-bottom:1rem}
+.lfield label{display:block;font-size:.68rem;font-weight:600;color:#64748b;margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.8px}
+.lfield input{width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--rs);color:#fff;font-size:.88rem;font-family:inherit;outline:none;transition:border-color .2s}
+.lfield input:focus{border-color:#4a7c59}
+.lfield input::placeholder{color:#475569}
+.btn-login{width:100%;padding:.75rem;background:linear-gradient(135deg,#2f5e40,#4a7c59);color:#fff;border:none;border-radius:var(--rs);font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;font-family:inherit;margin-top:.5rem}
+.btn-login:hover{opacity:.9}.btn-login:active{transform:scale(.98)}
+.login-err{color:#e05060;font-size:.75rem;text-align:center;margin-top:.8rem;min-height:1rem}
+
+/* LAYOUT */
+#app{display:none;height:100vh}
+.layout{display:flex;height:100vh;overflow:hidden;background:var(--sb-bg)}
+
+/* SIDEBAR */
+.sidebar{width:var(--sw);min-width:var(--sw);background:var(--sb-bg);display:flex;flex-direction:column;transition:var(--tr);overflow:hidden;position:relative;z-index:50;flex-shrink:0;border-right:1px solid var(--sb-bdr)}
+.sidebar.collapsed{width:var(--swc);min-width:var(--swc)}
+.layout.home-mode .sidebar{width:0!important;min-width:0!important;border:none;overflow:hidden}
+.layout.home-mode .sidebar *{opacity:0;pointer-events:none}
+.layout.home-mode .topbar{display:none}
+.sb-head{display:flex;align-items:center;gap:.7rem;padding:1rem 1rem;border-bottom:1px solid var(--sb-bdr);min-height:var(--th);flex-shrink:0}
+.sb-logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#2f5e40,#4a7c59);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-weight:800;font-size:.6rem;letter-spacing:1px}
+.sb-brand{overflow:hidden;transition:var(--tr);cursor:pointer}
+.sb-brand-name{color:var(--sb-brand);font-weight:700;font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
+.sb-brand-sub{color:var(--sb-brand-sub);font-size:.58rem;margin-top:.05rem;white-space:nowrap}
+.sidebar.collapsed .sb-brand{opacity:0;width:0;pointer-events:none}
+.sb-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:.5rem 0}
+.sb-body::-webkit-scrollbar{width:3px}.sb-body::-webkit-scrollbar-thumb{background:var(--sb-bdr);border-radius:3px}
+.sb-section-label{font-size:.55rem;font-weight:700;color:var(--sb-section-lbl);text-transform:uppercase;letter-spacing:2px;padding:.5rem 1rem .25rem;white-space:nowrap;overflow:hidden;transition:var(--tr)}
+.sidebar.collapsed .sb-section-label{opacity:0}
+.sb-item{display:flex;align-items:center;gap:.65rem;padding:.5rem 1rem;cursor:pointer;border-left:2px solid transparent;transition:var(--tr);text-decoration:none;position:relative}
+.sb-item:hover{background:var(--sb-hover)}
+.sb-item.active{background:var(--sb-active);border-left-color:var(--sb-active-border)}
+.sb-item-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sb-item);transition:color .2s}
+.sb-item.active .sb-item-icon{color:var(--sb-icon-active)}
+.sb-item-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sb-item-label{color:var(--sb-item);font-size:.7rem;font-weight:500;white-space:nowrap;overflow:hidden;transition:var(--tr);flex:1}
+.sb-item.active .sb-item-label{color:var(--sb-item-active);font-weight:600}
+.sb-item:hover .sb-item-label{color:var(--sb-item-hover)}
+.sidebar.collapsed .sb-item-label,.sidebar.collapsed .sb-soon-tag{opacity:0;width:0;pointer-events:none}
+.sb-soon{opacity:.42;cursor:default!important;pointer-events:none}
+.sb-soon-tag{font-size:.52rem;font-weight:600;padding:.1rem .38rem;border-radius:4px;background:rgba(201,168,57,.15);color:#a68a1e;white-space:nowrap;flex-shrink:0}
+.sb-footer{padding:.8rem 1rem;border-top:1px solid var(--sb-bdr);flex-shrink:0}
+.sb-user{display:flex;align-items:center;gap:.65rem;overflow:hidden}
+.sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2f5e40,#4a7c59);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.65rem;flex-shrink:0}
+.sb-user-info{overflow:hidden;transition:var(--tr)}
+.sb-user-name{color:var(--sb-user-name);font-size:.68rem;font-weight:600;white-space:nowrap}
+.sb-user-role{color:var(--sb-user-role);font-size:.58rem;white-space:nowrap}
+.sidebar.collapsed .sb-user-info{opacity:0;width:0}
+
+/* MAIN / TOPBAR */
+.main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;transition:var(--tr)}
+.topbar{height:var(--th);background:var(--sb-bg);border-bottom:1px solid var(--tb-bdr);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;flex-shrink:0;position:relative;z-index:40}
+.btn-hamburger{width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;border-radius:var(--rs);transition:var(--tr);flex-shrink:0}
+.btn-hamburger:hover{background:var(--tb-btn-hover)}
+.hbar{width:18px;height:2px;background:var(--hbar-clr);border-radius:2px}
+.topbar-breadcrumb{display:flex;align-items:center;gap:.45rem;flex-shrink:0}
+.bc-item{font-size:.74rem;color:var(--tb-bc);font-weight:500}
+.bc-item.active{color:var(--tb-bc-active);font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.bc-sep{color:var(--tb-bc);font-size:.95rem;opacity:.6}
+.topbar-spacer{flex:1}
+.tb-actions{display:flex;align-items:center;gap:.3rem}
+.tb-btn{width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;color:var(--tb-btn-clr);transition:var(--tr)}
+.tb-btn:hover{background:var(--tb-btn-hover);color:var(--tb-btn-hover-clr)}
+.tb-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tb-divider{width:1px;height:24px;background:var(--tb-bdr);margin:0 .2rem}
+.tb-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2f5e40,#4a7c59);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.7rem;cursor:default;flex-shrink:0}
+
+/* CONTENT */
+.content-wrapper{flex:1;overflow:hidden;padding:12px;background:var(--frame-bg)}
+.layout.home-mode .content-wrapper{padding:0}
+.content{overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;background:var(--bg);border-radius:20px;height:100%}
+.layout.home-mode .content{border-radius:0}
+.content::-webkit-scrollbar{width:4px}.content::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:4px}
+.section-page{display:none;flex-direction:column;gap:1.25rem}
+.section-page.show{display:flex;animation:tab-in .22s cubic-bezier(.4,0,.2,1) both}
+@keyframes tab-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* HOME (capa) */
+#sec-home{position:relative;min-height:100%;justify-content:center;padding:2rem;
+  background:
+    radial-gradient(ellipse at 92% 4%, rgba(74,124,89,.10) 0%, transparent 38%),
+    radial-gradient(ellipse at 6% 92%, rgba(74,124,89,.08) 0%, transparent 35%),
+    linear-gradient(148deg,#f7f6f3 0%,#efede9 100%)}
+#sec-home::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0);background-size:28px 28px;pointer-events:none}
+#sec-home>*{position:relative;z-index:1}
+body.dark #sec-home{background:
+    radial-gradient(ellipse at 92% 4%, rgba(74,124,89,.12) 0%, transparent 38%),
+    radial-gradient(ellipse at 6% 92%, rgba(74,124,89,.09) 0%, transparent 35%),
+    linear-gradient(148deg,#1a1a1e 0%,#16161a 100%)}
+body.dark #sec-home::before{background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 0)}
+.home-hero{text-align:center;padding:1.5rem 1rem 2rem}
+.home-badge{display:inline-flex;align-items:center;gap:.5rem;font-size:.52rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:4px;margin-bottom:1rem;padding:.28rem .9rem;border-radius:20px;background:rgba(74,124,89,.08);border:1px solid rgba(74,124,89,.12)}
+.home-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--esg);display:inline-block}
+.home-headline{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:800;color:var(--txt);line-height:1.2;margin-bottom:.5rem}
+.home-headline em{font-style:italic;color:var(--esg)}
+.home-sub{font-size:.85rem;color:var(--txt3);line-height:1.6}
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;max-width:1080px;margin:0 auto;width:100%}
+@media(max-width:900px){.home-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.home-grid{grid-template-columns:1fr}}
+.home-card{position:relative;overflow:hidden;border-radius:14px;background:#fff;cursor:pointer;display:flex;flex-direction:column;height:230px;box-shadow:0 4px 20px rgba(0,0,0,.09),0 1px 4px rgba(0,0,0,.05);transition:transform .32s cubic-bezier(.22,1,.36,1),box-shadow .32s cubic-bezier(.22,1,.36,1);user-select:none}
+.home-card:hover{transform:translateY(-10px);box-shadow:0 24px 52px rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.06)}
+.hc-soon{opacity:.62;cursor:not-allowed}
+.hc-soon:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.hc-panel{position:relative;overflow:hidden;height:66%;flex-shrink:0;transition:height .38s cubic-bezier(.22,1,.36,1)}
+.home-card:hover:not(.hc-soon) .hc-panel{height:72%}
+.hcp-green{background:var(--esg)}
+.hcp-gray{background:#9ca3af}
+.hc-chevron{position:absolute;top:0;right:0;width:45%;height:100%;pointer-events:none}
+.hc-chevron::before{content:'';position:absolute;inset:0;left:20%;background:rgba(0,0,0,.28);clip-path:polygon(35% 0,100% 0,100% 100%,0 100%)}
+.hc-chevron::after{content:'';position:absolute;inset:0;left:0;background:rgba(0,0,0,.14);clip-path:polygon(60% 0,100% 0,100% 100%,25% 100%)}
+.hc-ghost{position:absolute;right:-.5rem;bottom:-.5rem;font-size:6rem;font-weight:900;color:rgba(255,255,255,.08);line-height:1;letter-spacing:-.05em;pointer-events:none;transition:font-size .38s cubic-bezier(.22,1,.36,1),color .38s}
+.home-card:hover .hc-ghost{font-size:7.5rem;color:rgba(255,255,255,.12)}
+.hc-inner{position:relative;z-index:2;padding:1.1rem 1.3rem;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.hc-eyebrow{font-size:.5rem;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:.4rem}
+.hc-title{font-size:.98rem;font-weight:700;color:#fff;line-height:1.25}
+.hc-body{flex:1;padding:.85rem 1.3rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:#fff;transition:background .2s}
+.hc-tagline{font-size:.65rem;color:#888;line-height:1.55;flex:1}
+.hc-btn{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s cubic-bezier(.22,1,.36,1)}
+.home-card:hover:not(.hc-soon) .hc-btn{background:var(--esg);transform:translateX(3px)}
+.hc-btn svg{width:13px;height:13px;stroke:#888;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s}
+.home-card:hover:not(.hc-soon) .hc-btn svg{stroke:#fff}
+body.dark .home-card,body.dark .hc-body{background:var(--card)}
+body.dark .hc-tagline{color:var(--txt3)}
+body.dark .hc-btn{background:rgba(255,255,255,.08)}
+.home-foot{text-align:center;padding:1.4rem 0 .4rem;font-size:.58rem;color:var(--txt3);letter-spacing:1px}
+
+/* CARDS KPI */
+.cards-grid{display:grid;gap:1rem}
+.cards-grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1280px){.cards-grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.cards-grid-4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:1.4rem 1.5rem;box-shadow:var(--sh);transition:all .3s;border-top:3px solid var(--bdr)}
+.card:hover{box-shadow:var(--shm);transform:translateY(-2px)}
+.card.card-neg{border-top-color:var(--neg)}
+.card.card-warn{border-top-color:var(--warn)}
+.card.card-pos{border-top-color:var(--esg)}
+.card.card-info{border-top-color:#2A6478}
+.card-header{display:grid;grid-template-columns:1fr auto;align-items:start;gap:.4rem;margin-bottom:.9rem}
+.card-title{font-size:.6rem;font-weight:700;color:var(--txt3);text-transform:uppercase;line-height:1.4;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-value{font-weight:700;font-size:2rem;line-height:1.2;margin-bottom:.3rem;color:var(--txt)}
+.card-comp{font-size:.72rem;color:var(--txt3)}.card-comp span{font-weight:600;color:var(--txt2)}
+.tag{font-weight:600;font-size:.58rem;padding:.2rem .5rem;border-radius:5px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.tag.bad{background:var(--neg-l);color:var(--neg)}
+.tag.good{background:var(--esg-l);color:var(--esg)}
+.tag.warn{background:var(--warn-l);color:#a68a1e}
+.tag.muted{background:rgba(0,0,0,.06);color:var(--txt3)}
+body.dark .tag.muted{background:rgba(255,255,255,.06)}
+.pill{display:inline-block;padding:.14rem .5rem;border-radius:4px;font-size:.65rem;font-weight:600;white-space:nowrap}
+.pill.red{background:var(--neg-l);color:var(--neg)}
+.pill.green{background:var(--esg-l);color:var(--esg)}
+.pill.warn{background:var(--warn-l);color:#a68a1e}
+.pill.muted{background:rgba(0,0,0,.06);color:var(--txt3)}
+body.dark .pill.muted{background:rgba(255,255,255,.07)}
+
+/* PANEL + TABELA */
+.panel{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);overflow:hidden}
+.panel-head{padding:1.1rem 1.3rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.panel-title{font-size:.88rem;font-weight:700;color:var(--txt)}
+.panel-sub{font-size:.68rem;color:var(--txt3);margin-top:.15rem}
+.panel-tools{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.flt{display:flex;align-items:center;gap:.4rem}
+.flt label{font-size:.55rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap}
+.flt select,.flt input{background:var(--frame-bg);border:1px solid var(--bdr);border-radius:7px;padding:.35rem .65rem;font-size:.72rem;font-weight:600;color:var(--txt);cursor:pointer;font-family:inherit;outline:none;transition:all .2s}
+.flt select:hover,.flt select:focus,.flt input:focus{border-color:var(--esg)}
+.flt input{cursor:text;min-width:170px}
+.btn-new{display:inline-flex;align-items:center;gap:.45rem;background:var(--esg);color:#fff;border:none;border-radius:var(--rs);padding:.5rem 1.1rem;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
+.btn-io{width:32px;height:32px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--frame-bg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.btn-io svg{width:14px;height:14px;fill:none;stroke:var(--txt3);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.btn-io:hover{border-color:var(--esg);background:var(--esg-l)}
+.btn-io:hover svg{stroke:var(--esg)}
+.mode-chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.62rem;font-weight:700;color:#a68a1e;background:var(--warn-l);border:1px solid rgba(201,168,57,.25);border-radius:20px;padding:.28rem .75rem;white-space:nowrap}
+.mode-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.btn-new:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(74,124,89,.35)}
+.btn-new svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.tbl-scroll{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead th{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--txt3);padding:.65rem .9rem;border-bottom:2px solid var(--bdr);text-align:left;white-space:nowrap;background:var(--frame-bg)}
+.tbl tbody tr{border-bottom:1px solid var(--bdr);transition:background .12s}
+.tbl tbody tr:last-child{border:none}
+.tbl tbody tr:hover{background:var(--pri-l);cursor:pointer}
+.tbl tbody td{padding:.6rem .9rem;font-size:.76rem;color:var(--txt2);white-space:nowrap;vertical-align:middle}
+.tbl tbody td.strong{font-weight:600;color:var(--txt)}
+.tbl-empty{padding:2.5rem 1rem;text-align:center;color:var(--txt3);font-size:.8rem}
+.row-actions{display:flex;gap:.3rem}
+.act-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--bdr);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.act-btn svg{width:12px;height:12px;fill:none;stroke:var(--txt3);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.act-btn.edit:hover{background:var(--esg-l);border-color:var(--esg)}
+.act-btn.edit:hover svg{stroke:var(--esg)}
+.act-btn.del:hover{background:var(--neg-l);border-color:var(--neg)}
+.act-btn.del:hover svg{stroke:var(--neg)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex}
+.modal{position:relative;background:var(--card);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:760px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;animation:slideUp .22s cubic-bezier(.22,1,.36,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:1rem;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:.6rem}
+.modal-title svg{width:18px;height:18px;stroke:var(--esg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.modal-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--bdr);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt3);transition:all .2s;font-size:.8rem}
+.modal-close:hover{background:var(--neg);border-color:var(--neg);color:#fff}
+.modal-body{flex:1;overflow-y:auto;padding:1.5rem}
+.modal-body::-webkit-scrollbar{width:4px}.modal-body::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:4px}
+.form{display:flex;flex-direction:column;gap:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+@media(max-width:640px){.form-row,.form-row-3{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-size:.6rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px}
+.field label .req{color:var(--neg)}
+.field input,.field select,.field textarea{width:100%;padding:.5rem .75rem;background:var(--frame-bg);border:1px solid var(--bdr);border-radius:var(--rs);font-size:.8rem;color:var(--txt);font-family:inherit;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--esg);background:var(--card)}
+.field input[readonly],.field input:disabled,.field select:disabled{opacity:.55;cursor:not-allowed;background:var(--frame-bg)}
+.field textarea{min-height:72px;resize:vertical;line-height:1.6}
+.field .hint{font-size:.6rem;color:var(--txt3)}
+.field.err input,.field.err select{border-color:var(--neg)}
+.field .err-msg{font-size:.62rem;color:var(--neg);display:none}
+.field.err .err-msg{display:block}
+.fs-divider{display:flex;align-items:center;gap:.7rem;margin:.4rem 0 .1rem}
+.fs-divider span{font-size:.58rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
+.fs-divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+/* CID autocomplete */
+.cid-wrap{position:relative}
+.cid-sug{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--bdr);border-radius:var(--rs);box-shadow:var(--shm);z-index:20;max-height:220px;overflow-y:auto;display:none}
+.cid-sug.open{display:block}
+.cid-sug-item{padding:.55rem .8rem;cursor:pointer;font-size:.75rem;border-bottom:1px solid var(--bdr);transition:background .12s}
+.cid-sug-item:last-child{border-bottom:none}
+.cid-sug-item:hover{background:var(--esg-l)}
+.cid-sug-item .code{font-weight:700;color:var(--esg);margin-right:.4rem}
+.cid-sug-item .desc{color:var(--txt2)}
+.cid-sug-empty{padding:.55rem .8rem;font-size:.72rem;color:var(--txt3)}
+.cid-confirm{display:none;margin-top:.45rem;padding:.6rem .8rem;border-radius:var(--rs);background:var(--esg-l);border:1px solid rgba(74,124,89,.25);font-size:.74rem;color:var(--txt);line-height:1.5}
+.cid-confirm.show{display:block}
+.cid-confirm .code{font-weight:800;color:var(--esg)}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:.75rem}
+.modal-msg{font-size:.72rem;font-weight:600;min-height:1.2rem}
+.modal-msg.ok{color:var(--esg)}.modal-msg.err{color:var(--neg)}
+.modal-actions{display:flex;gap:.6rem}
+.btn-cancel{padding:.5rem 1rem;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--frame-bg);color:var(--txt2);font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-cancel:hover{border-color:var(--txt);color:var(--txt)}
+.btn-save{padding:.5rem 1.4rem;border-radius:var(--rs);border:none;background:var(--esg);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-save:hover{opacity:.9}.btn-save:disabled{opacity:.5;cursor:not-allowed}
+
+/* CONFIRM DELETE */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(3px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.5rem}
+.confirm-overlay.show{display:flex;animation:fadeIn .18s ease-out}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.confirm-card{background:var(--card);border-radius:16px;padding:2rem 1.75rem 1.5rem;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center;animation:slideUp .22s cubic-bezier(.22,1,.36,1)}
+.confirm-icon{width:52px;height:52px;border-radius:50%;background:var(--neg-l);display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem}
+.confirm-icon svg{width:22px;height:22px;stroke:var(--neg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.confirm-title{font-size:.95rem;font-weight:800;color:var(--txt);margin-bottom:.5rem}
+.confirm-item{font-size:.78rem;font-weight:700;color:var(--neg);background:var(--neg-l);border-radius:6px;padding:.3rem .65rem;margin:.4rem auto .9rem;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.confirm-desc{font-size:.75rem;color:var(--txt3);line-height:1.65;margin-bottom:1.5rem}
+.confirm-actions{display:flex;gap:.6rem;justify-content:center}
+.confirm-cancel{flex:1;max-width:120px;padding:.55rem;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--frame-bg);color:var(--txt2);font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.confirm-cancel:hover{border-color:var(--txt);color:var(--txt)}
+.confirm-ok{flex:1;max-width:160px;padding:.55rem;border-radius:var(--rs);border:none;background:var(--neg);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.confirm-ok:hover{opacity:.88}
+
+/* TOAST */
+#toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:600;display:flex;flex-direction:column;gap:.5rem;align-items:flex-end}
+.toast{background:var(--card);color:var(--txt);border:1px solid var(--bdr);border-left:3px solid var(--esg);border-radius:10px;padding:.7rem 1.1rem;font-size:.78rem;font-weight:600;box-shadow:var(--shm);opacity:0;transform:translateY(8px);transition:all .3s}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.err{border-left-color:var(--neg)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">FC</div>
+    <h2>ESG — Gestão de Indicadores</h2>
+    <p>Ferreira Costa — Saúde &amp; Segurança do Trabalho</p>
+    <div class="lfield"><label>E-mail</label><input type="email" id="l-email" placeholder="seu@email.com" autocomplete="email"></div>
+    <div class="lfield"><label>Senha</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" id="l-btn">Acessar Aplicativo</button>
+    <div class="login-err" id="l-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="layout home-mode" id="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">ESG</div>
+      <div class="sb-brand" onclick="showSection('home')" title="Voltar à Capa">
+        <div class="sb-brand-name">Ferreira Costa</div>
+        <div class="sb-brand-sub">ESG · Gestão de Indicadores</div>
+      </div>
+    </div>
+    <div class="sb-body">
+      <div class="sb-section-label">Módulos</div>
+
+      <div class="sb-item" data-section="home" onclick="showSection('home')">
+        <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div class="sb-item-label">Capa</div>
+      </div>
+
+      <div class="sb-item sb-soon">
+        <div class="sb-item-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="sb-item-label">Visão Geral</div>
+        <span class="sb-soon-tag">Em breve</span>
+      </div>
+
+      <div class="sb-item" data-section="acidentes" onclick="showSection('acidentes')">
+        <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="sb-item-label">Acidentes</div>
+      </div>
+
+      <div class="sb-item sb-soon">
+        <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="sb-item-label">CIPA</div>
+        <span class="sb-soon-tag">Em breve</span>
+      </div>
+
+      <div class="sb-item sb-soon">
+        <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="sb-item-label">Brigada</div>
+        <span class="sb-soon-tag">Em breve</span>
+      </div>
+
+      <div class="sb-item sb-soon">
+        <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <div class="sb-item-label">ASO</div>
+        <span class="sb-soon-tag">Em breve</span>
+      </div>
+
+      <div class="sb-item sb-soon">
+        <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+        <div class="sb-item-label">Treinamentos</div>
+        <span class="sb-soon-tag">Em breve</span>
+      </div>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sb-av">–</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sb-name">–</div>
+          <div class="sb-user-role">ESG · SST</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <div class="topbar">
+      <button class="btn-hamburger" onclick="document.getElementById('sidebar').classList.toggle('collapsed')" title="Recolher menu">
+        <span class="hbar"></span><span class="hbar"></span><span class="hbar"></span>
+      </button>
+      <div class="topbar-breadcrumb">
+        <span class="bc-item" style="cursor:pointer" onclick="showSection('home')">ESG</span>
+        <span class="bc-sep">›</span>
+        <span class="bc-item active" id="bc-active">Capa</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <span class="mode-chip" id="mode-chip" style="display:none" title="Os dados ficam salvos neste navegador. Use Exportar para gerar backup em JSON."><span class="dot"></span> Dados locais</span>
+      <div class="tb-actions">
+        <button class="tb-btn" onclick="toggleTheme()" title="Alternar tema">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="tb-btn" onclick="doLogout()" title="Sair">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+        <div class="tb-divider"></div>
+        <div class="tb-avatar" id="tb-av">–</div>
+      </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content" id="content">
+
+        <!-- ══ CAPA ══ -->
+        <div class="section-page" id="sec-home">
+          <div class="home-hero">
+            <div class="home-badge"><span class="dot"></span> Grupo Ferreira Costa &nbsp;·&nbsp; ESG — Saúde &amp; Segurança do Trabalho</div>
+            <h1 class="home-headline">Gestão de <em>Indicadores ESG</em></h1>
+            <div class="home-sub">Registro de dados e acompanhamento de indicadores de Saúde &amp; Segurança</div>
+          </div>
+
+          <div class="home-grid">
+            <!-- 01 Visão Geral -->
+            <div class="home-card hc-soon">
+              <div class="hc-panel hcp-gray">
+                <span class="hc-ghost">01</span>
+                <div class="hc-chevron"></div>
+                <div class="hc-inner">
+                  <div class="hc-eyebrow">Módulo 01</div>
+                  <div class="hc-title">Visão Geral</div>
+                </div>
+              </div>
+              <div class="hc-body">
+                <div class="hc-tagline">Indicadores consolidados<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              </div>
+            </div>
+
+            <!-- 02 Acidentes (ativo) -->
+            <div class="home-card" onclick="showSection('acidentes')">
+              <div class="hc-panel hcp-green">
+                <span class="hc-ghost">02</span>
+                <div class="hc-chevron"></div>
+                <div class="hc-inner">
+                  <div class="hc-eyebrow">Módulo 02</div>
+                  <div class="hc-title">Acidentes</div>
+                </div>
+              </div>
+              <div class="hc-body">
+                <div class="hc-tagline">Registro de ocorrências · CAT<br>Atestados · Ações corretivas</div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+            </div>
+
+            <!-- 03 CIPA -->
+            <div class="home-card hc-soon">
+              <div class="hc-panel hcp-gray">
+                <span class="hc-ghost">03</span>
+                <div class="hc-chevron"></div>
+                <div class="hc-inner">
+                  <div class="hc-eyebrow">Módulo 03</div>
+                  <div class="hc-title">CIPA</div>
+                </div>
+              </div>
+              <div class="hc-body">
+                <div class="hc-tagline">Comissões por filial<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              </div>
+            </div>
+
+            <!-- 04 Brigada -->
+            <div class="home-card hc-soon">
+              <div class="hc-panel hcp-gray">
+                <span class="hc-ghost">04</span>
+                <div class="hc-chevron"></div>
+                <div class="hc-inner">
+                  <div class="hc-eyebrow">Módulo 04</div>
+                  <div class="hc-title">Brigada</div>
+                </div>
+              </div>
+              <div class="hc-body">
+                <div class="hc-tagline">Brigadas de emergência<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              </div>
+            </div>
+
+            <!-- 05 ASO -->
+            <div class="home-card hc-soon">
+              <div class="hc-panel hcp-gray">
+                <span class="hc-ghost">05</span>
+                <div class="hc-chevron"></div>
+                <div class="hc-inner">
+                  <div class="hc-eyebrow">Módulo 05</div>
+                  <div class="hc-title">ASO</div>
+                </div>
+              </div>
+              <div class="hc-body">
+                <div class="hc-tagline">Atestados de saúde ocupacional<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              </div>
+            </div>
+
+            <!-- 06 Treinamentos -->
+            <div class="home-card hc-soon">
+              <div class="hc-panel hcp-gray">
+                <span class="hc-ghost">06</span>
+                <div class="hc-chevron"></div>
+                <div class="hc-inner">
+                  <div class="hc-eyebrow">Módulo 06</div>
+                  <div class="hc-title">Treinamentos</div>
+                </div>
+              </div>
+              <div class="hc-body">
+                <div class="hc-tagline">Treinamentos NR por filial<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="home-foot">Ferreira Costa · ESG — Saúde &amp; Segurança do Trabalho</div>
+        </div>
+
+        <!-- ══ ACIDENTES ══ -->
+        <div class="section-page" id="sec-acidentes">
+
+          <div class="cards-grid cards-grid-4">
+            <div class="card card-neg">
+              <div class="card-header"><div class="card-title">Total de Acidentes</div><span class="tag bad">Acidentes</span></div>
+              <div class="card-value" id="kpi-total">–</div>
+              <div class="card-comp">no período filtrado</div>
+            </div>
+            <div class="card card-warn">
+              <div class="card-header"><div class="card-title">Acidentes de Trajeto</div><span class="tag warn">Trajeto</span></div>
+              <div class="card-value" id="kpi-trajeto">–</div>
+              <div class="card-comp"><span id="kpi-trajeto-pct">–</span> do total</div>
+            </div>
+            <div class="card card-info">
+              <div class="card-header"><div class="card-title">Acidentes Típicos</div><span class="tag muted">Típico</span></div>
+              <div class="card-value" id="kpi-tipico">–</div>
+              <div class="card-comp"><span id="kpi-tipico-pct">–</span> do total</div>
+            </div>
+            <div class="card card-pos">
+              <div class="card-header"><div class="card-title">Pendentes de Finalização</div><span class="tag good">Status</span></div>
+              <div class="card-value" id="kpi-pend">–</div>
+              <div class="card-comp">registros com pendências</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Registros de Ocorrências</div>
+                <div class="panel-sub" id="tbl-count">–</div>
+              </div>
+              <div class="panel-tools">
+                <div class="flt"><label>Ano</label><select id="flt-ano" onchange="renderAcidentes()"><option value="TODOS">Todos</option></select></div>
+                <div class="flt"><label>Filial</label><select id="flt-filial" onchange="renderAcidentes()"><option value="TODAS">Todas</option></select></div>
+                <div class="flt"><label>Status</label><select id="flt-status" onchange="renderAcidentes()">
+                  <option value="TODOS">Todos</option><option value="Pendente">Pendente</option><option value="Finalizado">Finalizado</option>
+                </select></div>
+                <div class="flt"><input type="text" id="flt-busca" placeholder="Buscar nome, matrícula…" oninput="renderAcidentes()"></div>
+                <button class="btn-io" title="Exportar backup (JSON)" onclick="exportarDados()">
+                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </button>
+                <button class="btn-io" title="Importar backup (JSON)" onclick="document.getElementById('imp-file').click()">
+                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </button>
+                <input type="file" id="imp-file" accept=".json,application/json" style="display:none" onchange="importarDados(this)">
+                <button class="btn-new" onclick="openModal()">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Novo
+                </button>
+              </div>
+            </div>
+            <div class="tbl-scroll">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Data</th><th>Filial</th><th>Nome</th><th>Ocorrência</th><th>Tipo Acidente</th>
+                  <th>Colaborador</th><th>Atestado</th><th>CAT</th><th>Status</th><th></th>
+                </tr></thead>
+                <tbody id="tbl-body"></tbody>
+              </table>
+              <div class="tbl-empty" id="tbl-empty" style="display:none">Nenhum registro encontrado. Clique em <strong>+ Novo</strong> para registrar a primeira ocorrência.</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL: NOVO / EDITAR ACIDENTE -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span id="modal-title-txt">Registrar Ocorrência</span>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form" id="form">
+
+        <div class="fs-divider"><span>Identificação</span></div>
+        <div class="form-row-3">
+          <div class="field" id="fw-filial">
+            <label>Filial <span class="req">*</span></label>
+            <select id="f-filial">
+              <option value="">Selecione…</option>
+              <option>GUS</option><option>IMB</option><option>PAL</option><option>TAM</option><option>AJU</option>
+              <option>JPA</option><option>PNG</option><option>CAU</option><option>BAR</option><option>CABO</option>
+            </select>
+            <div class="err-msg">Selecione a filial.</div>
+          </div>
+          <div class="field" id="fw-data">
+            <label>Data do Acidente <span class="req">*</span></label>
+            <input type="date" id="f-data">
+            <div class="err-msg">Informe a data.</div>
+          </div>
+          <div class="field" id="fw-matricula">
+            <label>Matrícula <span class="req">*</span></label>
+            <input type="text" id="f-matricula" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field" id="fw-nome">
+            <label>Nome <span class="req">*</span></label>
+            <input type="text" id="f-nome" placeholder="NOME DE QUEM SOFREU O ACIDENTE" style="text-transform:uppercase">
+            <div class="err-msg">Informe o nome.</div>
+          </div>
+          <div class="field" id="fw-tipo-colab">
+            <label>Tipo de Colaborador <span class="req">*</span></label>
+            <select id="f-tipo-colab" onchange="ruleColaborador()">
+              <option value="">Selecione…</option>
+              <option>Próprio</option><option>Terceirizado</option><option>Cliente</option>
+            </select>
+            <div class="err-msg">Selecione o tipo.</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Empresa</label>
+            <input type="text" id="f-empresa" placeholder="Empresa do colaborador">
+            <div class="hint" id="hint-empresa"></div>
+          </div>
+          <div class="field">
+            <label>Função</label>
+            <input type="text" id="f-funcao" placeholder="Cargo do colaborador">
+            <div class="hint" id="hint-funcao"></div>
+          </div>
+        </div>
+
+        <div class="fs-divider"><span>Classificação</span></div>
+        <div class="form-row-3">
+          <div class="field" id="fw-tipo-ocor">
+            <label>Tipo de Ocorrência <span class="req">*</span></label>
+            <select id="f-tipo-ocor" onchange="ruleOcorrencia()">
+              <option value="">Selecione…</option>
+              <option>Acidente</option><option>Emergência</option><option>Incidente</option>
+            </select>
+            <div class="err-msg">Selecione o tipo.</div>
+          </div>
+          <div class="field">
+            <label>Tipo de Acidente</label>
+            <select id="f-tipo-acid">
+              <option>N/A</option><option>Típico</option><option>Trajeto</option><option>Prestador</option>
+            </select>
+            <div class="hint" id="hint-tipo-acid">N/A quando a ocorrência não for acidente</div>
+          </div>
+          <div class="field">
+            <label>Tipo de Equipamento</label>
+            <select id="f-equip">
+              <option>N/A</option><option>Carro</option><option>Moto</option><option>Paleteira</option><option>Outros</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Local</label>
+            <input type="text" id="f-local" placeholder="Onde ocorreu (setor, área, via…)">
+          </div>
+          <div class="field">
+            <label>Status do Registro</label>
+            <select id="f-status">
+              <option>Pendente</option><option>Finalizado</option>
+            </select>
+            <div class="hint">Pendente enquanto houver etapas em aberto</div>
+          </div>
+        </div>
+
+        <div class="fs-divider"><span>Atestado &amp; CID</span></div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Atestado Médico</label>
+            <select id="f-atestado" onchange="ruleAtestado()">
+              <option>N/A</option><option>Sim</option><option>Não</option>
+            </select>
+          </div>
+          <div class="field" id="fw-qtd-atest">
+            <label>Qtd. Atestados</label>
+            <input type="text" id="f-qtd-atest" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+          </div>
+          <div class="field" id="fw-qtd-dias">
+            <label>Qtd. Dias de Atestado</label>
+            <input type="text" id="f-qtd-dias" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>CID Informado?</label>
+            <select id="f-cid-inf" onchange="ruleCid()">
+              <option>N/A</option><option>Sim</option><option>Não</option>
+            </select>
+          </div>
+          <div class="field" id="fw-cid" style="display:none">
+            <label>CID</label>
+            <div class="cid-wrap">
+              <input type="text" id="f-cid" placeholder="Digite o código (ex.: S52)" autocomplete="off" oninput="cidSearch()" style="text-transform:uppercase">
+              <div class="cid-sug" id="cid-sug"></div>
+            </div>
+            <div class="cid-confirm" id="cid-confirm"></div>
+          </div>
+        </div>
+
+        <div class="fs-divider"><span>CAT</span></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Emitida CAT?</label>
+            <select id="f-cat"><option>N/A</option><option>Sim</option><option>Não</option></select>
+          </div>
+          <div class="field">
+            <label>Recibo CAT?</label>
+            <select id="f-cat-rec"><option>N/A</option><option>Sim</option><option>Não</option></select>
+          </div>
+        </div>
+
+        <div class="fs-divider"><span>Descrição &amp; Tratativa</span></div>
+        <div class="field full">
+          <label>Descrição Sumária</label>
+          <textarea id="f-desc" placeholder="Descreva resumidamente o que aconteceu…"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Causa</label>
+            <input type="text" id="f-causa" placeholder="Causa identificada">
+          </div>
+          <div class="field">
+            <label>Parte do Corpo Atingida</label>
+            <input type="text" id="f-parte-corpo" placeholder="Ex.: mão direita, tornozelo…">
+          </div>
+        </div>
+        <div class="field full">
+          <label>Ação Corretiva</label>
+          <textarea id="f-acao" placeholder="Ação corretiva definida ou executada…"></textarea>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-msg" id="modal-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" id="btn-save" onclick="saveAcidente()">Salvar Registro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-card">
+    <div class="confirm-icon"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+    <div class="confirm-title">Excluir registro?</div>
+    <div class="confirm-item" id="confirm-item">–</div>
+    <div class="confirm-desc">Esta ação não pode ser desfeita. O registro será removido permanentemente do banco de dados.</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="closeConfirm()">Cancelar</button>
+      <button class="confirm-ok" onclick="doDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+// MODE 'local'    → dados salvos neste navegador (localStorage) + backup JSON manual.
+// MODE 'supabase' → preencha SB_URL/SB_KEY de um projeto NOVO e execute os scripts em sql/.
+const MODE = 'local'
+const SB_URL = ''   // ex.: https://seu-projeto-esg.supabase.co
+const SB_KEY = ''   // publishable key do projeto ESG
+const sb = (MODE === 'supabase' && SB_URL && window.supabase) ? window.supabase.createClient(SB_URL, SB_KEY) : null
+
+const TBL_ACIDENTES = 'esg_acidentes'
+const TBL_CID = 'esg_cid10'
+const LS_KEY = 'esg_acidentes_v1'
+
+// CID-10 no modo local: carrega cid10.json da pasta do app (fallback mínimo embutido)
+let CID_LOCAL = [
+  {codigo:'S52', descricao:'Fratura do antebraço'},
+  {codigo:'S62', descricao:'Fratura ao nível do punho e da mão'},
+  {codigo:'S82', descricao:'Fratura da perna, incluindo tornozelo'},
+  {codigo:'S93', descricao:'Luxação, entorse e distensão ao nível do tornozelo e do pé'},
+  {codigo:'M54.5', descricao:'Dor lombar baixa'},
+  {codigo:'W19', descricao:'Queda sem especificação'}
+]
+fetch('cid10.json').then(r=>r.ok?r.json():null).then(d=>{ if(Array.isArray(d)&&d.length) CID_LOCAL=d }).catch(()=>{})
+const FILIAIS = ['GUS','IMB','PAL','TAM','AJU','JPA','PNG','CAU','BAR','CABO']
+
+let DS = []            // dataset de acidentes
+let editId = null      // id em edição (null = novo)
+let deleteId = null
+let cidConfirmed = null // {codigo, descricao} selecionado no autocomplete
+
+const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes' }
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function $(id){ return document.getElementById(id) }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+function fmtData(iso){ if(!iso) return '–'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}` }
+function isNumOuNA(v){ return /^(\d+|N\/A)$/i.test(String(v).trim()) }
+
+function toast(msg, type='ok') {
+  const w = $('toast-wrap')
+  const el = document.createElement('div')
+  el.className = `toast ${type==='ok'?'':'err'}`; el.textContent = msg
+  w.appendChild(el)
+  requestAnimationFrame(()=>el.classList.add('show'))
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),300) }, 3000)
+}
+
+function toggleTheme(){
+  document.body.classList.toggle('dark')
+  try{ localStorage.setItem('esg-theme', document.body.classList.contains('dark')?'dark':'light') }catch(e){}
+}
+try{ if(localStorage.getItem('esg-theme')==='dark') document.body.classList.add('dark') }catch(e){}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+$('l-btn').addEventListener('click', async () => {
+  const email = $('l-email').value.trim()
+  const pass  = $('l-pass').value
+  $('l-err').textContent = ''
+  if(!email||!pass){ $('l-err').textContent='Preencha e-mail e senha.'; return }
+  if(!sb){ $('l-err').textContent='Supabase não configurado (SB_URL/SB_KEY).'; return }
+  $('l-btn').textContent='Acessando…'; $('l-btn').disabled=true
+  const {data,error} = await sb.auth.signInWithPassword({email,password:pass})
+  $('l-btn').textContent='Acessar Aplicativo'; $('l-btn').disabled=false
+  if(error){ $('l-err').textContent='Credenciais inválidas.'; return }
+  startApp(data.user)
+})
+$('l-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') $('l-btn').click() })
+
+async function doLogout(){
+  if(MODE==='local'){ toast('Modo local — não há sessão para encerrar.'); return }
+  await sb.auth.signOut()
+  $('app').style.display='none'
+  $('login-screen').style.display='flex'
+  DS=[]
+}
+
+function startApp(user){
+  $('login-screen').style.display='none'
+  $('app').style.display='block'
+  const ini = user.email.slice(0,2).toUpperCase()
+  $('sb-av').textContent = ini
+  $('tb-av').textContent = ini
+  $('sb-name').textContent = user.email.split('@')[0]
+  if(MODE==='local') $('mode-chip').style.display=''
+  loadAcidentes()
+  showSection('home')
+}
+
+;(function(){
+  function boot(){
+    if(MODE==='local'){ startApp({email:'ESG Local'}) ; return }
+    if(!sb) return
+    sb.auth.getSession().then(({data:{session}})=>{ if(session) startApp(session.user) })
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot)
+  else boot()
+})()
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────────────────────────────
+function showSection(id){
+  $('layout').classList.toggle('home-mode', id==='home')
+  document.querySelectorAll('.sb-item[data-section]').forEach(i=>i.classList.toggle('active', i.dataset.section===id))
+  $('bc-active').textContent = SECTION_LABELS[id]||id
+  document.querySelectorAll('.section-page').forEach(s=>s.classList.remove('show'))
+  const el = $('sec-'+id)
+  if(el){ el.classList.add('show'); $('content').scrollTop=0 }
+  if(id==='acidentes') renderAcidentes()
+}
+window.showSection = showSection
+
+// ── CAMADA DE DADOS (local ⇄ supabase) ───────────────────────────────────────
+function lsRead(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]') }catch(e){ return [] } }
+function lsWrite(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)) }
+function sortAcidentes(arr){
+  return [...arr].sort((a,b)=> (b.data_acidente||'').localeCompare(a.data_acidente||'') || (b.id||0)-(a.id||0))
+}
+
+async function dbList(){
+  if(MODE==='local') return { data: sortAcidentes(lsRead()), error:null }
+  return await sb.from(TBL_ACIDENTES).select('*').order('data_acidente',{ascending:false}).order('id',{ascending:false})
+}
+async function dbInsert(rec){
+  if(MODE==='local'){
+    const arr = lsRead()
+    rec.id = arr.reduce((m,r)=>Math.max(m, r.id||0), 0) + 1
+    rec.created_at = new Date().toISOString()
+    arr.push(rec); lsWrite(arr)
+    return { error:null }
+  }
+  return await sb.from(TBL_ACIDENTES).insert(rec)
+}
+async function dbUpdate(id, rec){
+  if(MODE==='local'){
+    const arr = lsRead().map(r => r.id===id ? {...r, ...rec, id, updated_at:new Date().toISOString()} : r)
+    lsWrite(arr)
+    return { error:null }
+  }
+  return await sb.from(TBL_ACIDENTES).update(rec).eq('id', id)
+}
+async function dbDelete(id){
+  if(MODE==='local'){ lsWrite(lsRead().filter(r=>r.id!==id)); return { error:null } }
+  return await sb.from(TBL_ACIDENTES).delete().eq('id', id)
+}
+async function dbCid(q){
+  if(MODE==='local'){
+    const hits = CID_LOCAL.filter(c => c.codigo.toUpperCase().startsWith(q) || c.descricao.toUpperCase().includes(q)).slice(0,8)
+    return { data: hits, error:null }
+  }
+  return await sb.from(TBL_CID).select('codigo,descricao').or(`codigo.ilike.${q}%,descricao.ilike.%${q}%`).limit(8)
+}
+
+// ── BACKUP (exportar / importar JSON) ────────────────────────────────────────
+function exportarDados(){
+  if(!DS.length){ toast('Nenhum registro para exportar.','err'); return }
+  const blob = new Blob([JSON.stringify(DS, null, 2)], {type:'application/json'})
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `esg_acidentes_${new Date().toISOString().slice(0,10)}.json`
+  a.click()
+  URL.revokeObjectURL(a.href)
+  toast(`Backup exportado (${DS.length} registros) — salve na pasta "dados" do aplicativo.`)
+}
+window.exportarDados = exportarDados
+
+async function importarDados(inp){
+  const f = inp.files && inp.files[0]
+  inp.value = ''
+  if(!f) return
+  let arr
+  try{ arr = JSON.parse(await f.text()) }catch(e){ toast('Arquivo JSON inválido.','err'); return }
+  if(!Array.isArray(arr)){ toast('O arquivo deve conter uma lista de registros.','err'); return }
+  if(!confirm(`Importar ${arr.length} registros de "${f.name}"?\n\nIsso SUBSTITUI a base atual (${DS.length} registros).`)) return
+  if(MODE==='local'){
+    lsWrite(arr)
+  } else {
+    // migração p/ Supabase: insere tudo (ids são regenerados pelo banco)
+    const limpos = arr.map(({id,created_at,updated_at,created_by,...r})=>r)
+    const {error} = await sb.from(TBL_ACIDENTES).insert(limpos)
+    if(error){ toast('Erro ao importar: '+error.message,'err'); return }
+  }
+  toast(`${arr.length} registros importados.`)
+  loadAcidentes()
+}
+window.importarDados = importarDados
+
+// ── DADOS ─────────────────────────────────────────────────────────────────────
+async function loadAcidentes(){
+  const {data,error} = await dbList()
+  if(error){ console.warn('[ESG] loadAcidentes:', error); toast('Erro ao carregar registros: '+error.message,'err'); return }
+  DS = data||[]
+  buildFilters()
+  renderAcidentes()
+}
+
+function buildFilters(){
+  // Anos existentes nos dados (desc) — mantém seleção atual
+  const selAno = $('flt-ano'); const curAno = selAno.value||'TODOS'
+  const anos = [...new Set(DS.map(r=>(r.data_acidente||'').slice(0,4)).filter(Boolean))].sort().reverse()
+  selAno.innerHTML = '<option value="TODOS">Todos</option>' + anos.map(a=>`<option>${a}</option>`).join('')
+  if([...selAno.options].some(o=>o.value===curAno)) selAno.value=curAno
+
+  const selFil = $('flt-filial'); const curFil = selFil.value||'TODAS'
+  selFil.innerHTML = '<option value="TODAS">Todas</option>' + FILIAIS.map(f=>`<option>${f}</option>`).join('')
+  if([...selFil.options].some(o=>o.value===curFil)) selFil.value=curFil
+}
+
+function filteredData(){
+  const ano = $('flt-ano').value, fil = $('flt-filial').value, st = $('flt-status').value
+  const q = $('flt-busca').value.trim().toUpperCase()
+  return DS.filter(r=>{
+    if(ano!=='TODOS' && (r.data_acidente||'').slice(0,4)!==ano) return false
+    if(fil!=='TODAS' && r.filial!==fil) return false
+    if(st!=='TODOS' && r.status!==st) return false
+    if(q && !((r.nome||'').includes(q) || String(r.matricula||'').toUpperCase().includes(q))) return false
+    return true
+  })
+}
+
+function renderAcidentes(){
+  const rows = filteredData()
+
+  // KPIs (sobre o período/filial filtrado — ignora filtro de status e busca p/ visão fiel? Não: usa filtro ano+filial apenas)
+  const ano = $('flt-ano').value, fil = $('flt-filial').value
+  const base = DS.filter(r=>{
+    if(ano!=='TODOS' && (r.data_acidente||'').slice(0,4)!==ano) return false
+    if(fil!=='TODAS' && r.filial!==fil) return false
+    return true
+  })
+  const acid = base.filter(r=>r.tipo_ocorrencia==='Acidente')
+  const traj = acid.filter(r=>r.tipo_acidente==='Trajeto').length
+  const tipi = acid.filter(r=>r.tipo_acidente==='Típico').length
+  const pend = base.filter(r=>r.status==='Pendente').length
+  $('kpi-total').textContent = acid.length
+  $('kpi-trajeto').textContent = traj
+  $('kpi-tipico').textContent = tipi
+  $('kpi-trajeto-pct').textContent = acid.length? Math.round(traj/acid.length*100)+'%' : '0%'
+  $('kpi-tipico-pct').textContent = acid.length? Math.round(tipi/acid.length*100)+'%' : '0%'
+  $('kpi-pend').textContent = pend
+
+  // Tabela
+  const tb = $('tbl-body')
+  $('tbl-count').textContent = `${rows.length} registro${rows.length===1?'':'s'}`
+  if(!rows.length){ tb.innerHTML=''; $('tbl-empty').style.display='block'; return }
+  $('tbl-empty').style.display='none'
+  tb.innerHTML = rows.map(r=>{
+    const stPill = r.status==='Finalizado' ? '<span class="pill green">Finalizado</span>' : '<span class="pill warn">Pendente</span>'
+    const cat = r.emitida_cat==='Sim' ? '<span class="pill green">Sim</span>' : (r.emitida_cat==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
+    const at  = r.atestado_medico==='Sim' ? '<span class="pill green">Sim</span>' : (r.atestado_medico==='Não'?'<span class="pill red">Não</span>':'<span class="pill muted">N/A</span>')
+    return `<tr onclick="openModal(${r.id})">
+      <td class="strong">${fmtData(r.data_acidente)}</td>
+      <td><span class="pill muted">${esc(r.filial)}</span></td>
+      <td class="strong" style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${esc(r.nome)}</td>
+      <td>${esc(r.tipo_ocorrencia)}</td>
+      <td>${esc(r.tipo_acidente)}</td>
+      <td>${esc(r.tipo_colaborador)}</td>
+      <td>${at}</td>
+      <td>${cat}</td>
+      <td>${stPill}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-actions">
+          <button class="act-btn edit" title="Editar" onclick="openModal(${r.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>
+          <button class="act-btn del" title="Excluir" onclick="askDelete(${r.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div>
+      </td>
+    </tr>`
+  }).join('')
+}
+window.renderAcidentes = renderAcidentes
+
+// ── REGRAS DO FORMULÁRIO ──────────────────────────────────────────────────────
+// Nome sempre maiúsculo
+$('f-nome').addEventListener('input', function(){ this.value = this.value.toUpperCase() })
+
+// Tipo de Ocorrência ≠ Acidente → Tipo de Acidente = N/A (travado)
+function ruleOcorrencia(){
+  const v = $('f-tipo-ocor').value
+  const ta = $('f-tipo-acid')
+  if(v && v!=='Acidente'){ ta.value='N/A'; ta.disabled=true; $('hint-tipo-acid').textContent='N/A — ocorrência não é acidente' }
+  else { ta.disabled=false; $('hint-tipo-acid').textContent='' }
+}
+
+// Colaborador Próprio → Empresa=FC travada; não-Próprio → Função=N/A travada
+function ruleColaborador(){
+  const v = $('f-tipo-colab').value
+  const emp = $('f-empresa'), fun = $('f-funcao')
+  if(v==='Próprio'){
+    emp.value='FC'; emp.readOnly=true; $('hint-empresa').textContent='Colaborador próprio — empresa FC'
+    fun.readOnly=false; if(fun.value==='N/A') fun.value=''; $('hint-funcao').textContent=''
+  } else if(v){
+    emp.readOnly=false; if(emp.value==='FC') emp.value=''; $('hint-empresa').textContent=''
+    fun.value='N/A'; fun.readOnly=true; $('hint-funcao').textContent='Não é colaborador próprio — função N/A'
+  } else {
+    emp.readOnly=false; fun.readOnly=false
+    $('hint-empresa').textContent=''; $('hint-funcao').textContent=''
+  }
+}
+
+// Atestado: Não → qtds = 0 travadas; N/A → qtds = N/A travadas; Sim → livre
+function ruleAtestado(){
+  const v = $('f-atestado').value
+  const a = $('f-qtd-atest'), d = $('f-qtd-dias')
+  if(v==='Não'){ a.value='0'; d.value='0'; a.readOnly=true; d.readOnly=true }
+  else if(v==='N/A'){ a.value='N/A'; d.value='N/A'; a.readOnly=true; d.readOnly=true }
+  else { a.readOnly=false; d.readOnly=false; if(a.value==='N/A')a.value=''; if(d.value==='N/A')d.value='' }
+}
+
+// CID informado = Sim → mostra campo CID com autocomplete
+function ruleCid(){
+  const v = $('f-cid-inf').value
+  const show = v==='Sim'
+  $('fw-cid').style.display = show?'':'none'
+  if(!show){ $('f-cid').value=''; cidConfirmed=null; $('cid-confirm').classList.remove('show'); $('cid-sug').classList.remove('open') }
+}
+
+// Autocomplete CID (consulta esg_cid10 no Supabase)
+let cidTimer = null
+function cidSearch(){
+  const q = $('f-cid').value.trim().toUpperCase().replace(/[,()%]/g,'')
+  cidConfirmed = null
+  $('cid-confirm').classList.remove('show')
+  clearTimeout(cidTimer)
+  if(q.length<2){ $('cid-sug').classList.remove('open'); return }
+  cidTimer = setTimeout(async ()=>{
+    const {data,error} = await dbCid(q)
+    const box = $('cid-sug')
+    if(error){ box.innerHTML=`<div class="cid-sug-empty">Erro ao consultar CID: ${esc(error.message)}</div>`; box.classList.add('open'); return }
+    if(!data||!data.length){ box.innerHTML='<div class="cid-sug-empty">Nenhum CID encontrado — verifique o código.</div>'; box.classList.add('open'); return }
+    box.innerHTML = data.map(c=>`<div class="cid-sug-item" onclick="cidPick('${esc(c.codigo)}', this.dataset.desc)" data-desc="${esc(c.descricao)}">
+      <span class="code">${esc(c.codigo)}</span><span class="desc">${esc(c.descricao)}</span></div>`).join('')
+    box.classList.add('open')
+  }, 280)
+}
+function cidPick(codigo, descricao){
+  cidConfirmed = {codigo, descricao}
+  $('f-cid').value = codigo
+  $('cid-sug').classList.remove('open')
+  const c = $('cid-confirm')
+  c.innerHTML = `<span class="code">${esc(codigo)}</span> — ${esc(descricao)} <span style="color:var(--esg);font-weight:700">✓ confirmado</span>`
+  c.classList.add('show')
+}
+window.cidPick = cidPick
+document.addEventListener('click', e=>{ if(!e.target.closest('.cid-wrap')) $('cid-sug').classList.remove('open') })
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function resetForm(){
+  document.querySelectorAll('#form input, #form textarea').forEach(i=>{ i.value=''; i.readOnly=false })
+  document.querySelectorAll('#form select').forEach(s=>{ s.disabled=false; s.selectedIndex=0 })
+  document.querySelectorAll('#form .field').forEach(f=>f.classList.remove('err'))
+  $('f-status').value='Pendente'
+  cidConfirmed=null
+  $('cid-confirm').classList.remove('show')
+  $('cid-sug').classList.remove('open')
+  $('fw-cid').style.display='none'
+  $('hint-empresa').textContent=''; $('hint-funcao').textContent=''; $('hint-tipo-acid').textContent=''
+  $('modal-msg').textContent=''; $('modal-msg').className='modal-msg'
+}
+
+function openModal(id){
+  resetForm()
+  editId = id||null
+  $('modal-title-txt').textContent = editId? 'Editar Ocorrência' : 'Registrar Ocorrência'
+  if(editId){
+    const r = DS.find(x=>x.id===editId)
+    if(!r){ editId=null; return }
+    $('f-filial').value=r.filial||''
+    $('f-data').value=r.data_acidente||''
+    $('f-matricula').value=r.matricula||''
+    $('f-nome').value=r.nome||''
+    $('f-tipo-colab').value=r.tipo_colaborador||''
+    $('f-empresa').value=r.empresa||''
+    $('f-funcao').value=r.funcao||''
+    $('f-tipo-ocor').value=r.tipo_ocorrencia||''
+    $('f-tipo-acid').value=r.tipo_acidente||'N/A'
+    $('f-equip').value=r.tipo_equipamento||'N/A'
+    $('f-local').value=r.local||''
+    $('f-status').value=r.status||'Pendente'
+    $('f-atestado').value=r.atestado_medico||'N/A'
+    $('f-qtd-atest').value=r.qtd_atestados??'N/A'
+    $('f-qtd-dias').value=r.qtd_dias_atestado??'N/A'
+    $('f-cid-inf').value=r.cid_informado||'N/A'
+    $('f-cat').value=r.emitida_cat||'N/A'
+    $('f-cat-rec').value=r.recibo_cat||'N/A'
+    $('f-desc').value=r.descricao_sumaria||''
+    $('f-causa').value=r.causa||''
+    $('f-parte-corpo').value=r.parte_corpo||''
+    $('f-acao').value=r.acao_corretiva||''
+    ruleOcorrencia(); ruleColaborador(); ruleAtestado(); ruleCid()
+    if(r.cid_informado==='Sim' && r.cid_codigo){
+      $('f-cid').value=r.cid_codigo
+      cidConfirmed={codigo:r.cid_codigo, descricao:r.cid_descricao||''}
+      const c=$('cid-confirm')
+      c.innerHTML=`<span class="code">${esc(r.cid_codigo)}</span> — ${esc(r.cid_descricao||'')} <span style="color:var(--esg);font-weight:700">✓ confirmado</span>`
+      c.classList.add('show')
+    }
+  }
+  $('modal-overlay').classList.add('open')
+}
+window.openModal = openModal
+function closeModal(){ $('modal-overlay').classList.remove('open'); editId=null }
+window.closeModal = closeModal
+
+// ── SALVAR ────────────────────────────────────────────────────────────────────
+function markErr(id, on){ $(id).classList.toggle('err', !!on); return !!on }
+
+async function saveAcidente(){
+  let bad = false
+  bad = markErr('fw-filial', !$('f-filial').value) || bad
+  bad = markErr('fw-data', !$('f-data').value) || bad
+  bad = markErr('fw-nome', !$('f-nome').value.trim()) || bad
+  bad = markErr('fw-matricula', !isNumOuNA($('f-matricula').value)) || bad
+  bad = markErr('fw-tipo-colab', !$('f-tipo-colab').value) || bad
+  bad = markErr('fw-tipo-ocor', !$('f-tipo-ocor').value) || bad
+  bad = markErr('fw-qtd-atest', !isNumOuNA($('f-qtd-atest').value)) || bad
+  bad = markErr('fw-qtd-dias', !isNumOuNA($('f-qtd-dias').value)) || bad
+  if(bad){ $('modal-msg').textContent='Corrija os campos destacados.'; $('modal-msg').className='modal-msg err'; return }
+
+  if($('f-cid-inf').value==='Sim' && !cidConfirmed){
+    $('modal-msg').textContent='Selecione o CID na lista para confirmar o código.'
+    $('modal-msg').className='modal-msg err'; return
+  }
+
+  const norm = v => String(v).trim().toUpperCase()==='N/A' ? 'N/A' : String(v).trim()
+  const rec = {
+    filial: $('f-filial').value,
+    nome: $('f-nome').value.trim().toUpperCase(),
+    matricula: norm($('f-matricula').value),
+    data_acidente: $('f-data').value,
+    tipo_ocorrencia: $('f-tipo-ocor').value,
+    tipo_acidente: $('f-tipo-acid').value,
+    tipo_colaborador: $('f-tipo-colab').value,
+    empresa: $('f-empresa').value.trim() || ($('f-tipo-colab').value==='Próprio'?'FC':'N/A'),
+    funcao: $('f-funcao').value.trim() || 'N/A',
+    atestado_medico: $('f-atestado').value,
+    qtd_atestados: norm($('f-qtd-atest').value),
+    qtd_dias_atestado: norm($('f-qtd-dias').value),
+    cid_informado: $('f-cid-inf').value,
+    cid_codigo: ($('f-cid-inf').value==='Sim' && cidConfirmed) ? cidConfirmed.codigo : null,
+    cid_descricao: ($('f-cid-inf').value==='Sim' && cidConfirmed) ? cidConfirmed.descricao : null,
+    descricao_sumaria: $('f-desc').value.trim() || null,
+    emitida_cat: $('f-cat').value,
+    recibo_cat: $('f-cat-rec').value,
+    local: $('f-local').value.trim() || null,
+    tipo_equipamento: $('f-equip').value,
+    causa: $('f-causa').value.trim() || null,
+    parte_corpo: $('f-parte-corpo').value.trim() || null,
+    acao_corretiva: $('f-acao').value.trim() || null,
+    status: $('f-status').value
+  }
+
+  $('btn-save').disabled=true; $('btn-save').textContent='Salvando…'
+  let error
+  if(editId){ ({error} = await dbUpdate(editId, rec)) }
+  else { ({error} = await dbInsert(rec)) }
+  $('btn-save').disabled=false; $('btn-save').textContent='Salvar Registro'
+
+  if(error){
+    $('modal-msg').textContent='Erro ao salvar: '+error.message
+    $('modal-msg').className='modal-msg err'
+    return
+  }
+  toast(editId? 'Registro atualizado.' : 'Ocorrência registrada.')
+  closeModal()
+  loadAcidentes()
+}
+window.saveAcidente = saveAcidente
+
+// ── EXCLUIR ───────────────────────────────────────────────────────────────────
+function askDelete(id){
+  deleteId = id
+  const r = DS.find(x=>x.id===id)
+  $('confirm-item').textContent = r? `${fmtData(r.data_acidente)} — ${r.nome} (${r.filial})` : '#'+id
+  $('confirm-overlay').classList.add('show')
+}
+window.askDelete = askDelete
+function closeConfirm(){ $('confirm-overlay').classList.remove('show'); deleteId=null }
+window.closeConfirm = closeConfirm
+async function doDelete(){
+  if(!deleteId) return
+  const {error} = await dbDelete(deleteId)
+  closeConfirm()
+  if(error){ toast('Erro ao excluir: '+error.message,'err'); return }
+  toast('Registro excluído.')
+  loadAcidentes()
+}
+window.doDelete = doDelete
+</script>
+</body>
+</html>
