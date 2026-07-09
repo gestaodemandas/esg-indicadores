@@ -250,6 +250,60 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .act-btn.del:hover{background:var(--neg-l);border-color:var(--neg)}
 .act-btn.del:hover svg{stroke:var(--neg)}
 
+/* Botão secundário (Exportar Excel) */
+.btn-sec{display:inline-flex;align-items:center;gap:.45rem;background:var(--card);color:var(--acid);border:1px solid var(--acid);border-radius:var(--rs);padding:.5rem 1.05rem;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
+.btn-sec:hover{background:var(--acid-l)}
+.btn-sec svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── BARRA DE FILTROS (cabeçalho da seção) ─────────────────────────────────── */
+.acid-filterbar{display:flex;align-items:flex-end;gap:1.5rem;flex-wrap:wrap;background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1rem 1.35rem}
+.afb-group{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.afb-group>label{font-size:.55rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px}
+.afb-group select{background:var(--frame-bg);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .8rem;font-size:.78rem;font-weight:600;color:var(--txt);cursor:pointer;font-family:inherit;outline:none;transition:all .2s;min-width:130px}
+.afb-group select:hover,.afb-group select:focus{border-color:var(--acid)}
+.afb-search{flex:1;min-width:200px;display:flex;flex-direction:column;gap:.35rem}
+.afb-search>label{font-size:.55rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px}
+.afb-search-wrap{position:relative}
+.afb-search-wrap svg{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--txt3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.afb-search input{width:100%;background:var(--frame-bg);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .8rem .5rem 2.1rem;font-size:.78rem;color:var(--txt);font-family:inherit;outline:none;transition:all .2s}
+.afb-search input:focus{border-color:var(--acid);background:var(--card)}
+
+/* ── DASHBOARD (cards + visuais) ───────────────────────────────────────────── */
+.acid-top{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:900px){.acid-top{grid-template-columns:1fr}}
+.acid-col{display:flex;flex-direction:column;gap:1rem}
+.chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.1rem 1.3rem 1.2rem;display:flex;flex-direction:column}
+.chart-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
+.chart-card-title{font-size:.82rem;font-weight:700;color:var(--txt)}
+.chart-card-sub{font-size:.62rem;color:var(--txt3);font-weight:600}
+.chart-empty{padding:2rem 1rem;text-align:center;color:var(--txt3);font-size:.76rem}
+
+/* Gráfico de barras (CSS) — barras verticais com rótulo no topo */
+.barchart{display:flex;align-items:flex-end;gap:.5rem;height:200px;padding-top:1.4rem}
+.barchart-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.barchart-bar{width:100%;max-width:46px;border-radius:5px 5px 0 0;position:relative;transition:height .5s cubic-bezier(.22,1,.36,1);min-height:3px}
+.barchart-val{position:absolute;top:-1.15rem;left:50%;transform:translateX(-50%);font-size:.68rem;font-weight:800;color:var(--txt2)}
+.barchart-lbl{margin-top:.45rem;font-size:.6rem;font-weight:700;color:var(--txt3);white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+.barchart-lbl.hl{color:var(--acid)}
+
+/* Gráfico mensal — barras verticais vermelhas */
+.monthchart{display:flex;align-items:flex-end;gap:.4rem;height:220px;padding-top:1.4rem}
+.monthchart-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.monthchart-bar{width:100%;max-width:54px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#d65a67,var(--acid));position:relative;transition:height .5s cubic-bezier(.22,1,.36,1);min-height:2px}
+.monthchart-bar.zero{background:var(--bdr)}
+.monthchart-val{position:absolute;top:-1.15rem;left:50%;transform:translateX(-50%);font-size:.66rem;font-weight:800;color:var(--txt2)}
+.monthchart-lbl{margin-top:.45rem;font-size:.58rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+
+/* Velocímetro (gauge) SVG */
+.gauge{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:.5rem 0}
+.gauge svg{width:100%;max-width:260px;height:auto}
+.gauge-track{fill:none;stroke:var(--bdr);stroke-width:18;stroke-linecap:round}
+.gauge-fill{fill:none;stroke-width:18;stroke-linecap:round;transition:stroke-dashoffset .7s cubic-bezier(.22,1,.36,1)}
+.gauge-num{font-size:2.2rem;font-weight:800;fill:var(--txt)}
+.gauge-cap{font-size:.72rem;font-weight:600;fill:var(--txt3)}
+.gauge-foot{font-size:.7rem;color:var(--txt3);font-weight:600;margin-top:.2rem;text-align:center}
+.gauge-foot strong{color:var(--txt2)}
+
 /* TABELA — seta de expandir + barra de conclusão + linha de detalhe */
 .exp-btn{width:22px;height:22px;border-radius:5px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .exp-btn:hover{background:var(--bdr)}
@@ -497,6 +551,14 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
       <div class="topbar-spacer"></div>
       <span class="mode-chip" id="mode-chip" style="display:none" title="Os dados ficam salvos neste navegador. Use Exportar para gerar backup em JSON."><span class="dot"></span> Dados locais</span>
       <div class="tb-actions">
+        <button class="tb-btn" onclick="exportarDados()" title="Exportar backup (JSON)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button class="tb-btn" onclick="document.getElementById('imp-file').click()" title="Importar backup (JSON)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <input type="file" id="imp-file" accept=".json,application/json" style="display:none" onchange="importarDados(this)">
+        <div class="tb-divider"></div>
         <button class="tb-btn" onclick="openPerfil()" title="Meu Perfil (técnico de segurança)">
           <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </button>
@@ -626,27 +688,51 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <!-- ══ ACIDENTES ══ -->
         <div class="section-page" id="sec-acidentes">
 
-          <div class="cards-grid cards-grid-4">
-            <div class="card card-neg">
-              <div class="card-header"><div class="card-title">Total de Acidentes</div><span class="tag bad">Acidentes</span></div>
-              <div class="card-value" id="kpi-total">–</div>
-              <div class="card-comp">no período filtrado</div>
+          <!-- Barra de filtros -->
+          <div class="acid-filterbar">
+            <div class="afb-group"><label>Ano</label><select id="flt-ano" onchange="renderAcidentes()"><option value="TODOS">Todos</option></select></div>
+            <div class="afb-group"><label>Filial</label><select id="flt-filial" onchange="renderAcidentes()"><option value="TODAS">Todas</option></select></div>
+            <div class="afb-group"><label>Status</label><select id="flt-status" onchange="renderAcidentes()">
+              <option value="TODOS">Todos</option><option value="Pendente">Pendente</option><option value="Finalizado">Finalizado</option>
+            </select></div>
+            <div class="afb-search"><label>Buscar</label>
+              <div class="afb-search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="flt-busca" placeholder="Nome ou matrícula…" oninput="renderAcidentes()">
+              </div>
             </div>
-            <div class="card card-warn">
-              <div class="card-header"><div class="card-title">Acidentes de Trajeto</div><span class="tag warn">Trajeto</span></div>
-              <div class="card-value" id="kpi-trajeto">–</div>
-              <div class="card-comp"><span id="kpi-trajeto-pct">–</span> do total</div>
+          </div>
+
+          <!-- Dois cartões, cada um com seu visual -->
+          <div class="acid-top">
+            <div class="acid-col">
+              <div class="card card-neg">
+                <div class="card-header"><div class="card-title">Acidentes Registrados</div><span class="tag bad">Acidentes</span></div>
+                <div class="card-value" id="kpi-total">–</div>
+                <div class="card-comp">no período filtrado</div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-card-head"><span class="chart-card-title">Acidentes por Filial</span><span class="chart-card-sub">todas as filiais</span></div>
+                <div id="chart-filial"></div>
+              </div>
             </div>
-            <div class="card card-info">
-              <div class="card-header"><div class="card-title">Acidentes Típicos</div><span class="tag muted">Típico</span></div>
-              <div class="card-value" id="kpi-tipico">–</div>
-              <div class="card-comp"><span id="kpi-tipico-pct">–</span> do total</div>
+            <div class="acid-col">
+              <div class="card card-neutral">
+                <div class="card-header"><div class="card-title">Pendentes de Finalização</div><span class="tag muted">Status</span></div>
+                <div class="card-value" id="kpi-pend">–</div>
+                <div class="card-comp">registros com pendências</div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-card-head"><span class="chart-card-title">Taxa de Finalização</span><span class="chart-card-sub">finalizados ÷ total</span></div>
+                <div id="chart-gauge"></div>
+              </div>
             </div>
-            <div class="card card-neutral">
-              <div class="card-header"><div class="card-title">Pendentes de Finalização</div><span class="tag muted">Status</span></div>
-              <div class="card-value" id="kpi-pend">–</div>
-              <div class="card-comp">registros com pendências</div>
-            </div>
+          </div>
+
+          <!-- Acidentes mês a mês -->
+          <div class="chart-card">
+            <div class="chart-card-head"><span class="chart-card-title">Acidentes por Mês</span><span class="chart-card-sub" id="chart-mensal-sub">–</span></div>
+            <div id="chart-mensal"></div>
           </div>
 
           <div class="panel">
@@ -656,19 +742,10 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 <div class="panel-sub" id="tbl-count">–</div>
               </div>
               <div class="panel-tools">
-                <div class="flt"><label>Ano</label><select id="flt-ano" onchange="renderAcidentes()"><option value="TODOS">Todos</option></select></div>
-                <div class="flt"><label>Filial</label><select id="flt-filial" onchange="renderAcidentes()"><option value="TODAS">Todas</option></select></div>
-                <div class="flt"><label>Status</label><select id="flt-status" onchange="renderAcidentes()">
-                  <option value="TODOS">Todos</option><option value="Pendente">Pendente</option><option value="Finalizado">Finalizado</option>
-                </select></div>
-                <div class="flt"><input type="text" id="flt-busca" placeholder="Buscar nome, matrícula…" oninput="renderAcidentes()"></div>
-                <button class="btn-io" title="Exportar backup (JSON)" onclick="exportarDados()">
-                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <button class="btn-sec" onclick="exportarExcel()">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="12" y1="12" x2="12" y2="18"/></svg>
+                  Exportar Excel
                 </button>
-                <button class="btn-io" title="Importar backup (JSON)" onclick="document.getElementById('imp-file').click()">
-                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                </button>
-                <input type="file" id="imp-file" accept=".json,application/json" style="display:none" onchange="importarDados(this)">
                 <button class="btn-new" onclick="openModal()">
                   <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Novo
@@ -1461,23 +1538,23 @@ function recCompletion(r){
 function renderAcidentes(){
   const rows = filteredData()
 
-  // KPIs (sobre o período/filial filtrado — ignora filtro de status e busca p/ visão fiel? Não: usa filtro ano+filial apenas)
+  // Ano + Filial filtram o dashboard (cards e visuais). Status e Busca refinam só a tabela.
   const ano = $('flt-ano').value, fil = $('flt-filial').value
   const base = DS.filter(r=>{
     if(ano!=='TODOS' && (r.data_acidente||'').slice(0,4)!==ano) return false
     if(fil!=='TODAS' && r.filial!==fil) return false
     return true
   })
-  const acid = base.filter(r=>r.tipo_ocorrencia==='Acidente')
-  const traj = acid.filter(r=>r.tipo_acidente==='Trajeto').length
-  const tipi = acid.filter(r=>r.tipo_acidente==='Típico').length
+  const total = base.length
   const pend = base.filter(r=>r.status==='Pendente').length
-  $('kpi-total').textContent = acid.length
-  $('kpi-trajeto').textContent = traj
-  $('kpi-tipico').textContent = tipi
-  $('kpi-trajeto-pct').textContent = acid.length? Math.round(traj/acid.length*100)+'%' : '0%'
-  $('kpi-tipico-pct').textContent = acid.length? Math.round(tipi/acid.length*100)+'%' : '0%'
+  const fin  = base.filter(r=>r.status==='Finalizado').length
+  $('kpi-total').textContent = total
   $('kpi-pend').textContent = pend
+
+  // Visuais
+  renderChartFilial(ano)
+  renderGauge(fin, total)
+  renderChartMensal(base, ano)
 
   // Tabela
   const tb = $('tbl-body')
@@ -1534,6 +1611,101 @@ function toggleDetail(id){
 }
 window.toggleDetail = toggleDetail
 window.renderAcidentes = renderAcidentes
+
+// ── VISUAIS ───────────────────────────────────────────────────────────────────
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+// Rampa sequencial de vermelho (magnitude: quanto maior, mais escuro)
+function redShade(v, max){
+  const stops = ['#e7a3aa','#dd7581','#d0505f','#bd2335','#8b1a1d']
+  if(max<=0) return stops[0]
+  const i = Math.min(stops.length-1, Math.round((v/max)*(stops.length-1)))
+  return stops[i]
+}
+
+// Gráfico de barras — Acidentes por Filial (respeita só o Ano; mostra todas as filiais)
+function renderChartFilial(ano){
+  const box = $('chart-filial')
+  const dados = DS.filter(r => ano==='TODOS' || (r.data_acidente||'').slice(0,4)===ano)
+  const cont = {}
+  dados.forEach(r => { if(r.filial) cont[r.filial] = (cont[r.filial]||0)+1 })
+  const arr = FILIAIS.filter(f => cont[f]).map(f => ({filial:f, n:cont[f]})).sort((a,b)=>b.n-a.n)
+  if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem registros no período.</div>'; return }
+  const max = Math.max(...arr.map(a=>a.n))
+  box.innerHTML = '<div class="barchart">' + arr.map(a => {
+    const h = Math.max(3, Math.round(a.n/max*160))
+    return `<div class="barchart-col">
+      <div class="barchart-bar" style="height:${h}px;background:${redShade(a.n,max)}"><span class="barchart-val">${a.n}</span></div>
+      <div class="barchart-lbl">${esc(a.filial)}</div>
+    </div>`
+  }).join('') + '</div>'
+}
+
+// Velocímetro — Taxa de Finalização (0–100%)
+function renderGauge(fin, total){
+  const box = $('chart-gauge')
+  const pct = total ? Math.round(fin/total*100) : 0
+  const cor = pct>=100 ? 'var(--pos)' : (pct>=50 ? 'var(--warn)' : 'var(--acid)')
+  // semicírculo: raio 80, centro (100,100), arco de 180° (comprimento π·r ≈ 251.3)
+  const R = 80, LEN = Math.PI*R
+  const off = LEN * (1 - pct/100)
+  box.innerHTML = `<div class="gauge">
+    <svg viewBox="0 0 200 118">
+      <path class="gauge-track" d="M20 100 A80 80 0 0 1 180 100"/>
+      <path class="gauge-fill" d="M20 100 A80 80 0 0 1 180 100" stroke="${cor}" stroke-dasharray="${LEN.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
+      <text class="gauge-num" x="100" y="92" text-anchor="middle">${pct}%</text>
+      <text class="gauge-cap" x="100" y="112" text-anchor="middle">finalizados</text>
+    </svg>
+    <div class="gauge-foot"><strong>${fin}</strong> de <strong>${total}</strong> registros finalizados</div>
+  </div>`
+}
+
+// Gráfico mensal — Acidentes por Mês (vermelho)
+function renderChartMensal(base, ano){
+  const box = $('chart-mensal')
+  const anos = [...new Set(DS.map(r=>(r.data_acidente||'').slice(0,4)).filter(Boolean))].sort()
+  const year = ano!=='TODOS' ? ano : (anos.length ? anos[anos.length-1] : String(new Date().getFullYear()))
+  $('chart-mensal-sub').textContent = 'ano ' + year
+  const cont = new Array(12).fill(0)
+  base.forEach(r => { const d=r.data_acidente||''; if(d.slice(0,4)===year){ const m=parseInt(d.slice(5,7),10); if(m>=1&&m<=12) cont[m-1]++ } })
+  const max = Math.max(1, ...cont)
+  if(cont.every(c=>c===0)){ box.innerHTML = `<div class="chart-empty">Sem registros em ${year}.</div>`; return }
+  box.innerHTML = '<div class="monthchart">' + cont.map((n,i) => {
+    const h = n===0 ? 2 : Math.max(4, Math.round(n/max*170))
+    return `<div class="monthchart-col">
+      <div class="monthchart-bar${n===0?' zero':''}" style="height:${h}px">${n>0?`<span class="monthchart-val">${n}</span>`:''}</div>
+      <div class="monthchart-lbl">${MESES[i]}</div>
+    </div>`
+  }).join('') + '</div>'
+}
+
+// ── EXPORTAR EXCEL (.xls via tabela HTML) ─────────────────────────────────────
+function exportarExcel(){
+  const rows = filteredData()
+  if(!rows.length){ toast('Nenhum registro para exportar.','err'); return }
+  const cols = [['data_acidente','Data'],['filial','Filial'],['nome','Nome'],['matricula','Matrícula'],
+    ['tipo_ocorrencia','Ocorrência'],['tipo_acidente','Tipo de Acidente'],['tipo_colaborador','Colaborador'],
+    ['empresa','Empresa'],['funcao','Função'],['setor','Setor'],['atestado_medico','Atestado'],
+    ['qtd_atestados','Qtd. Atestados'],['qtd_dias_atestado','Dias de Atestado'],['cid_informado','CID Informado'],
+    ['cid_codigo','CID'],['cid_descricao','Descrição CID'],['emitida_cat','Emitida CAT'],['recibo_cat','Recibo CAT'],
+    ['local','Local'],['gravidade','Gravidade'],['parte_corpo','Parte do Corpo'],['causa','Causa'],
+    ['acao_corretiva','Ação Corretiva'],['status','Status'],['completude','Conclusão %']]
+  const cell = v => `<td>${esc(v==null?'':v)}</td>`
+  const head = '<tr>' + cols.map(([,l])=>`<th style="background:#b52d39;color:#fff;font-weight:bold">${esc(l)}</th>`).join('') + '</tr>'
+  const body = rows.map(r => '<tr>' + cols.map(([k])=>{
+    let v = r[k]; if(k==='data_acidente') v = fmtData(r[k])
+    return cell(v)
+  }).join('') + '</tr>').join('')
+  const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head>
+    <body><table border="1">${head}${body}</table></body></html>`
+  const blob = new Blob(['﻿'+html], {type:'application/vnd.ms-excel;charset=utf-8'})
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `acidentes_${new Date().toISOString().slice(0,10)}.xls`
+  a.click()
+  URL.revokeObjectURL(a.href)
+  toast(`${rows.length} registro${rows.length===1?'':'s'} exportado${rows.length===1?'':'s'} para Excel.`)
+}
+window.exportarExcel = exportarExcel
 
 // ── MEU PERFIL (técnico de segurança) ────────────────────────────────────────
 function getPerfil(){ try{ return JSON.parse(localStorage.getItem(PERFIL_KEY)||'null') }catch(e){ return null } }
