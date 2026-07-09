@@ -696,6 +696,13 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
           <!-- Barra de filtros -->
           <div class="acid-filterbar">
             <div class="afb-group"><label>Ano</label><select id="flt-ano" onchange="renderAcidentes()"><option value="TODOS">Todos</option></select></div>
+            <div class="afb-group"><label>Mês</label><select id="flt-mes" onchange="renderAcidentes()">
+              <option value="TODOS">Todos</option>
+              <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
+              <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
+              <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
+              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select></div>
             <div class="afb-group"><label>Filial</label><select id="flt-filial" onchange="renderAcidentes()"><option value="TODAS">Todas</option></select></div>
             <div class="afb-group"><label>Status</label><select id="flt-status" onchange="renderAcidentes()">
               <option value="TODOS">Todos</option><option value="Pendente">Pendente</option><option value="Finalizado">Finalizado</option>
@@ -1505,17 +1512,24 @@ function buildFilters(){
   if([...selFil.options].some(o=>o.value===curFil)) selFil.value=curFil
 }
 
-function filteredData(){
-  const ano = $('flt-ano').value, fil = $('flt-filial').value, st = $('flt-status').value
+// Aplica todos os filtros ativos (Ano/Mês/Filial/Status/Busca), exceto os indicados em `skip`.
+// Cada visual ignora a própria dimensão que detalha (ex.: gráfico por filial ignora o filtro
+// de Filial; gráfico mensal ignora o filtro de Mês) — assim os números do topo, dos gráficos
+// e da tabela ficam sempre consistentes entre si para os demais filtros.
+function scopedRows(skip){
+  skip = skip || {}
+  const ano = $('flt-ano').value, mes = $('flt-mes').value, fil = $('flt-filial').value, st = $('flt-status').value
   const q = $('flt-busca').value.trim().toUpperCase()
   return DS.filter(r=>{
-    if(ano!=='TODOS' && (r.data_acidente||'').slice(0,4)!==ano) return false
-    if(fil!=='TODAS' && r.filial!==fil) return false
-    if(st!=='TODOS' && r.status!==st) return false
+    if(!skip.ano && ano!=='TODOS' && (r.data_acidente||'').slice(0,4)!==ano) return false
+    if(!skip.mes && mes!=='TODOS' && (r.data_acidente||'').slice(5,7)!==mes) return false
+    if(!skip.filial && fil!=='TODAS' && r.filial!==fil) return false
+    if(!skip.status && st!=='TODOS' && r.status!==st) return false
     if(q && !((r.nome||'').includes(q) || String(r.matricula||'').toUpperCase().includes(q))) return false
     return true
   })
 }
+function filteredData(){ return scopedRows() }
 
 // Conjunto canônico de campos que contam para a conclusão de um registro.
 // Exclui os 4 de domínio pendente (Espécie/Situação Geradora/Agente Causador/
@@ -1587,23 +1601,18 @@ function renderAcidentes(){
   const rows = sortRows(filteredData())
   updateSortIndicators()
 
-  // Ano + Filial filtram o dashboard (cards e visuais). Status e Busca refinam só a tabela.
-  const ano = $('flt-ano').value, fil = $('flt-filial').value
-  const base = DS.filter(r=>{
-    if(ano!=='TODOS' && (r.data_acidente||'').slice(0,4)!==ano) return false
-    if(fil!=='TODAS' && r.filial!==fil) return false
-    return true
-  })
-  const total = base.length
-  const pend = base.filter(r=>r.status==='Pendente').length
-  const fin  = base.filter(r=>r.status==='Finalizado').length
+  // KPIs e gauge respeitam TODOS os filtros ativos (mesmo escopo da tabela `rows`),
+  // para nunca mostrar um número que contradiga o que está listado abaixo.
+  const total = rows.length
+  const pend = rows.filter(r=>r.status==='Pendente').length
+  const fin  = rows.filter(r=>r.status==='Finalizado').length
   $('kpi-total').textContent = total
   $('kpi-pend').textContent = pend
 
-  // Visuais
-  renderChartFilial(ano)
+  // Visuais — cada um ignora apenas a própria dimensão que detalha
+  renderChartFilial()
   renderGauge(fin, total)
-  renderChartMensal(base, ano)
+  renderChartMensal()
 
   // Tabela
   const tb = $('tbl-body')
@@ -1671,10 +1680,10 @@ function redShade(v, max){
   return stops[i]
 }
 
-// Gráfico de barras — Acidentes por Filial (respeita só o Ano; mostra todas as filiais)
-function renderChartFilial(ano){
+// Gráfico de barras — Acidentes por Filial (respeita Ano/Mês/Status/Busca; ignora o filtro de Filial p/ comparar todas)
+function renderChartFilial(){
   const box = $('chart-filial')
-  const dados = DS.filter(r => ano==='TODOS' || (r.data_acidente||'').slice(0,4)===ano)
+  const dados = scopedRows({filial:true})
   const cont = {}
   dados.forEach(r => { if(r.filial) cont[r.filial] = (cont[r.filial]||0)+1 })
   const arr = FILIAIS.filter(f => cont[f]).map(f => ({filial:f, n:cont[f]})).sort((a,b)=>b.n-a.n)
@@ -1708,9 +1717,11 @@ function renderGauge(fin, total){
   </div>`
 }
 
-// Gráfico mensal — Acidentes por Mês (vermelho)
-function renderChartMensal(base, ano){
+// Gráfico mensal — Acidentes por Mês (respeita Ano/Filial/Status/Busca; ignora o filtro de Mês p/ ver a tendência do ano inteiro)
+function renderChartMensal(){
   const box = $('chart-mensal')
+  const base = scopedRows({mes:true})
+  const ano = $('flt-ano').value
   const anos = [...new Set(DS.map(r=>(r.data_acidente||'').slice(0,4)).filter(Boolean))].sort()
   const year = ano!=='TODOS' ? ano : (anos.length ? anos[anos.length-1] : String(new Date().getFullYear()))
   $('chart-mensal-sub').textContent = 'ano ' + year
