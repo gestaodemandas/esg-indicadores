@@ -730,12 +730,12 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             </div>
             <div class="acid-col">
               <div class="card card-neutral">
-                <div class="card-header"><div class="card-title">Pendentes de Finalização</div><span class="tag muted">Status</span></div>
+                <div class="card-header"><div class="card-title">Pendentes de Finalização</div><span class="tag muted">Formulário</span></div>
                 <div class="card-value" id="kpi-pend">–</div>
-                <div class="card-comp">registros com pendências</div>
+                <div class="card-comp">registros com formulário incompleto</div>
               </div>
               <div class="chart-card">
-                <div class="chart-card-head"><span class="chart-card-title">Taxa de Finalização</span><span class="chart-card-sub">finalizados ÷ total</span></div>
+                <div class="chart-card-head"><span class="chart-card-title">Taxa de Finalização</span><span class="chart-card-sub">formulários completos ÷ total</span></div>
                 <div id="chart-gauge"></div>
               </div>
             </div>
@@ -1567,9 +1567,18 @@ function recCompletion(r){
   return { pct, pendentes }
 }
 
+// Conclusão de um registro: usa o snapshot salvo (mais fiel — baseado nos campos que o
+// usuário efetivamente visitou no formulário); se ausente (registro antigo/importado sem
+// esse dado), recalcula a partir dos valores atuais do registro.
+function rowCompletion(r){
+  return (typeof r.completude === 'number')
+    ? { pct: r.completude, pendentes: Array.isArray(r.campos_pendentes) ? r.campos_pendentes : [] }
+    : recCompletion(r)
+}
+
 // Valor comparável de um registro para a coluna de ordenação
 function sortValue(r, col){
-  if(col==='completude') return (typeof r.completude==='number') ? r.completude : recCompletion(r).pct
+  if(col==='completude') return rowCompletion(r).pct
   return String(r[col] ?? '')
 }
 function sortRows(rows){
@@ -1603,15 +1612,17 @@ function renderAcidentes(){
 
   // KPIs e gauge respeitam TODOS os filtros ativos (mesmo escopo da tabela `rows`),
   // para nunca mostrar um número que contradiga o que está listado abaixo.
+  // "Finalização" aqui = % de CONCLUSÃO DO FORMULÁRIO (rowCompletion), não o campo
+  // Status (Pendente/Finalizado) — esse é um marcador manual à parte, independente
+  // de quantos campos já foram preenchidos, e não deve ser confundido com o outro.
   const total = rows.length
-  const pend = rows.filter(r=>r.status==='Pendente').length
-  const fin  = rows.filter(r=>r.status==='Finalizado').length
+  const completos = rows.filter(r => rowCompletion(r).pct >= 100).length
   $('kpi-total').textContent = total
-  $('kpi-pend').textContent = pend
+  $('kpi-pend').textContent = total - completos
 
   // Visuais — cada um ignora apenas a própria dimensão que detalha
   renderChartFilial()
-  renderGauge(fin, total)
+  renderGauge(completos, total)
   renderChartMensal()
 
   // Tabela
@@ -1621,9 +1632,7 @@ function renderAcidentes(){
   $('tbl-empty').style.display='none'
   tb.innerHTML = rows.map(r=>{
     const stPill = r.status==='Finalizado' ? '<span class="pill green">Finalizado</span>' : '<span class="pill warn">Pendente</span>'
-    // Conclusão: usa o snapshot salvo (mais fiel, baseado nos campos que o usuário
-    // visitou); se ausente (registros antigos/importados), calcula do próprio registro.
-    const c = (typeof r.completude === 'number') ? { pct:r.completude, pendentes: Array.isArray(r.campos_pendentes)?r.campos_pendentes:[] } : recCompletion(r)
+    const c = rowCompletion(r)
     const pct = c.pct, pend = c.pendentes
     const lvl = pct>=100 ? 'lvl-full' : (pct>=50 ? 'lvl-mid' : 'lvl-low')
     const compCell = `<div class="tbl-comp"><div class="tbl-comp-bar"><div class="tbl-comp-fill ${lvl}" style="width:${pct}%"></div></div><span class="tbl-comp-pct">${pct}%</span></div>`
@@ -1698,10 +1707,11 @@ function renderChartFilial(){
   }).join('') + '</div>'
 }
 
-// Velocímetro — Taxa de Finalização (0–100%)
-function renderGauge(fin, total){
+// Velocímetro — Taxa de Conclusão do Formulário (0–100%). Mede quantos registros
+// estão com TODOS os campos preenchidos (rowCompletion===100), não o campo Status.
+function renderGauge(completos, total){
   const box = $('chart-gauge')
-  const pct = total ? Math.round(fin/total*100) : 0
+  const pct = total ? Math.round(completos/total*100) : 0
   const cor = pct>=100 ? 'var(--pos)' : (pct>=50 ? 'var(--warn)' : 'var(--acid)')
   // semicírculo: raio 80, centro (100,100), arco de 180° (comprimento π·r ≈ 251.3)
   const R = 80, LEN = Math.PI*R
@@ -1711,9 +1721,9 @@ function renderGauge(fin, total){
       <path class="gauge-track" d="M20 100 A80 80 0 0 1 180 100"/>
       <path class="gauge-fill" d="M20 100 A80 80 0 0 1 180 100" stroke="${cor}" stroke-dasharray="${LEN.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
       <text class="gauge-num" x="100" y="92" text-anchor="middle">${pct}%</text>
-      <text class="gauge-cap" x="100" y="112" text-anchor="middle">finalizados</text>
+      <text class="gauge-cap" x="100" y="112" text-anchor="middle">completos</text>
     </svg>
-    <div class="gauge-foot"><strong>${fin}</strong> de <strong>${total}</strong> registros finalizados</div>
+    <div class="gauge-foot"><strong>${completos}</strong> de <strong>${total}</strong> registros com formulário completo</div>
   </div>`
 }
 
