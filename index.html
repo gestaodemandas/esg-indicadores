@@ -1297,10 +1297,10 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 // MODE 'local'    → dados salvos neste navegador (localStorage) + backup JSON manual.
-// MODE 'supabase' → preencha SB_URL/SB_KEY de um projeto NOVO e execute os scripts em sql/.
-const MODE = 'local'
-const SB_URL = ''   // ex.: https://seu-projeto-esg.supabase.co
-const SB_KEY = ''   // publishable key do projeto ESG
+// MODE 'supabase' → lê/grava no banco; exige login (RLS restrita a usuários autenticados).
+const MODE = 'supabase'
+const SB_URL = 'https://nkijyuartfyxrawkivmm.supabase.co'
+const SB_KEY = 'sb_publishable_Zlj-RZk_AfkPPOdPLiu11g_t8LZoS_a'  // chave publishable (anon) — segura no client; RLS protege os dados
 const sb = (MODE === 'supabase' && SB_URL && window.supabase) ? window.supabase.createClient(SB_URL, SB_KEY) : null
 
 const TBL_ACIDENTES = 'esg_acidentes'
