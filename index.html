@@ -304,23 +304,31 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .fs-divider::after{content:'';flex:1;height:1px;background:rgba(181,45,57,.3)}
 body.dark .fs-divider::after{background:rgba(181,45,57,.4)}
 
-/* TABS DO FORMULÁRIO */
-.modal-progress{display:flex;align-items:center;gap:.7rem;padding:.55rem 1.5rem;border-bottom:1px solid var(--bdr);flex-shrink:0}
-.modal-progress-bar{flex:1;height:6px;background:var(--bdr);border-radius:4px;overflow:hidden}
-.modal-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acid),#d65a67);transition:width .3s ease;width:0%}
-.modal-progress-fill.complete{background:linear-gradient(90deg,var(--pos),#9dc98a)}
-.modal-progress-pct{font-size:.68rem;font-weight:800;color:var(--txt2);min-width:36px;text-align:right}
-.modal-tabs{display:flex;gap:.35rem;padding:.6rem 1.5rem;border-bottom:1px solid var(--bdr);overflow-x:auto;flex-shrink:0;background:var(--frame-bg)}
-.modal-tabs::-webkit-scrollbar{height:3px}.modal-tabs::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
-.modal-tab{display:flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:20px;border:1px solid var(--bdr);background:var(--card);font-size:.68rem;font-weight:600;color:var(--txt2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s;flex-shrink:0}
-.modal-tab:hover{border-color:var(--acid);color:var(--acid)}
+/* TABS DO FORMULÁRIO — barra lateral vertical */
+.modal-main{flex:1;display:flex;min-height:0;overflow:hidden}
+.modal-tabs{display:flex;flex-direction:column;gap:.25rem;padding:.75rem;flex-shrink:0;width:186px;background:var(--frame-bg);border-right:1px solid var(--bdr);overflow-y:auto}
+.modal-tabs::-webkit-scrollbar{width:3px}.modal-tabs::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+.modal-tab{display:flex;align-items:center;justify-content:space-between;gap:.4rem;padding:.55rem .7rem;border-radius:8px;border:1px solid transparent;background:none;font-size:.7rem;font-weight:600;color:var(--txt2);cursor:pointer;font-family:inherit;text-align:left;white-space:nowrap;transition:all .2s;width:100%}
+.modal-tab:hover{background:var(--card);color:var(--acid)}
 .modal-tab.active{background:var(--acid);border-color:var(--acid);color:#fff}
-.modal-tab .mt-pct{font-size:.6rem;font-weight:800;padding:.05rem .42rem;border-radius:10px;background:rgba(0,0,0,.08);color:inherit}
+.modal-tab .mt-pct{font-size:.58rem;font-weight:800;padding:.05rem .42rem;border-radius:10px;background:rgba(0,0,0,.08);color:inherit;flex-shrink:0}
 body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
 .modal-tab.active .mt-pct{background:rgba(255,255,255,.25)}
 .modal-tab.mt-complete .mt-pct{background:var(--pos-l);color:var(--pos)}
 .modal-tab.active.mt-complete .mt-pct{background:rgba(255,255,255,.3);color:#fff}
 .tab-pane{display:none;flex-direction:column;gap:1rem}
+/* Barra de progresso — rodapé (acima dos botões) */
+.modal-progress{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.5rem;border-top:1px solid var(--bdr);flex-shrink:0}
+.modal-progress-bar{flex:1;height:6px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.modal-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acid),#d65a67);transition:width .3s ease;width:0%}
+.modal-progress-fill.complete{background:linear-gradient(90deg,var(--pos),#9dc98a)}
+.modal-progress-pct{font-size:.68rem;font-weight:800;color:var(--txt2);min-width:36px;text-align:right}
+/* Empilha em telas estreitas: abas viram linha rolável no topo */
+@media(max-width:600px){
+  .modal-main{flex-direction:column}
+  .modal-tabs{flex-direction:row;width:auto;border-right:none;border-bottom:1px solid var(--bdr);overflow-x:auto;overflow-y:hidden}
+  .modal-tab{width:auto;flex-shrink:0}
+}
 .tab-pane.active{display:flex}
 .dyn-table{display:flex;flex-direction:column;gap:.4rem}
 .dyn-head{display:flex;gap:.6rem;padding:0 .1rem;font-size:.58rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1.2px}
@@ -697,13 +705,10 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
       </div>
       <button class="modal-close" onclick="tryCloseModal()">✕</button>
     </div>
-    <div class="modal-progress">
-      <div class="modal-progress-bar"><div class="modal-progress-fill" id="modal-progress-fill"></div></div>
-      <span class="modal-progress-pct" id="modal-progress-pct">0%</span>
-    </div>
-    <div class="modal-tabs" id="modal-tabs"></div>
-    <div class="modal-body">
-      <div class="form" id="form">
+    <div class="modal-main">
+      <div class="modal-tabs" id="modal-tabs"></div>
+      <div class="modal-body">
+        <div class="form" id="form">
 
         <div class="tab-pane active" data-tab="comunicado">
         <div class="fs-divider"><span>Dados do Comunicado</span></div>
@@ -1117,7 +1122,12 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         </div>
         </div><!-- /tab-pane analise -->
 
-      </div>
+        </div><!-- /form -->
+      </div><!-- /modal-body -->
+    </div><!-- /modal-main -->
+    <div class="modal-progress">
+      <div class="modal-progress-bar"><div class="modal-progress-fill" id="modal-progress-fill"></div></div>
+      <span class="modal-progress-pct" id="modal-progress-pct">0%</span>
     </div>
     <div class="modal-footer">
       <div class="modal-msg" id="modal-msg"></div>
