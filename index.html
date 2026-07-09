@@ -1332,6 +1332,8 @@ let editId = null      // id em edição (null = novo)
 let deleteId = null
 let cidConfirmed = null // {codigo, descricao} selecionado no autocomplete
 let formDirty = false  // usuário alterou algo desde a abertura do modal
+let currentUser = null  // linha do usuário logado em esg_usuarios {filial, ver_todas, perfil} (modo supabase)
+let TECNICO_FILIAL = {} // mapa filial -> {nome, matricula} (referência p/ autopreencher)
 let sortCol = 'data_acidente'  // coluna de ordenação da tabela
 let sortDir = 'desc'           // 'asc' | 'desc'
 const NUM_COLS = ['completude'] // colunas comparadas numericamente
@@ -1382,7 +1384,7 @@ async function doLogout(){
   DS=[]
 }
 
-function startApp(user){
+async function startApp(user){
   $('login-screen').style.display='none'
   $('app').style.display='block'
   const ini = user.email.slice(0,2).toUpperCase()
@@ -1390,8 +1392,28 @@ function startApp(user){
   $('tb-av').textContent = ini
   $('sb-name').textContent = user.email.split('@')[0]
   if(MODE==='local') $('mode-chip').style.display=''
+  await loadAccessContext(user)   // define currentUser + TECNICO_FILIAL (modo supabase)
   loadAcidentes()
   showSection('home')
+}
+
+// Carrega o contexto de acesso do usuário logado (só no modo supabase):
+// - currentUser: sua linha em esg_usuarios (filial, ver_todas, perfil)
+// - TECNICO_FILIAL: mapa filial -> técnico (referência, para autopreencher)
+async function loadAccessContext(user){
+  currentUser = null; TECNICO_FILIAL = {}
+  if(MODE!=='supabase' || !sb) return
+  try {
+    const email = (user.email||'').toLowerCase()
+    const {data:me} = await sb.from('esg_usuarios').select('*').eq('email', email).maybeSingle()
+    currentUser = me || null
+    const {data:tf} = await sb.from('esg_tecnico_filial').select('*')
+    ;(tf||[]).forEach(t => { TECNICO_FILIAL[t.filial] = {nome:t.nome, matricula:t.matricula} })
+    // mostra o escopo de acesso no chip do topo
+    const escopo = currentUser ? (currentUser.ver_todas ? 'Todas as filiais' : ('Filial ' + (currentUser.filial||'—'))) : 'Sem perfil ESG'
+    $('mode-chip').innerHTML = '<span class="dot"></span> ' + escopo
+    $('mode-chip').style.display = ''
+  } catch(e){ console.warn('[ESG] loadAccessContext:', e) }
 }
 
 ;(function(){
@@ -2114,20 +2136,55 @@ function openModal(id){
       if(el.id && el.id.startsWith('f-') && String(el.value||'').trim()!=='') touchedFields.add(el.id)
     })
   } else {
-    // Registro novo: pré-preenche a partir do perfil salvo e data de hoje
-    const p = getPerfil()
-    if(p && p.nome){ $('f-tec-seg').value = p.nome; touchedFields.add('f-tec-seg') }
-    if(p && p.matricula){ $('f-matricula-tec').value = p.matricula; touchedFields.add('f-matricula-tec') }
+    // Registro novo: filial + técnico conforme o contexto de acesso (supabase) ou perfil local
+    if(MODE==='supabase' && (currentUser || Object.keys(TECNICO_FILIAL).length)){
+      applyAccessDefaults()
+    } else {
+      const p = getPerfil()
+      if(p && p.nome){ $('f-tec-seg').value = p.nome; touchedFields.add('f-tec-seg') }
+      if(p && p.matricula){ $('f-matricula-tec').value = p.matricula; touchedFields.add('f-matricula-tec') }
+    }
     $('f-data-comunicado').value = new Date().toISOString().slice(0,10)
     touchedFields.add('f-data-comunicado')
   }
+  lockFilialSePreciso()   // usuário de filial (não corporativo) não troca a filial
   $('modal-overlay').classList.add('open')
   updateProgress()
   formDirty = false   // pré-preenchimentos automáticos não contam como alteração do usuário
 }
+
+// No modo supabase: usuário de filial tem a filial travada; corporativo escolhe livremente.
+function lockFilialSePreciso(){
+  const fsel = $('f-filial')
+  if(MODE==='supabase' && currentUser && !currentUser.ver_todas && currentUser.filial){
+    if(!editId){ fsel.value = currentUser.filial; touchedFields.add('f-filial') }
+    fsel.disabled = true
+  } else {
+    fsel.disabled = false
+  }
+}
+// Preenche filial (se travada) e técnico da filial a partir da referência
+function applyAccessDefaults(){
+  if(currentUser && !currentUser.ver_todas && currentUser.filial){
+    $('f-filial').value = currentUser.filial; touchedFields.add('f-filial')
+  }
+  autofillTecnico($('f-filial').value)
+}
+// Autopreenche Técnico de Segurança + matrícula conforme a filial (mapa TECNICO_FILIAL)
+function autofillTecnico(filial){
+  const t = filial && TECNICO_FILIAL[filial]
+  if(t){
+    $('f-tec-seg').value = t.nome || ''
+    $('f-matricula-tec').value = t.matricula || ''
+    if(t.nome) touchedFields.add('f-tec-seg')
+    if(t.matricula) touchedFields.add('f-matricula-tec')
+  }
+}
 window.openModal = openModal
 function onFormChange(e){
   if(e.target && e.target.id && e.target.id.startsWith('f-')) touchedFields.add(e.target.id)
+  // Corporativo trocou a filial → reautopreenche o técnico daquela filial
+  if(e.target && e.target.id==='f-filial' && MODE==='supabase') autofillTecnico(e.target.value)
   formDirty = true
   updateProgress()
 }
