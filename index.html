@@ -236,6 +236,11 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .tbl-scroll{overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse}
 .tbl thead th{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--txt3);padding:.65rem .9rem;border-bottom:2px solid var(--bdr);text-align:left;white-space:nowrap;background:var(--frame-bg)}
+.tbl thead th.th-sort{cursor:pointer;user-select:none;transition:color .15s}
+.tbl thead th.th-sort:hover{color:var(--acid)}
+.tbl thead th.th-sort.active{color:var(--acid)}
+.sort-ind{margin-left:.25rem;font-size:.62rem;opacity:.35}
+.tbl thead th.th-sort.active .sort-ind{opacity:1}
 .tbl tbody tr{border-bottom:1px solid var(--bdr);transition:background .12s}
 .tbl tbody tr:last-child{border:none}
 .tbl tbody tr:hover{background:var(--pri-l);cursor:pointer}
@@ -755,8 +760,18 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <div class="tbl-scroll">
               <table class="tbl">
                 <thead><tr>
-                  <th style="width:26px"></th><th>Data</th><th>Filial</th><th>Nome</th><th>Ocorrência</th><th>Tipo Acidente</th>
-                  <th>Colaborador</th><th>Atestado</th><th>CAT</th><th>Conclusão</th><th>Status</th><th></th>
+                  <th style="width:26px"></th>
+                  <th class="th-sort" data-col="data_acidente" onclick="sortBy('data_acidente')">Data <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="filial" onclick="sortBy('filial')">Filial <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="nome" onclick="sortBy('nome')">Nome <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tipo_ocorrencia" onclick="sortBy('tipo_ocorrencia')">Ocorrência <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tipo_acidente" onclick="sortBy('tipo_acidente')">Tipo Acidente <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tipo_colaborador" onclick="sortBy('tipo_colaborador')">Colaborador <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="atestado_medico" onclick="sortBy('atestado_medico')">Atestado <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="emitida_cat" onclick="sortBy('emitida_cat')">CAT <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="completude" onclick="sortBy('completude')">Conclusão <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="status" onclick="sortBy('status')">Status <span class="sort-ind"></span></th>
+                  <th></th>
                 </tr></thead>
                 <tbody id="tbl-body"></tbody>
               </table>
@@ -1310,6 +1325,9 @@ let editId = null      // id em edição (null = novo)
 let deleteId = null
 let cidConfirmed = null // {codigo, descricao} selecionado no autocomplete
 let formDirty = false  // usuário alterou algo desde a abertura do modal
+let sortCol = 'data_acidente'  // coluna de ordenação da tabela
+let sortDir = 'desc'           // 'asc' | 'desc'
+const NUM_COLS = ['completude'] // colunas comparadas numericamente
 
 const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes' }
 
@@ -1535,8 +1553,39 @@ function recCompletion(r){
   return { pct, pendentes }
 }
 
+// Valor comparável de um registro para a coluna de ordenação
+function sortValue(r, col){
+  if(col==='completude') return (typeof r.completude==='number') ? r.completude : recCompletion(r).pct
+  return String(r[col] ?? '')
+}
+function sortRows(rows){
+  const num = NUM_COLS.includes(sortCol)
+  const dir = sortDir==='asc' ? 1 : -1
+  return [...rows].sort((a,b)=>{
+    const va = sortValue(a,sortCol), vb = sortValue(b,sortCol)
+    let cmp = num ? (va-vb) : String(va).localeCompare(String(vb),'pt-BR',{sensitivity:'base',numeric:true})
+    if(cmp===0) cmp = (b.id||0)-(a.id||0)   // desempate estável: mais recente primeiro
+    return cmp*dir
+  })
+}
+function sortBy(col){
+  if(sortCol===col){ sortDir = sortDir==='asc' ? 'desc' : 'asc' }
+  else { sortCol = col; sortDir = NUM_COLS.includes(col) ? 'desc' : 'asc' }
+  renderAcidentes()
+}
+window.sortBy = sortBy
+function updateSortIndicators(){
+  document.querySelectorAll('#sec-acidentes th.th-sort').forEach(th=>{
+    const active = th.dataset.col===sortCol
+    th.classList.toggle('active', active)
+    const ind = th.querySelector('.sort-ind')
+    if(ind) ind.textContent = active ? (sortDir==='asc'?'▲':'▼') : '↕'
+  })
+}
+
 function renderAcidentes(){
-  const rows = filteredData()
+  const rows = sortRows(filteredData())
+  updateSortIndicators()
 
   // Ano + Filial filtram o dashboard (cards e visuais). Status e Busca refinam só a tabela.
   const ano = $('flt-ano').value, fil = $('flt-filial').value
