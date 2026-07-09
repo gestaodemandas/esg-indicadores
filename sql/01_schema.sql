@@ -18,7 +18,7 @@ create table if not exists public.esg_acidentes (
   matricula         text not null default 'N/A',          -- número ou 'N/A' (validado no app)
   data_acidente     date not null,
   tipo_ocorrencia   text not null check (tipo_ocorrencia in ('Acidente','Emergência','Incidente')),
-  tipo_acidente     text not null default 'N/A' check (tipo_acidente in ('N/A','Típico','Trajeto','Prestador')),
+  tipo_acidente     text not null default 'N/A' check (tipo_acidente in ('N/A','Típico','Trajeto','Prestador','Não Caracterizado')),
   tipo_colaborador  text not null check (tipo_colaborador in ('Próprio','Terceirizado','Cliente')),
   empresa           text not null default 'FC',
   funcao            text not null default 'N/A',
@@ -32,7 +32,7 @@ create table if not exists public.esg_acidentes (
   emitida_cat       text not null default 'N/A' check (emitida_cat in ('Sim','Não','N/A')),
   recibo_cat        text not null default 'N/A' check (recibo_cat in ('Sim','Não','N/A')),
   local             text,
-  tipo_equipamento  text not null default 'N/A' check (tipo_equipamento in ('N/A','Carro','Moto','Paleteira','Outros')),
+  tipo_equipamento  text not null default 'N/A' check (tipo_equipamento in ('N/A','Veículo','Empilhadeira','Paleteira','Outros')),
   causa             text,
   parte_corpo       text,
   acao_corretiva    text,
