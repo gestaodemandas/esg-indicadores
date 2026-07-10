@@ -475,6 +475,25 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
   </div>
 </div>
 
+<!-- TROCA DE SENHA (primeiro login) -->
+<div id="pwd-screen" style="display:none;position:fixed;inset:0;z-index:999;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d1710 0%,#1c332a 50%,#0d1710 100%)">
+  <div class="login-card" style="max-width:420px">
+    <div class="login-logo">FC</div>
+    <h2>Troca de Senha Obrigatória</h2>
+    <p>Por segurança, defina sua senha pessoal antes de continuar.<br>Mínimo de 8 caracteres.</p>
+    <div class="lfield">
+      <label>Nova Senha</label>
+      <input type="password" id="pwd-nova" placeholder="Digite sua nova senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')document.getElementById('pwd-conf').focus()">
+    </div>
+    <div class="lfield">
+      <label>Confirmar Nova Senha</label>
+      <input type="password" id="pwd-conf" placeholder="Repita a nova senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitPasswordChange()">
+    </div>
+    <button class="btn-login" id="pwd-btn" onclick="submitPasswordChange()">Confirmar e Acessar</button>
+    <div class="login-err" id="pwd-err"></div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
 <div class="layout home-mode" id="layout">
@@ -1386,6 +1405,33 @@ async function doLogout(){
 
 async function startApp(user){
   $('login-screen').style.display='none'
+  // Primeiro login (senha provisória): obriga a troca antes de entrar
+  if(MODE==='supabase' && user.user_metadata && user.user_metadata.needs_password_change){
+    window._pendingUser = user
+    $('pwd-screen').style.display='flex'
+    return
+  }
+  _launchApp(user)
+}
+
+async function submitPasswordChange(){
+  const nova = $('pwd-nova').value.trim()
+  const conf = $('pwd-conf').value.trim()
+  const err = $('pwd-err'), btn = $('pwd-btn')
+  err.textContent=''
+  if(nova.length < 8){ err.textContent='A senha deve ter pelo menos 8 caracteres.'; return }
+  if(nova === '12345678'){ err.textContent='Escolha uma senha diferente da provisória.'; return }
+  if(nova !== conf){ err.textContent='As senhas não coincidem.'; return }
+  btn.disabled=true; btn.textContent='Salvando…'
+  const {error} = await sb.auth.updateUser({ password:nova, data:{ needs_password_change:false } })
+  btn.disabled=false; btn.textContent='Confirmar e Acessar'
+  if(error){ err.textContent='Erro ao salvar: '+error.message; return }
+  $('pwd-screen').style.display='none'
+  _launchApp(window._pendingUser)
+}
+window.submitPasswordChange = submitPasswordChange
+
+async function _launchApp(user){
   $('app').style.display='block'
   const ini = user.email.slice(0,2).toUpperCase()
   $('sb-av').textContent = ini
