@@ -468,7 +468,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
     <div class="login-logo">FC</div>
     <h2>ESG — Gestão de Indicadores</h2>
     <p>Ferreira Costa — Saúde &amp; Segurança do Trabalho</p>
-    <div class="lfield"><label>E-mail</label><input type="email" id="l-email" placeholder="seu@email.com" autocomplete="email"></div>
+    <div class="lfield"><label>Matrícula</label><input type="text" inputmode="numeric" id="l-email" placeholder="Sua matrícula" autocomplete="username"></div>
     <div class="lfield"><label>Senha</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"></div>
     <button class="btn-login" id="l-btn">Acessar Aplicativo</button>
     <div class="login-err" id="l-err"></div>
@@ -1381,14 +1381,23 @@ function toggleTheme(){
 try{ if(localStorage.getItem('esg-theme')==='dark') document.body.classList.add('dark') }catch(e){}
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
+// Login por matrícula: cada conta é criada no Supabase com um e-mail sintético
+// <matricula>@ESG_LOGIN_DOMAIN (mesmo padrão já usado no app de Gestão de Demandas
+// para contas sem e-mail corporativo). Quem digitar um e-mail de verdade (contém "@")
+// também funciona — cobre contas antigas que já usam e-mail real.
+const ESG_LOGIN_DOMAIN = 'esg.ferreiracosta.com.br'
+function loginToEmail(v){
+  v = v.trim()
+  return v.includes('@') ? v.toLowerCase() : (v + '@' + ESG_LOGIN_DOMAIN).toLowerCase()
+}
 $('l-btn').addEventListener('click', async () => {
-  const email = $('l-email').value.trim()
+  const login = $('l-email').value.trim()
   const pass  = $('l-pass').value
   $('l-err').textContent = ''
-  if(!email||!pass){ $('l-err').textContent='Preencha e-mail e senha.'; return }
+  if(!login||!pass){ $('l-err').textContent='Preencha matrícula e senha.'; return }
   if(!sb){ $('l-err').textContent='Supabase não configurado (SB_URL/SB_KEY).'; return }
   $('l-btn').textContent='Acessando…'; $('l-btn').disabled=true
-  const {data,error} = await sb.auth.signInWithPassword({email,password:pass})
+  const {data,error} = await sb.auth.signInWithPassword({email:loginToEmail(login), password:pass})
   $('l-btn').textContent='Acessar Aplicativo'; $('l-btn').disabled=false
   if(error){ $('l-err').textContent='Credenciais inválidas.'; return }
   startApp(data.user)
@@ -1433,12 +1442,15 @@ window.submitPasswordChange = submitPasswordChange
 
 async function _launchApp(user){
   $('app').style.display='block'
-  const ini = user.email.slice(0,2).toUpperCase()
-  $('sb-av').textContent = ini
-  $('tb-av').textContent = ini
-  $('sb-name').textContent = user.email.split('@')[0]
   if(MODE==='local') $('mode-chip').style.display=''
   await loadAccessContext(user)   // define currentUser + TECNICO_FILIAL (modo supabase)
+  // Nome de exibição: prioriza o nome cadastrado em esg_usuarios (login é por
+  // matrícula/e-mail sintético — mostrar isso pro usuário ficaria feio/confuso)
+  const nomeExibicao = (currentUser && currentUser.nome) ? currentUser.nome : user.email.split('@')[0]
+  const ini = nomeExibicao.slice(0,2).toUpperCase()
+  $('sb-av').textContent = ini
+  $('tb-av').textContent = ini
+  $('sb-name').textContent = nomeExibicao
   loadAcidentes()
   showSection('home')
 }
