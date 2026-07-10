@@ -1381,14 +1381,18 @@ function toggleTheme(){
 try{ if(localStorage.getItem('esg-theme')==='dark') document.body.classList.add('dark') }catch(e){}
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
-// Login por matrícula: cada conta é criada no Supabase com um e-mail sintético
-// <matricula>@ESG_LOGIN_DOMAIN (mesmo padrão já usado no app de Gestão de Demandas
-// para contas sem e-mail corporativo). Quem digitar um e-mail de verdade (contém "@")
-// também funciona — cobre contas antigas que já usam e-mail real.
-const ESG_LOGIN_DOMAIN = 'esg.ferreiracosta.com.br'
-function loginToEmail(v){
+// Login por matrícula: a conta no Supabase usa o e-mail REAL de cada pessoa (o mesmo
+// já cadastrado na planilha de acesso) — não inventamos identidade nova. Quem digitar
+// um e-mail de verdade (contém "@") também funciona direto. Para matrícula, o app
+// consulta a função pública esg_email_por_matricula() pra descobrir qual e-mail usar
+// antes de autenticar (só quem não tem e-mail real na planilha usa um sintético).
+async function loginToEmail(v){
   v = v.trim()
-  return v.includes('@') ? v.toLowerCase() : (v + '@' + ESG_LOGIN_DOMAIN).toLowerCase()
+  if(v.includes('@')) return v.toLowerCase()
+  const {data, error} = await sb.rpc('esg_email_por_matricula', {_matricula:v})
+  if(error) throw new Error('Erro ao consultar matrícula: '+error.message)
+  if(!data) return null   // matrícula não cadastrada
+  return data
 }
 $('l-btn').addEventListener('click', async () => {
   const login = $('l-email').value.trim()
@@ -1397,10 +1401,17 @@ $('l-btn').addEventListener('click', async () => {
   if(!login||!pass){ $('l-err').textContent='Preencha matrícula e senha.'; return }
   if(!sb){ $('l-err').textContent='Supabase não configurado (SB_URL/SB_KEY).'; return }
   $('l-btn').textContent='Acessando…'; $('l-btn').disabled=true
-  const {data,error} = await sb.auth.signInWithPassword({email:loginToEmail(login), password:pass})
-  $('l-btn').textContent='Acessar Aplicativo'; $('l-btn').disabled=false
-  if(error){ $('l-err').textContent='Credenciais inválidas.'; return }
-  startApp(data.user)
+  try{
+    const email = await loginToEmail(login)
+    if(!email){ $('l-err').textContent='Matrícula não encontrada.'; return }
+    const {data,error} = await sb.auth.signInWithPassword({email, password:pass})
+    if(error){ $('l-err').textContent='Credenciais inválidas.'; return }
+    startApp(data.user)
+  } catch(e){
+    $('l-err').textContent = e.message || 'Erro ao acessar.'
+  } finally {
+    $('l-btn').textContent='Acessar Aplicativo'; $('l-btn').disabled=false
+  }
 })
 $('l-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') $('l-btn').click() })
 
