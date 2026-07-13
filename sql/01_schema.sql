@@ -13,7 +13,7 @@
 -- ── 1. Tabela de registros de acidentes/ocorrências ─────────────────────────
 create table if not exists public.esg_acidentes (
   id                bigint generated always as identity primary key,
-  filial            text not null check (filial in ('GUS','IMB','PAL','TAM','AJU','JPA','PNG','CAU','BAR','CABO')),
+  filial            text not null,   -- validado por esg_filial_grupo / RLS (locais dinâmicos, sem CHECK fixo)
   nome              text not null,
   matricula         text not null default 'N/A',          -- número ou 'N/A' (validado no app)
   data_acidente     date not null,
@@ -32,7 +32,8 @@ create table if not exists public.esg_acidentes (
   emitida_cat       text not null default 'N/A' check (emitida_cat in ('Sim','Não','N/A')),
   recibo_cat        text not null default 'N/A' check (recibo_cat in ('Sim','Não','N/A')),
   local             text,
-  tipo_equipamento  text not null default 'N/A' check (tipo_equipamento in ('N/A','Veículo','Empilhadeira','Paleteira','Outros')),
+  tipo_equipamento  text not null default 'N/A' check (tipo_equipamento in ('N/A','Veículo','Empilhadeira','Paleteira','Transpaleteira','PEMT','Prensa','Equipamento de Limpeza','Outros')),
+  tipo_equipamento_outro text,   -- descrição livre quando tipo_equipamento = 'Outros'
   causa             text,
   parte_corpo       text,
   acao_corretiva    text,

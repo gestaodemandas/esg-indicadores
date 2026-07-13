@@ -362,6 +362,7 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .fs-divider span{font-size:.6rem;font-weight:800;color:var(--acid);text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
 .fs-divider::after{content:'';flex:1;height:1px;background:rgba(181,45,57,.3)}
 body.dark .fs-divider::after{background:rgba(181,45,57,.4)}
+.tab-help{font-size:.72rem;color:var(--txt3);line-height:1.5;margin:-.2rem 0 .3rem;padding:.5rem .7rem;background:var(--acid-l);border-left:2px solid var(--acid);border-radius:0 6px 6px 0}
 
 /* TABS DO FORMULÁRIO — barra lateral vertical */
 .modal-main{flex:1;display:flex;min-height:0;overflow:hidden}
@@ -849,10 +850,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
           <div class="field">
             <label>Responsável pelo Comunicado</label>
             <input type="text" id="f-resp-comunicado" placeholder="Nome do responsável" style="text-transform:uppercase">
-          </div>
-          <div class="field">
-            <label>Data do Relatório</label>
-            <input type="date" id="f-data-relatorio">
+            <div class="hint">Preenchido com o técnico logado; edite se necessário</div>
           </div>
         </div>
         <div class="field full">
@@ -866,12 +864,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row-3">
           <div class="field" id="fw-filial">
             <label>Filial <span class="req">*</span></label>
-            <select id="f-filial">
-              <option value="">Selecione…</option>
-              <option>GUS</option><option>IMB</option><option>PAL</option><option>TAM</option><option>AJU</option>
-              <option>JPA</option><option>PNG</option><option>CAU</option><option>BAR</option><option>CABO</option>
-            </select>
+            <select id="f-filial"><option value="">Selecione…</option></select>
             <div class="err-msg">Selecione a filial.</div>
+            <div class="hint" id="hint-filial"></div>
           </div>
           <div class="field" id="fw-data">
             <label>Data do Acidente <span class="req">*</span></label>
@@ -904,19 +899,19 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row">
           <div class="field">
             <label>Empresa</label>
-            <input type="text" id="f-empresa" placeholder="Empresa do colaborador">
-            <div class="hint" id="hint-empresa"></div>
+            <input type="text" id="f-empresa" placeholder="Ex.: ROYAL, American…">
+            <div class="hint" id="hint-empresa">Se terceirizado, informe a empresa (ex.: ROYAL, American, etc.)</div>
           </div>
           <div class="field">
-            <label>Função</label>
-            <input type="text" id="f-funcao" placeholder="Cargo do colaborador">
+            <label>Cargo do Acidentado</label>
+            <input type="text" id="f-funcao" placeholder="Cargo de quem sofreu o acidente">
             <div class="hint" id="hint-funcao"></div>
           </div>
         </div>
         <div class="form-row">
           <div class="field">
-            <label>Setor</label>
-            <input type="text" id="f-setor" placeholder="Setor de lotação do colaborador">
+            <label>Setor do Acidentado</label>
+            <input type="text" id="f-setor" placeholder="Setor de lotação de quem sofreu o acidente">
           </div>
         </div>
         <div class="form-row">
@@ -972,6 +967,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <select id="f-lateralidade-dom">
               <option>N/A</option><option>Destro</option><option>Canhoto</option><option>Ambidestro</option>
             </select>
+            <div class="hint">Mão/lado predominante do acidentado (destro, canhoto ou ambidestro)</div>
           </div>
         </div>
         </div><!-- /tab-pane identificacao -->
@@ -996,8 +992,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
           </div>
           <div class="field">
             <label>Tipo de Equipamento</label>
-            <select id="f-equip">
-              <option>N/A</option><option>Veículo</option><option>Empilhadeira</option><option>Paleteira</option><option>Outros</option>
+            <select id="f-equip" onchange="ruleEquip()">
+              <option>N/A</option><option>Veículo</option><option>Empilhadeira</option><option>Paleteira</option>
+              <option>Transpaleteira</option><option>PEMT</option><option>Prensa</option><option>Equipamento de Limpeza</option><option>Outros</option>
             </select>
           </div>
         </div>
@@ -1006,12 +1003,10 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <label>Local do Acidente</label>
             <input type="text" id="f-local" placeholder="Ponto exato — ex.: rampa de carga, corredor 3">
           </div>
-          <div class="field">
-            <label>Status do Registro</label>
-            <select id="f-status">
-              <option>Pendente</option><option>Finalizado</option>
-            </select>
-            <div class="hint">Pendente enquanto houver etapas em aberto</div>
+          <div class="field" id="fw-equip-outro" style="display:none">
+            <label>Qual equipamento? <span class="req">*</span></label>
+            <input type="text" id="f-equip-outro" placeholder="Descreva o equipamento">
+            <div class="err-msg">Descreva o equipamento.</div>
           </div>
         </div>
         <div class="form-row-3">
@@ -1024,18 +1019,11 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <input type="text" id="f-endereco" placeholder="Endereço completo, se fora da filial">
           </div>
         </div>
-        <div class="form-row-3">
-          <!-- ABERTO: domínio oficial de Espécie ainda não definido — dropdown deixado vazio propositalmente -->
-          <div class="field">
-            <label>Espécie</label>
-            <select id="f-especie" disabled><option value="">A definir</option></select>
-            <div class="hint">Lista oficial pendente de definição</div>
-          </div>
-          <!-- ABERTO: domínio oficial de Situação Geradora ainda não definido -->
+        <div class="form-row">
           <div class="field">
             <label>Situação Geradora</label>
-            <select id="f-situacao-geradora" disabled><option value="">A definir</option></select>
-            <div class="hint">Lista oficial pendente de definição</div>
+            <select id="f-situacao-geradora"><option value="">Selecione…</option></select>
+            <div class="hint">Classificação da situação que gerou o acidente (eSocial – Tabela 15)</div>
           </div>
           <!-- ABERTO: domínio oficial de Agente Causador ainda não definido -->
           <div class="field">
@@ -1149,14 +1137,13 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="form-row">
           <div class="field">
             <label>Parte do Corpo Atingida</label>
-            <input type="text" id="f-parte-corpo" placeholder="Ex.: mão direita, tornozelo…">
-            <div class="hint">Lista padronizada pendente — preenchimento livre por ora</div>
+            <select id="f-parte-corpo"><option value="">Selecione…</option></select>
+            <div class="hint">Localização da lesão (eSocial – Tabela 13)</div>
           </div>
-          <!-- ABERTO: domínio oficial de Natureza da Lesão ainda não definido -->
           <div class="field">
             <label>Natureza da Lesão</label>
-            <select id="f-natureza-lesao" disabled><option value="">A definir</option></select>
-            <div class="hint">Lista oficial pendente de definição</div>
+            <select id="f-natureza-lesao"><option value="">Selecione…</option></select>
+            <div class="hint">Tipo da lesão sofrida (eSocial)</div>
           </div>
         </div>
         <div class="form-row">
@@ -1186,6 +1173,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
 
         <div class="tab-pane" data-tab="analise">
         <div class="fs-divider"><span>Análise — 5 Porquês</span></div>
+        <p class="tab-help">Técnica de causa-raiz: parta do problema e pergunte "por quê?" sucessivamente, cada resposta motivando a próxima, até chegar à causa fundamental (não à causa aparente).</p>
         <div class="field full">
           <label>Problema</label>
           <textarea id="f-5p-problema" placeholder="Descreva o problema central a ser analisado…"></textarea>
@@ -1212,6 +1200,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         </div>
 
         <div class="fs-divider"><span>Plano de Ação</span></div>
+        <p class="tab-help">Ações corretivas/preventivas para evitar a recorrência. Cada linha: o que fazer, quem é o responsável e até quando (prazo).</p>
         <div class="dyn-table" id="dyn-plano">
           <div class="dyn-head">
             <span style="flex:2">Ação</span><span style="flex:1.2">Responsável</span><span style="width:150px">Prazo</span><span style="width:32px"></span>
@@ -1224,6 +1213,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         </button>
 
         <div class="fs-divider"><span>Grupo de Análise</span></div>
+        <p class="tab-help">Pessoas que participaram da investigação/análise da ocorrência. Registre nome, setor e a assinatura de cada participante.</p>
         <div class="dyn-table" id="dyn-grupo">
           <div class="dyn-head">
             <span style="flex:1.4">Nome</span><span style="flex:1">Setor</span><span style="flex:1">Assinatura</span><span style="width:32px"></span>
@@ -1345,6 +1335,126 @@ let CID_LOCAL = [
 ]
 fetch('cid10.json').then(r=>r.ok?r.json():null).then(d=>{ if(Array.isArray(d)&&d.length) CID_LOCAL=d }).catch(()=>{})
 const FILIAIS = ['GUS','IMB','PAL','TAM','AJU','JPA','PNG','CAU','BAR','CABO']
+// Locais extras atendidos por alguns técnicos (além da filial-sede)
+const LOCAIS_EXTRA = ['CD ALH','DEP JPA','MESTRE NILO','CD LAU','CD ST DRU']
+const TODOS_LOCAIS = FILIAIS.concat(LOCAIS_EXTRA)
+// Grupo de locais que cada filial-sede pode atender (não listado = só a própria)
+const FILIAL_GRUPO = {
+  JPA: ['JPA','CD ALH','DEP JPA'],
+  GUS: ['GUS','MESTRE NILO'],
+  PAL: ['PAL','CD LAU'],
+  BAR: ['BAR','CD ST DRU']
+}
+// Locais que o usuário logado pode escolher no formulário
+function locaisPermitidos(){
+  if(MODE!=='supabase' || !currentUser || currentUser.ver_todas) return TODOS_LOCAIS
+  return FILIAL_GRUPO[currentUser.filial] || [currentUser.filial]
+}
+
+// ── Listas suspensas (eSocial) ────────────────────────────────────────────────
+const SIT_GERADORA = [
+  'Impacto de pessoa contra objeto parado','Impacto de pessoa contra objeto em movimento',
+  'Impacto sofrido por pessoa, de objeto que cai','Impacto sofrido por pessoa, de objeto projetado',
+  'Impacto sofrido por pessoa, NIC',
+  'Queda de pessoa com diferença de nível de andaime, passagem, plataforma, etc.',
+  'Queda de pessoa com diferença de nível de escada móvel ou fixada cujos degraus não permitem o apoio integral do pé',
+  'Queda de pessoa com diferença de nível de material empilhado','Queda de pessoa com diferença de nível de veículo',
+  'Queda de pessoa com diferença de nível em escada permanente cujos degraus permitem apoio integral do pé',
+  'Queda de pessoa com diferença de nível em poço, escavação, abertura no piso, etc. (da borda da abertura)',
+  'Queda de pessoa com diferença de nível, NIC',
+  'Queda de pessoa em mesmo nível em passagem ou superfície de sustentação',
+  'Queda de pessoa em mesmo nível sobre ou contra alguma coisa','Queda de pessoa em mesmo nível, NIC',
+  'Aprisionamento em, sob ou entre objetos em movimento convergente (calandra) ou de encaixe',
+  'Aprisionamento em, sob ou entre um objeto parado e outro em movimento',
+  'Aprisionamento em, sob ou entre dois ou mais objetos em movimento (sem encaixe)',
+  'Aprisionamento em, sob ou entre desabamento ou desmoronamento de edificação, barreira, etc.',
+  'Aprisionamento em, sob ou entre, NIC',
+  'Atrito ou abrasão por encostar, pisar, ajoelhar ou sentar em objeto (não em vibração)',
+  'Atrito ou abrasão por manusear objeto (não em vibração)','Atrito ou abrasão por objeto em vibração',
+  'Atrito ou abrasão por corpo estranho no olho','Atrito ou abrasão por compressão repetitiva','Atrito ou abrasão, NIC',
+  'Reação do corpo a seus movimentos - movimento involuntário (escorregão sem queda, etc.)',
+  'Reação do corpo a seus movimentos - movimento voluntário',
+  'Esforço excessivo ao erguer objeto','Esforço excessivo ao empurrar ou puxar objeto',
+  'Esforço excessivo ao manejar, sacudir ou arremessar objeto','Esforço excessivo, NIC',
+  'Exposição à energia elétrica',
+  'Contato com objeto ou substância a temperatura muito alta','Contato com objeto ou substância a temperatura muito baixa',
+  'Exposição à temperatura ambiente elevada','Exposição à temperatura ambiente baixa',
+  'Inalação de substância cáustica, tóxica ou nociva','Ingestão de substância cáustica, tóxica ou nociva',
+  'Absorção (por contato) de substância cáustica, tóxica ou nociva','Inalação, ingestão e absorção, NIC',
+  'Imersão','Exposição à radiação não ionizante','Exposição à radiação ionizante','Exposição ao ruído',
+  'Exposição à vibração','Exposição à pressão ambiente','Exposição à pressão ambiente elevada',
+  'Exposição à pressão ambiente baixa','Exposição à poluição da água','Exposição à poluição do ar',
+  'Exposição à poluição do solo','Exposição à poluição, NIC',
+  'Ataque de ser vivo por mordedura, picada, chifrada, coice, etc.','Ataque de ser vivo com peçonha',
+  'Ataque de ser vivo com transmissão de doença','Ataque de ser vivo (inclusive do homem), NIC',
+  'Contato com pessoas doentes ou material infectocontagiante - agentes biológicos',
+  'Tipo, NIC','Tipo inexistente'
+]
+const NAT_LESAO = [
+  'Escoriação, abrasão (ferimento superficial)','Corte, laceração, ferida contusa, punctura (ferida aberta)',
+  'Contusão, esmagamento (superfície cutânea intacta)','Distensão, torção',
+  'Inflamação de articulação, tendão ou músculo','Luxação','Fratura',
+  'Queimadura ou escaldadura (efeito de temperatura elevada)','Queimadura química',
+  'Efeito de radiação (imediato)','Congelamento e outros efeitos da exposição à baixa temperatura',
+  'Asfixia, estrangulamento, afogamento','Intermação, insolação, cãibra e outros efeitos da temperatura ambiente elevada',
+  'Choque elétrico e eletroplessão (eletrocussão)','Hérnia de qualquer natureza, ruptura','Amputação ou enucleação',
+  'Perda ou diminuição de sentido (audição, visão, olfato, paladar, tato)','Concussão cerebral','Lesão imediata, NIC',
+  'Doença contagiosa ou infecciosa','Pneumoconiose (silicose, asbestose, etc.)','Dermatose',
+  'Envenenamento sistêmico','Perda ou diminuição mediatas de sentido','Efeito de radiação (mediato)',
+  'Doença, NIC','Lesões múltiplas','Outras lesões, NIC'
+]
+const PARTE_CORPO = [
+  'Crânio (inclusive encéfalo)','Ouvido (externo, médio, interno, audição e equilíbrio)',
+  'Olho (inclusive nervo ótico e visão)','Nariz (inclusive fossas nasais, seios da face e olfato)',
+  'Boca (inclusive lábios, dentes, língua, garganta e paladar)','Mandíbula (inclusive queixo)',
+  'Face, partes múltiplas','Cabeça, partes múltiplas','Cabeça, NIC',
+  'Braço (entre o punho e o ombro)','Braço (acima do cotovelo)','Pescoço','Cotovelo',
+  'Antebraço (entre o punho e o cotovelo)','Punho','Mão (exceto punho ou dedos)','Dedo',
+  'Membros superiores, partes múltiplas','Membros superiores, NIC','Ombro',
+  'Tórax (inclusive órgãos internos)','Dorso (inclusive músculos dorsais, coluna e medula espinhal)',
+  'Abdome (inclusive órgãos internos)','Quadris (inclusive pélvis, órgãos pélvicos e nádegas)',
+  'Tronco, partes múltiplas','Tronco, NIC','Perna (entre o tornozelo e a pélvis)','Coxa','Joelho',
+  'Perna (do tornozelo ao joelho)','Articulação do tornozelo','Pé (exceto artelhos)','Artelho',
+  'Membros inferiores, partes múltiplas','Membros inferiores, NIC','Partes múltiplas',
+  'Sistemas e aparelhos','Aparelho circulatório','Aparelho respiratório','Sistema nervoso',
+  'Aparelho digestivo','Aparelho gênito-urinário','Sistema musculoesquelético','Sistemas e aparelhos, NIC',
+  'Localização da lesão, NIC'
+]
+// Preenche um <select> com placeholder + opções, preservando o valor atual se possível
+function fillSelect(id, opts, placeholder){
+  const el = $(id); if(!el) return
+  const atual = el.value
+  el.innerHTML = '<option value="">'+(placeholder||'Selecione…')+'</option>' + opts.map(o=>`<option>${esc(o)}</option>`).join('')
+  if(atual && opts.includes(atual)) el.value = atual
+}
+function fillListasSuspensas(){
+  fillSelect('f-situacao-geradora', SIT_GERADORA)
+  fillSelect('f-natureza-lesao', NAT_LESAO)
+  fillSelect('f-parte-corpo', PARTE_CORPO)
+  fillSelect('f-filial', locaisPermitidos(), 'Selecione…')
+}
+
+// ── CAMPOS OBRIGATÓRIOS ───────────────────────────────────────────────────────
+// Só estes contam para o % de conclusão. O resto do formulário é complementar.
+const REQUIRED = [
+  ['f-filial','filial','Filial'],
+  ['f-data','data_acidente','Data do Acidente'],
+  ['f-nome','nome','Nome'],
+  ['f-matricula','matricula','Matrícula'],
+  ['f-funcao','funcao','Cargo do Acidentado'],
+  ['f-tipo-colab','tipo_colaborador','Tipo de Colaborador'],
+  ['f-tipo-ocor','tipo_ocorrencia','Tipo de Ocorrência'],
+  ['f-tipo-acid','tipo_acidente','Tipo de Acidente'],
+  ['f-desc','descricao_sumaria','Descrição Sumária'],
+  ['f-situacao-geradora','situacao_geradora','Situação Geradora'],
+  ['f-natureza-lesao','natureza_lesao','Natureza da Lesão'],
+  ['f-parte-corpo','parte_corpo','Parte do Corpo Atingida'],
+  ['f-atestado','atestado_medico','Atestado Médico'],
+  ['f-cat','emitida_cat','Emitida CAT'],
+  ['f-causa','causa','Causa'],
+  ['f-acao','acao_corretiva','Ação Corretiva']
+]
+const REQUIRED_IDS = REQUIRED.map(r=>r[0])
 
 let DS = []            // dataset de acidentes
 let editId = null      // id em edição (null = novo)
@@ -1599,7 +1709,10 @@ function buildFilters(){
   if([...selAno.options].some(o=>o.value===curAno)) selAno.value=curAno
 
   const selFil = $('flt-filial'); const curFil = selFil.value||'TODAS'
-  selFil.innerHTML = '<option value="TODAS">Todas</option>' + FILIAIS.map(f=>`<option>${f}</option>`).join('')
+  // Mostra só os locais que realmente aparecem nos dados carregados (evita poluir com locais sem registro)
+  const filiaisComDados = [...new Set(DS.map(r=>r.filial).filter(Boolean))].sort()
+  const listaFil = filiaisComDados.length ? filiaisComDados : TODOS_LOCAIS
+  selFil.innerHTML = '<option value="TODAS">Todas</option>' + listaFil.map(f=>`<option>${esc(f)}</option>`).join('')
   if([...selFil.options].some(o=>o.value===curFil)) selFil.value=curFil
 }
 
@@ -1622,38 +1735,14 @@ function scopedRows(skip){
 }
 function filteredData(){ return scopedRows() }
 
-// Conjunto canônico de campos que contam para a conclusão de um registro.
-// Exclui os 4 de domínio pendente (Espécie/Situação Geradora/Agente Causador/
-// Natureza da Lesão) e as listas dinâmicas (Plano de Ação/Grupo de Análise).
-const FIELD_DEFS = [
-  ['tecnico_seguranca','Técnico de Segurança'],['matricula_tecnico','Matrícula do Técnico'],
-  ['data_comunicado','Data do Comunicado'],['responsavel_comunicado','Responsável pelo Comunicado'],
-  ['data_relatorio','Data do Relatório'],['informacao_preliminar','Informação Preliminar'],
-  ['filial','Filial'],['data_acidente','Data do Acidente'],['matricula','Matrícula'],['nome','Nome'],
-  ['tipo_colaborador','Tipo de Colaborador'],['empresa','Empresa'],['funcao','Função'],['setor','Setor'],
-  ['tempo_empresa_anos','Tempo na Empresa (anos)'],['tempo_empresa_meses','Tempo na Empresa (meses)'],
-  ['tempo_cargo_anos','Tempo no Cargo (anos)'],['tempo_cargo_meses','Tempo no Cargo (meses)'],
-  ['lideranca_imediata','Liderança Imediata'],['matricula_lideranca','Matrícula da Liderança'],
-  ['habilitacao','Habilitação / Autorização'],['lateralidade_dominante','Lateralidade Dominante'],
-  ['tipo_ocorrencia','Tipo de Ocorrência'],['tipo_acidente','Tipo de Acidente'],['tipo_equipamento','Tipo de Equipamento'],
-  ['local','Local do Acidente'],['status','Status do Registro'],['horario_acidente','Horário do Acidente'],
-  ['endereco','Endereço'],['trabalho_habitual','Trabalho Habitual'],['utilizou_epi','Utilizou EPI'],
-  ['atestado_medico','Atestado Médico'],['qtd_atestados','Qtd. Atestados'],['qtd_dias_atestado','Qtd. Dias de Atestado'],
-  ['cid_informado','CID Informado'],['nome_medico','Nome do Médico'],['crm_uf','CRM / UF'],
-  ['data_atendimento','Data do Atendimento'],['dias_afastamento','Dias de Afastamento'],['dias_internacao','Dias em Internação'],
-  ['emitida_cat','Emitida CAT'],['recibo_cat','Recibo CAT'],
-  ['descricao_sumaria','Descrição Sumária'],['causa','Causa'],['parte_corpo','Parte do Corpo Atingida'],
-  ['lateralidade_lesao','Lateralidade da Lesão'],['gravidade','Gravidade'],['acao_corretiva','Ação Corretiva'],
-  ['problema_5p','Problema (5 Porquês)'],['porque_1','Por quê? (1)'],['porque_2','Por quê? (2)'],
-  ['porque_3','Por quê? (3)'],['porque_4','Por quê? (4)'],['porque_5','Por quê? (5)'],['local_data','Local e Data']
-]
+// A conclusão do registro considera SOMENTE os campos obrigatórios (REQUIRED).
+// O restante do formulário é complementar e não entra no %.
+const FIELD_DEFS = REQUIRED.map(([,key,label]) => [key, label])
 // Calcula conclusão a partir do registro (fallback para registros sem snapshot salvo)
 function recCompletion(r){
-  // campo "CID" (código) entra na conta apenas quando cid_informado === 'Sim'
-  const list = r.cid_informado==='Sim' ? FIELD_DEFS.concat([['cid_codigo','CID']]) : FIELD_DEFS
   const filled = v => v!==null && v!==undefined && String(v).trim()!==''
-  const pendentes = list.filter(([k]) => !filled(r[k])).map(([,label]) => label)
-  const total = list.length
+  const pendentes = FIELD_DEFS.filter(([k]) => !filled(r[k])).map(([,label]) => label)
+  const total = FIELD_DEFS.length
   const pct = total ? Math.round((total-pendentes.length)/total*100) : 100
   return { pct, pendentes }
 }
@@ -1910,10 +1999,10 @@ let activeTab = 'comunicado'
 // mesmo num formulário em branco, inflando o % antes de qualquer ação do usuário.
 let touchedFields = new Set()
 
+// Só os campos OBRIGATÓRIOS entram no cálculo de conclusão (por aba ou geral).
 function fieldsInScope(container){
   return [...container.querySelectorAll('input,select,textarea')]
-    .filter(el => el.id && el.id.startsWith('f-'))
-    .filter(el => !DOMINIO_PENDENTE.includes(el.id))
+    .filter(el => REQUIRED_IDS.includes(el.id))
     .filter(el => { const f = el.closest('.field'); return !f || f.style.display !== 'none' })
 }
 function scopeProgress(container){
@@ -2039,11 +2128,11 @@ function ruleColaborador(){
     emp.value='FC'; emp.readOnly=true; $('hint-empresa').textContent='Colaborador próprio — empresa FC'; touchedFields.add('f-empresa')
     fun.readOnly=false; if(fun.value==='N/A'){ fun.value=''; touchedFields.delete('f-funcao') } ; $('hint-funcao').textContent=''
   } else if(v){
-    emp.readOnly=false; if(emp.value==='FC'){ emp.value=''; touchedFields.delete('f-empresa') }; $('hint-empresa').textContent=''
-    fun.value='N/A'; fun.readOnly=true; $('hint-funcao').textContent='Não é colaborador próprio — função N/A'; touchedFields.add('f-funcao')
+    emp.readOnly=false; if(emp.value==='FC'){ emp.value=''; touchedFields.delete('f-empresa') }; $('hint-empresa').textContent=HINT_EMPRESA
+    fun.readOnly=false; $('hint-funcao').textContent=''
   } else {
     emp.readOnly=false; fun.readOnly=false
-    $('hint-empresa').textContent=''; $('hint-funcao').textContent=''
+    $('hint-empresa').textContent=HINT_EMPRESA; $('hint-funcao').textContent=''
   }
   updateProgress()
 }
@@ -2100,20 +2189,30 @@ document.addEventListener('click', e=>{ if(!e.target.closest('.cid-wrap')) $('ci
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
 // Selects com domínio ainda não definido — permanecem desabilitados após reset
-const DOMINIO_PENDENTE = ['f-especie','f-situacao-geradora','f-agente-causador','f-natureza-lesao']
+const DOMINIO_PENDENTE = ['f-agente-causador']
+const HINT_EMPRESA = 'Se terceirizado, informe a empresa (ex.: ROYAL, American, etc.)'
+
+// Tipo de Equipamento = Outros → exige descrever qual
+function ruleEquip(){
+  const outros = $('f-equip').value==='Outros'
+  $('fw-equip-outro').style.display = outros ? '' : 'none'
+  if(!outros){ $('f-equip-outro').value=''; touchedFields.delete('f-equip-outro') }
+  updateProgress()
+}
 
 function resetForm(){
   touchedFields = new Set()
   document.querySelectorAll('#form input, #form textarea').forEach(i=>{ i.value=''; i.readOnly=false })
   document.querySelectorAll('#form select').forEach(s=>{ s.disabled=false; s.selectedIndex=0 })
+  fillListasSuspensas()   // popula Situação Geradora, Natureza da Lesão, Parte do Corpo e Filial
   DOMINIO_PENDENTE.forEach(id=>{ $(id).disabled=true })
   document.querySelectorAll('#form .field').forEach(f=>f.classList.remove('err'))
-  $('f-status').value='Pendente'
   cidConfirmed=null
   $('cid-confirm').classList.remove('show')
   $('cid-sug').classList.remove('open')
   $('fw-cid').style.display='none'
-  $('hint-empresa').textContent=''; $('hint-funcao').textContent=''; $('hint-tipo-acid').textContent=''
+  $('fw-equip-outro').style.display='none'
+  $('hint-empresa').textContent=HINT_EMPRESA; $('hint-funcao').textContent=''; $('hint-tipo-acid').textContent=''
   renderPlanoRows([]); renderGrupoRows([])
   $('modal-msg').textContent=''; $('modal-msg').className='modal-msg'
   renderTabs()
@@ -2138,8 +2237,8 @@ function openModal(id){
     $('f-tipo-ocor').value=r.tipo_ocorrencia||''
     $('f-tipo-acid').value=r.tipo_acidente||'N/A'
     $('f-equip').value=r.tipo_equipamento||'N/A'
+    $('f-equip-outro').value=r.tipo_equipamento_outro||''
     $('f-local').value=r.local||''
-    $('f-status').value=r.status||'Pendente'
     $('f-atestado').value=r.atestado_medico||'N/A'
     $('f-qtd-atest').value=r.qtd_atestados??'N/A'
     $('f-qtd-dias').value=r.qtd_dias_atestado??'N/A'
@@ -2149,13 +2248,14 @@ function openModal(id){
     $('f-desc').value=r.descricao_sumaria||''
     $('f-causa').value=r.causa||''
     $('f-parte-corpo').value=r.parte_corpo||''
+    $('f-natureza-lesao').value=r.natureza_lesao||''
+    $('f-situacao-geradora').value=r.situacao_geradora||''
     $('f-acao').value=r.acao_corretiva||''
     // Dados do Comunicado
     $('f-tec-seg').value=r.tecnico_seguranca||''
     $('f-matricula-tec').value=r.matricula_tecnico||''
     $('f-data-comunicado').value=r.data_comunicado||''
     $('f-resp-comunicado').value=r.responsavel_comunicado||''
-    $('f-data-relatorio').value=r.data_relatorio||''
     $('f-info-preliminar').value=r.informacao_preliminar||''
     // Identificação — complemento
     $('f-setor').value=r.setor||''
@@ -2192,7 +2292,7 @@ function openModal(id){
     renderPlanoRows(r.plano_acao||[])
     renderGrupoRows(r.grupo_analise||[])
     $('f-local-data').value=r.local_data||''
-    ruleOcorrencia(); ruleColaborador(); ruleAtestado(); ruleCid()
+    ruleOcorrencia(); ruleColaborador(); ruleAtestado(); ruleCid(); ruleEquip()
     if(r.cid_informado==='Sim' && r.cid_codigo){
       $('f-cid').value=r.cid_codigo
       cidConfirmed={codigo:r.cid_codigo, descricao:r.cid_descricao||''}
@@ -2210,38 +2310,32 @@ function openModal(id){
       applyAccessDefaults()
     } else {
       const p = getPerfil()
-      if(p && p.nome){ $('f-tec-seg').value = p.nome; touchedFields.add('f-tec-seg') }
+      if(p && p.nome){ $('f-tec-seg').value = p.nome; $('f-resp-comunicado').value = p.nome; touchedFields.add('f-tec-seg'); touchedFields.add('f-resp-comunicado') }
       if(p && p.matricula){ $('f-matricula-tec').value = p.matricula; touchedFields.add('f-matricula-tec') }
     }
     $('f-data-comunicado').value = new Date().toISOString().slice(0,10)
     touchedFields.add('f-data-comunicado')
   }
-  lockFilialSePreciso()   // usuário de filial (não corporativo) não troca a filial
+  // Filial fica sempre editável; para técnico, as opções já vêm restritas ao seu grupo
+  $('f-filial').disabled = false
+  const hf = $('hint-filial')
+  if(hf) hf.textContent = (MODE==='supabase' && currentUser && !currentUser.ver_todas && FILIAL_GRUPO[currentUser.filial]) ? 'Você pode registrar em qualquer local do seu grupo' : ''
   $('modal-overlay').classList.add('open')
   updateProgress()
   formDirty = false   // pré-preenchimentos automáticos não contam como alteração do usuário
 }
 
-// No modo supabase: usuário de filial tem a filial travada; corporativo escolhe livremente.
-function lockFilialSePreciso(){
-  const fsel = $('f-filial')
-  if(MODE==='supabase' && currentUser && !currentUser.ver_todas && currentUser.filial){
-    if(!editId){ fsel.value = currentUser.filial; touchedFields.add('f-filial') }
-    fsel.disabled = true
-  } else {
-    fsel.disabled = false
-  }
-}
-// Preenche filial (se travada) e o Técnico de Segurança/Matrícula com a identidade
-// de quem está LOGADO agora (é normalmente quem está de fato preenchendo o registro,
-// seja técnico, supervisor ou corporativo). Só cai no técnico oficial da filial (via
-// esg_tecnico_filial) se por algum motivo o usuário logado não tiver nome cadastrado.
+// Pré-preenche a filial-sede (default do grupo, editável) e o Técnico/Responsável +
+// Matrícula com a identidade de quem está LOGADO (normalmente quem preenche o registro).
+// Só cai no técnico oficial da filial (esg_tecnico_filial) se o usuário logado não
+// tiver nome cadastrado.
 function applyAccessDefaults(){
   if(currentUser && !currentUser.ver_todas && currentUser.filial){
     $('f-filial').value = currentUser.filial; touchedFields.add('f-filial')
   }
   if(currentUser && currentUser.nome){
     $('f-tec-seg').value = currentUser.nome; touchedFields.add('f-tec-seg')
+    $('f-resp-comunicado').value = currentUser.nome; touchedFields.add('f-resp-comunicado')
     if(currentUser.matricula){ $('f-matricula-tec').value = currentUser.matricula; touchedFields.add('f-matricula-tec') }
   } else {
     autofillTecnico($('f-filial').value)
@@ -2259,7 +2353,18 @@ function autofillTecnico(filial){
   }
 }
 window.openModal = openModal
+// Campos que só aceitam número ou "N/A" — filtra a digitação em tempo real
+const NUMNA_IDS = ['f-matricula','f-matricula-tec','f-matricula-lideranca','f-qtd-atest','f-qtd-dias',
+  'f-dias-afastamento','f-dias-internacao','f-tempo-empresa-anos','f-tempo-empresa-meses',
+  'f-tempo-cargo-anos','f-tempo-cargo-meses']
+function sanitizeNumNA(el){
+  const up = el.value.toUpperCase()
+  if(up && 'N/A'.startsWith(up)){ el.value = up; return }   // digitando N, N/, N/A
+  const digits = el.value.replace(/\D/g,'')
+  if(digits !== el.value) el.value = digits
+}
 function onFormChange(e){
+  if(e.target && e.target.id && NUMNA_IDS.includes(e.target.id)) sanitizeNumNA(e.target)
   if(e.target && e.target.id && e.target.id.startsWith('f-')) touchedFields.add(e.target.id)
   // Corporativo trocou a filial: só sugere o técnico oficial daquela filial se o
   // campo ainda estiver vazio — nunca sobrescreve um nome que já esteja preenchido
@@ -2311,6 +2416,7 @@ async function saveAcidente(){
   bad = markErr('fw-tempo-empresa-meses', !isNumOuNAOuVazio($('f-tempo-empresa-meses').value)) || bad
   bad = markErr('fw-tempo-cargo-anos', !isNumOuNAOuVazio($('f-tempo-cargo-anos').value)) || bad
   bad = markErr('fw-tempo-cargo-meses', !isNumOuNAOuVazio($('f-tempo-cargo-meses').value)) || bad
+  bad = markErr('fw-equip-outro', $('f-equip').value==='Outros' && !$('f-equip-outro').value.trim()) || bad
   if(bad){ $('modal-msg').textContent='Corrija os campos destacados.'; $('modal-msg').className='modal-msg err'; return }
 
   if($('f-cid-inf').value==='Sim' && !cidConfirmed){
@@ -2325,8 +2431,7 @@ window.saveAcidente = saveAcidente
 
 // Salva rascunho sem exigir campos obrigatórios (status forçado a Pendente)
 async function saveDraft(){
-  const rec = buildRec()
-  rec.status = 'Pendente'
+  const rec = buildRec()   // status já é derivado da conclusão em buildRec
   await persistRec(rec, 'Rascunho salvo.')
 }
 window.saveDraft = saveDraft
@@ -2355,17 +2460,16 @@ function buildRec(){
     recibo_cat: $('f-cat-rec').value,
     local: $('f-local').value.trim() || null,
     tipo_equipamento: $('f-equip').value,
+    tipo_equipamento_outro: ($('f-equip').value==='Outros') ? ($('f-equip-outro').value.trim() || null) : null,
     causa: $('f-causa').value.trim() || null,
-    parte_corpo: $('f-parte-corpo').value.trim() || null,
+    parte_corpo: $('f-parte-corpo').value || null,
     acao_corretiva: $('f-acao').value.trim() || null,
-    status: $('f-status').value,
 
     // Dados do Comunicado
     tecnico_seguranca: $('f-tec-seg').value.trim() || null,
     matricula_tecnico: $('f-matricula-tec').value.trim() ? norm($('f-matricula-tec').value) : null,
     data_comunicado: $('f-data-comunicado').value || null,
     responsavel_comunicado: $('f-resp-comunicado').value.trim().toUpperCase() || null,
-    data_relatorio: $('f-data-relatorio').value || null,
     informacao_preliminar: $('f-info-preliminar').value.trim() || null,
 
     // Identificação — complemento
@@ -2382,8 +2486,7 @@ function buildRec(){
     // Classificação — complemento
     horario_acidente: $('f-horario').value || null,
     endereco: $('f-endereco').value.trim() || null,
-    especie: null,            // ABERTO: domínio pendente de definição
-    situacao_geradora: null,  // ABERTO: domínio pendente de definição
+    situacao_geradora: $('f-situacao-geradora').value || null,
     agente_causador: null,    // ABERTO: domínio pendente de definição
     trabalho_habitual: $('f-trabalho-habitual').value,
     utilizou_epi: $('f-epi').value,
@@ -2396,7 +2499,7 @@ function buildRec(){
     dias_internacao: $('f-dias-internacao').value.trim() ? norm($('f-dias-internacao').value) : null,
 
     // Lesão
-    natureza_lesao: null,     // ABERTO: domínio pendente de definição
+    natureza_lesao: $('f-natureza-lesao').value || null,
     lateralidade_lesao: $('f-lateralidade-lesao').value,
     gravidade: $('f-gravidade').value || null,
 
@@ -2416,6 +2519,8 @@ function buildRec(){
   const comp = computeCompletion()
   rec.completude = comp.pct
   rec.campos_pendentes = comp.pendentes
+  // Status deixou de ser campo manual: é derivado da conclusão dos obrigatórios.
+  rec.status = comp.pct >= 100 ? 'Finalizado' : 'Pendente'
   return rec
 }
 
