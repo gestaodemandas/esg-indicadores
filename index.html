@@ -2232,14 +2232,23 @@ function lockFilialSePreciso(){
     fsel.disabled = false
   }
 }
-// Preenche filial (se travada) e técnico da filial a partir da referência
+// Preenche filial (se travada) e o Técnico de Segurança/Matrícula com a identidade
+// de quem está LOGADO agora (é normalmente quem está de fato preenchendo o registro,
+// seja técnico, supervisor ou corporativo). Só cai no técnico oficial da filial (via
+// esg_tecnico_filial) se por algum motivo o usuário logado não tiver nome cadastrado.
 function applyAccessDefaults(){
   if(currentUser && !currentUser.ver_todas && currentUser.filial){
     $('f-filial').value = currentUser.filial; touchedFields.add('f-filial')
   }
-  autofillTecnico($('f-filial').value)
+  if(currentUser && currentUser.nome){
+    $('f-tec-seg').value = currentUser.nome; touchedFields.add('f-tec-seg')
+    if(currentUser.matricula){ $('f-matricula-tec').value = currentUser.matricula; touchedFields.add('f-matricula-tec') }
+  } else {
+    autofillTecnico($('f-filial').value)
+  }
 }
-// Autopreenche Técnico de Segurança + matrícula conforme a filial (mapa TECNICO_FILIAL)
+// Autopreenche Técnico de Segurança + matrícula conforme a filial (mapa TECNICO_FILIAL) —
+// só usado como alternativa quando o usuário logado não tem identidade própria disponível.
 function autofillTecnico(filial){
   const t = filial && TECNICO_FILIAL[filial]
   if(t){
@@ -2252,8 +2261,10 @@ function autofillTecnico(filial){
 window.openModal = openModal
 function onFormChange(e){
   if(e.target && e.target.id && e.target.id.startsWith('f-')) touchedFields.add(e.target.id)
-  // Corporativo trocou a filial → reautopreenche o técnico daquela filial
-  if(e.target && e.target.id==='f-filial' && MODE==='supabase') autofillTecnico(e.target.value)
+  // Corporativo trocou a filial: só sugere o técnico oficial daquela filial se o
+  // campo ainda estiver vazio — nunca sobrescreve um nome que já esteja preenchido
+  // (nem o do próprio usuário logado, autopreenchido ao abrir o formulário).
+  if(e.target && e.target.id==='f-filial' && MODE==='supabase' && !$('f-tec-seg').value.trim()) autofillTecnico(e.target.value)
   formDirty = true
   updateProgress()
 }
