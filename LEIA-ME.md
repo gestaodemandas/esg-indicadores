@@ -1,6 +1,6 @@
 # Aplicativo ESG — Gestão de Indicadores
 
-Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes** e **ASO**. Os demais (Visão Geral, CIPA, Brigada, Treinamentos) aparecem na capa como "Em breve".
+Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes**, **ASO** e **Treinamentos**. Os demais (Visão Geral, CIPA, Brigada) aparecem na capa como "Em breve".
 
 - **Publicado em**: https://gestaodemandas.github.io/esg-indicadores/
 - **Repositório**: https://github.com/gestaodemandas/esg-indicadores
@@ -16,6 +16,7 @@ Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e anál
 | `sql/02_seed_cid10_amostra.sql` | Popula `esg_cid10` com a amostra |
 | `sql/03_migracao_form.sql` | Migração da revisão de formulário (jul/2026): coluna `tipo_equipamento_outro`, domínio ampliado de equipamentos, tabela `esg_filial_grupo` + `esg_pode_ver()` por grupo de locais |
 | `sql/04_aso.sql` | Cria `esg_aso_upload` + `esg_aso_exame` (módulo ASO) e RLS — **depende de `esg_pode_ver()`, já criado por `01`/`03`; rodar depois desses** |
+| `sql/05_treinamentos.sql` | Cria `esg_trein_catalogo` (com seed dos 12 treinamentos NR) + `esg_trein_registro` e RLS — **rodar depois de `01`/`03`/`04`** (usa `esg_pode_ver` e `esg_e_corporativo`) |
 | `dados/` | **Fora do git** (`.gitignore` — contém nomes/e-mails/matrículas, LGPD). Scripts de carga histórica, controle de acesso e backups |
 | `.claude/launch.json` *(fora desta pasta, na raiz de Sessões Claude)* | Config do preview local (`esg-app`, porta 8734) |
 
@@ -189,6 +190,27 @@ Códigos fora desta tabela (confirmados nos dados reais: `601`, `701`) **ficam c
 - Códigos `601` e `701` (vistos nos dados reais) não têm sigla confirmada — ficam com o valor bruto.
 - Reconciliar a grafia "ALH" (CODFIL 93, 100–112) com "CD ALH" do `esg_filial_grupo` do módulo Acidentes, se a intenção for que o mesmo técnico enxergue os dois.
 - Sem interface para consultar snapshots antigos (ficam no banco, mas só a versão vigente aparece no app).
+
+## Módulo Treinamentos
+
+Substitui as planilhas "CONTROLE DE TREINAMENTOS" (uma por filial, uma aba por NR). Decisão (2026-07-14): o pessoal da filial **preenche direto no app**; as planilhas atuais entram só como carga inicial via importação e depois são aposentadas.
+
+### Princípio: só 3 dados são "de verdade"
+Na planilha antiga, quase tudo era fórmula (que vivia quebrando). No app, o usuário informa apenas: **colaborador** (nome, matrícula, função, setor), **qual treinamento** ele precisa fazer e a **data em que realizou**. Todo o resto é derivado na leitura, nunca armazenado:
+- Vencimento = data de realização + periodicidade do catálogo (ou `vencimento_override` vindo da importação, quando a planilha trazia um fim de prazo diferente do calculado).
+- Situação: **Em dia** (>30 dias) / **A renovar** (≤30 dias) / **Vencido** (<0) / **Não realizado** (sem data) — mesma régua da planilha de origem (validada: os 143 registros de GUS reproduzem exatamente os KPIs da capa, 75/7/28/33).
+
+### Modelo de dados
+- **`esg_trein_catalogo`**: catálogo único de treinamentos (código = nome da aba na planilha, nome, periodicidade em dias, funções obrigadas, ativo). Seed com os 12 NRs extraídos da planilha de GUS. **Escrita restrita ao corporativo** (`esg_e_corporativo()`); alterar a periodicidade recalcula automaticamente a situação de todos os registros.
+- **`esg_trein_registro`**: colaborador × treinamento exigido (filial, nome, matrícula, função, setor, treinamento_id, data_realizacao, vencimento_override, obs). RLS por filial/grupo (`esg_pode_ver`), igual Acidentes — técnico vê e edita só o seu grupo.
+
+### Funcionalidades
+- Filtros: Filial, Treinamento, Situação, Busca. 4 KPIs (Em dia / A renovar / Vencido / Não realizado).
+- Gráficos de barra horizontal **empilhada por situação**: por treinamento e por filial (consolidado que não existia nas planilhas separadas), ordenados por volume de pendência.
+- Tabela ordenável com situação derivada + editar (registrar reciclagem = atualizar a data) e excluir.
+- **Importar planilha**: lê o arquivo "CONTROLE DE TREINAMENTOS" (capa INÍCIO + abas por NR), casa as abas com o catálogo pelo código, detecta a filial linha a linha ("1 - GUS" → CODFIL→sigla) e **substitui** os registros das filiais presentes no arquivo. RLS impede o técnico de afetar outra filial.
+- **Catálogo** (botão visível só para corporativo): editar nome/periodicidade/funções/ativo e adicionar novos treinamentos.
+- Exportação Excel.
 
 ## Carga histórica
 

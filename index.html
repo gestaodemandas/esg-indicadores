@@ -283,6 +283,12 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .aso-banner-value{font-size:1rem;font-weight:700;color:var(--txt);margin-top:.15rem}
 .aso-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
 @media(max-width:900px){.aso-kpis{grid-template-columns:1fr}}
+.trein-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem}
+@media(max-width:1100px){.trein-kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.trein-kpis{grid-template-columns:1fr}}
+.trein-legend{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center}
+.tl-item{display:flex;align-items:center;gap:.35rem;font-size:.64rem;font-weight:700;color:var(--txt3)}
+.tl-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
 .chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.1rem 1.3rem 1.2rem;display:flex;flex-direction:column}
 .chart-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
 .chart-card-title{font-size:.82rem;font-weight:700;color:var(--txt)}
@@ -564,10 +570,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <div class="sb-item-label">ASO</div>
       </div>
 
-      <div class="sb-item sb-soon">
+      <div class="sb-item" data-section="trein" onclick="showSection('trein')">
         <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
         <div class="sb-item-label">Treinamentos</div>
-        <span class="sb-soon-tag">Em breve</span>
       </div>
     </div>
     <div class="sb-footer">
@@ -709,9 +714,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
               </div>
             </div>
 
-            <!-- 06 Treinamentos -->
-            <div class="home-card hc-soon">
-              <div class="hc-panel hcp-gray">
+            <!-- 06 Treinamentos (ativo) -->
+            <div class="home-card" onclick="showSection('trein')">
+              <div class="hc-panel hcp-red">
                 <span class="hc-ghost">06</span>
                 <div class="hc-chevron"></div>
                 <div class="hc-inner">
@@ -720,8 +725,8 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 </div>
               </div>
               <div class="hc-body">
-                <div class="hc-tagline">Treinamentos NR por filial<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
-                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="hc-tagline">Treinamentos NR por filial<br>Vencimentos · Reciclagens</div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
               </div>
             </div>
           </div>
@@ -945,6 +950,119 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 <tbody id="aso-tbl-body"></tbody>
               </table>
               <div class="tbl-empty" id="aso-tbl-empty" style="display:none">Nenhum exame encontrado. Importe uma planilha para começar.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══ TREINAMENTOS ══ -->
+        <div class="section-page" id="sec-trein">
+
+          <!-- Barra de filtros -->
+          <div class="acid-filterbar">
+            <div class="afb-group"><label>Filial</label><select id="tr-flt-filial" onchange="renderTrein()"><option value="TODAS">Todas</option></select></div>
+            <div class="afb-group"><label>Treinamento</label><select id="tr-flt-trein" onchange="renderTrein()"><option value="TODOS">Todos</option></select></div>
+            <div class="afb-group"><label>Situação</label><select id="tr-flt-sit" onchange="renderTrein()">
+              <option value="TODAS">Todas</option><option value="Em dia">Em dia</option><option value="A renovar">A renovar (30 dias)</option><option value="Vencido">Vencido</option><option value="Não realizado">Não realizado</option>
+            </select></div>
+            <div class="afb-search"><label>Buscar</label>
+              <div class="afb-search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="tr-flt-busca" placeholder="Nome ou matrícula…" oninput="renderTrein()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Cartões de situação (contam colaborador × treinamento) -->
+          <div class="trein-kpis">
+            <div class="card card-pos">
+              <div class="card-header"><div class="card-title">Em dia</div><span class="tag good">Ok</span></div>
+              <div class="card-value" id="tr-kpi-emdia">–</div>
+              <div class="card-comp">vencimento a mais de 30 dias</div>
+            </div>
+            <div class="card card-neutral">
+              <div class="card-header"><div class="card-title">A renovar</div><span class="tag warn">30 dias</span></div>
+              <div class="card-value" id="tr-kpi-renovar">–</div>
+              <div class="card-comp">vencem nos próximos 30 dias</div>
+            </div>
+            <div class="card card-neg">
+              <div class="card-header"><div class="card-title">Vencidos</div><span class="tag bad">Atenção</span></div>
+              <div class="card-value" id="tr-kpi-vencido">–</div>
+              <div class="card-comp">prazo de reciclagem estourado</div>
+            </div>
+            <div class="card card-neutral">
+              <div class="card-header"><div class="card-title">Não realizados</div><span class="tag muted">Sem registro</span></div>
+              <div class="card-value" id="tr-kpi-naoreal">–</div>
+              <div class="card-comp">nunca fizeram o treinamento</div>
+            </div>
+          </div>
+
+          <!-- Situação por treinamento (barra empilhada) -->
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <span class="chart-card-title">Situação por Treinamento</span>
+              <span class="trein-legend">
+                <span class="tl-item"><span class="tl-dot" style="background:var(--esg)"></span>Em dia</span>
+                <span class="tl-item"><span class="tl-dot" style="background:#e0953a"></span>A renovar</span>
+                <span class="tl-item"><span class="tl-dot" style="background:var(--acid)"></span>Vencido</span>
+                <span class="tl-item"><span class="tl-dot" style="background:#9aa2ab"></span>Não realizado</span>
+              </span>
+            </div>
+            <div id="tr-chart-trein"></div>
+          </div>
+
+          <!-- Situação por filial (visão consolidada) -->
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <span class="chart-card-title">Situação por Filial</span>
+              <span class="chart-card-sub">consolidado de todos os treinamentos</span>
+            </div>
+            <div id="tr-chart-filial"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Registros de Treinamento</div>
+                <div class="panel-sub" id="tr-tbl-count">–</div>
+              </div>
+              <div class="panel-tools">
+                <button class="btn-sec" id="tr-btn-catalogo" style="display:none" onclick="openCatalogo()">
+                  <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                  Catálogo
+                </button>
+                <input type="file" id="tr-file" accept=".xlsx,.xls" style="display:none" onchange="importarTrein(this)">
+                <button class="btn-sec" onclick="document.getElementById('tr-file').click()">
+                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Importar planilha
+                </button>
+                <button class="btn-sec" onclick="exportarExcelTrein()">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="12" y1="12" x2="12" y2="18"/></svg>
+                  Exportar Excel
+                </button>
+                <button class="btn-new" onclick="openTreinModal()">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Novo
+                </button>
+              </div>
+            </div>
+            <div class="tbl-scroll">
+              <table class="tbl">
+                <thead><tr>
+                  <th class="th-sort" data-col="filial" onclick="sortByTrein('filial')">Filial <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="nome" onclick="sortByTrein('nome')">Nome <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="matricula" onclick="sortByTrein('matricula')">Matrícula <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="funcao" onclick="sortByTrein('funcao')">Função <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tr_nome" onclick="sortByTrein('tr_nome')">Treinamento <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="data_realizacao" onclick="sortByTrein('data_realizacao')">Realizado em <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tr_vence" onclick="sortByTrein('tr_vence')">Vence em <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tr_dias" onclick="sortByTrein('tr_dias')">Dias <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tr_situacao" onclick="sortByTrein('tr_situacao')">Situação <span class="sort-ind"></span></th>
+                  <th></th>
+                </tr></thead>
+                <tbody id="tr-tbl-body"></tbody>
+              </table>
+              <div class="tbl-empty" id="tr-tbl-empty" style="display:none">Nenhum registro. Clique em <strong>+ Novo</strong> ou importe a planilha da sua filial.</div>
             </div>
           </div>
 
@@ -1450,6 +1568,114 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
   </div>
 </div>
 
+<!-- MODAL: NOVO / EDITAR REGISTRO DE TREINAMENTO -->
+<div class="modal-overlay" id="trein-overlay" onclick="if(event.target===this)closeTreinModal()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        <span id="trein-modal-title">Novo Registro de Treinamento</span>
+      </div>
+      <button class="modal-close" onclick="closeTreinModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form">
+        <div class="form-row">
+          <div class="field" id="tw-filial">
+            <label>Filial <span class="req">*</span></label>
+            <select id="t-filial"><option value="">Selecione…</option></select>
+            <div class="err-msg">Selecione a filial.</div>
+          </div>
+          <div class="field" id="tw-trein">
+            <label>Treinamento <span class="req">*</span></label>
+            <select id="t-trein" onchange="treinPreview()"><option value="">Selecione…</option></select>
+            <div class="err-msg">Selecione o treinamento.</div>
+            <div class="hint" id="t-trein-hint"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field" id="tw-nome">
+            <label>Nome do Colaborador <span class="req">*</span></label>
+            <input type="text" id="t-nome" placeholder="Nome completo" style="text-transform:uppercase">
+            <div class="err-msg">Informe o nome.</div>
+          </div>
+          <div class="field" id="tw-matricula">
+            <label>Matrícula <span class="req">*</span></label>
+            <input type="text" id="t-matricula" placeholder="Número ou N/A">
+            <div class="err-msg">Apenas número ou N/A.</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Função</label>
+            <input type="text" id="t-funcao" placeholder="Cargo do colaborador" style="text-transform:uppercase">
+          </div>
+          <div class="field">
+            <label>Setor</label>
+            <input type="text" id="t-setor" placeholder="Setor de lotação" style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Data de Realização</label>
+            <input type="date" id="t-data" onchange="treinPreview()">
+            <div class="hint">Deixe vazio se o colaborador ainda não fez o treinamento (conta como "Não realizado")</div>
+          </div>
+          <div class="field">
+            <label>Situação (calculada)</label>
+            <div id="t-preview" style="padding:.55rem 0"><span class="tag muted">Não realizado</span></div>
+            <div class="hint" id="t-preview-hint"></div>
+          </div>
+        </div>
+        <div class="field full">
+          <label>Observações</label>
+          <input type="text" id="t-obs" placeholder="Opcional">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-msg" id="trein-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeTreinModal()">Cancelar</button>
+        <button class="btn-save" id="trein-btn-save" onclick="saveTrein()">Salvar Registro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CATÁLOGO DE TREINAMENTOS (corporativo) -->
+<div class="modal-overlay" id="cat-overlay" onclick="if(event.target===this)closeCatalogo()">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Catálogo de Treinamentos</span>
+      </div>
+      <button class="modal-close" onclick="closeCatalogo()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="hint" style="margin-bottom:.8rem">Catálogo único para todas as filiais. Alterar a periodicidade recalcula automaticamente a situação de todos os registros do treinamento.</div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>Treinamento</th><th>Periodicidade (dias)</th><th>Funções obrigadas</th><th>Ativo</th><th></th></tr></thead>
+          <tbody id="cat-tbl-body"></tbody>
+        </table>
+      </div>
+      <button class="btn-sec" style="margin-top:.8rem" onclick="addCatalogoRow()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Adicionar treinamento
+      </button>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-msg" id="cat-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeCatalogo()">Fechar</button>
+        <button class="btn-save" onclick="saveCatalogo()">Salvar Catálogo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast-wrap"></div>
 
 <script>
@@ -1609,7 +1835,7 @@ let sortCol = 'data_acidente'  // coluna de ordenação da tabela
 let sortDir = 'desc'           // 'asc' | 'desc'
 const NUM_COLS = ['completude'] // colunas comparadas numericamente
 
-const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes', aso:'ASO' }
+const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes', aso:'ASO', trein:'Treinamentos' }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function $(id){ return document.getElementById(id) }
@@ -1757,6 +1983,7 @@ function showSection(id){
   if(el){ el.classList.add('show'); $('content').scrollTop=0 }
   if(id==='acidentes') renderAcidentes()
   if(id==='aso') loadASO()
+  if(id==='trein') loadTrein()
 }
 window.showSection = showSection
 
@@ -2488,6 +2715,429 @@ function exportarExcelASO(){
   toast(`${rows.length} registro${rows.length===1?'':'s'} exportado${rows.length===1?'':'s'} para Excel.`)
 }
 window.exportarExcelASO = exportarExcelASO
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MÓDULO TREINAMENTOS — preenchimento direto no app (decisão 2026-07-14)
+// Só 3 dados são "de verdade": colaborador, treinamento exigido e a DATA em que
+// realizou. Vencimento, dias a vencer e situação são DERIVADOS na leitura, com a
+// mesma régua da planilha de origem: Em dia (>30d) / A renovar (≤30d) / Vencido
+// (<0) / Não realizado (sem data). Catálogo único gerido pelo corporativo.
+// ═══════════════════════════════════════════════════════════════════════════
+let TR_CATALOGO = []       // catálogo de treinamentos (esg_trein_catalogo)
+let TR_CAT_MAP = {}        // id -> item do catálogo
+let TR_DS = []             // registros (esg_trein_registro)
+let trSortCol = 'tr_dias'
+let trSortDir = 'asc'
+let treinEditId = null
+
+const TR_SIT_ORDEM = ['Em dia','A renovar','Vencido','Não realizado']
+const TR_SIT_COR = { 'Em dia':'var(--esg)', 'A renovar':'#e0953a', 'Vencido':'var(--acid)', 'Não realizado':'#9aa2ab' }
+function trSitClass(s){ return s==='Em dia'?'good':s==='A renovar'?'warn':s==='Vencido'?'bad':'muted' }
+
+// Deriva vencimento/dias/situação de um registro (nada disso é armazenado)
+function treinDeriv(r){
+  const cat = TR_CAT_MAP[r.treinamento_id]
+  if(!r.data_realizacao) return { vence:null, dias:null, situacao:'Não realizado' }
+  let vence = r.vencimento_override
+  if(!vence && cat){
+    const d = new Date(r.data_realizacao+'T00:00:00')
+    d.setDate(d.getDate() + cat.periodicidade_dias)
+    vence = d.toISOString().slice(0,10)
+  }
+  if(!vence) return { vence:null, dias:null, situacao:'Não realizado' }
+  const hoje = new Date(); hoje.setHours(0,0,0,0)
+  const dias = Math.round((new Date(vence+'T00:00:00') - hoje)/86400000)
+  return { vence, dias, situacao: dias<0 ? 'Vencido' : (dias<=30 ? 'A renovar' : 'Em dia') }
+}
+
+async function loadTrein(){
+  if(!sb) return
+  const [{data:cat, error:e1}, {data:regs, error:e2}] = await Promise.all([
+    sb.from('esg_trein_catalogo').select('*').order('ordem'),
+    sb.from('esg_trein_registro').select('*')
+  ])
+  if(e1){ toast('Erro ao carregar catálogo: '+e1.message,'err'); return }
+  if(e2){ toast('Erro ao carregar registros: '+e2.message,'err'); return }
+  TR_CATALOGO = cat||[]
+  TR_CAT_MAP = {}; TR_CATALOGO.forEach(c => TR_CAT_MAP[c.id] = c)
+  TR_DS = regs||[]
+  $('tr-btn-catalogo').style.display = (currentUser && currentUser.ver_todas) ? '' : 'none'
+  buildTreinFilters()
+  renderTrein()
+}
+window.loadTrein = loadTrein
+
+function buildTreinFilters(){
+  const selFil = $('tr-flt-filial'); const curFil = selFil.value||'TODAS'
+  const filiais = [...new Set(TR_DS.map(r=>r.filial).filter(Boolean))].sort()
+  selFil.innerHTML = '<option value="TODAS">Todas</option>' + filiais.map(f=>`<option>${esc(f)}</option>`).join('')
+  if([...selFil.options].some(o=>o.value===curFil)) selFil.value=curFil
+
+  const selTr = $('tr-flt-trein'); const curTr = selTr.value||'TODOS'
+  selTr.innerHTML = '<option value="TODOS">Todos</option>' + TR_CATALOGO.filter(c=>c.ativo).map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('')
+  if([...selTr.options].some(o=>o.value===curTr)) selTr.value=curTr
+}
+
+// Mesma lógica de scopedRows(skip): cada visual ignora só a própria dimensão
+function scopedTreinRows(skip){
+  skip = skip||{}
+  const filFiltro = $('tr-flt-filial').value
+  const trFiltro = $('tr-flt-trein').value
+  const sitFiltro = $('tr-flt-sit').value
+  const busca = ($('tr-flt-busca').value||'').trim().toUpperCase()
+  return TR_DS.filter(r=>{
+    if(!skip.filial && filFiltro!=='TODAS' && r.filial!==filFiltro) return false
+    if(!skip.trein && trFiltro!=='TODOS' && String(r.treinamento_id)!==trFiltro) return false
+    if(!skip.sit && sitFiltro!=='TODAS' && treinDeriv(r).situacao!==sitFiltro) return false
+    if(busca && !(String(r.nome||'').toUpperCase().includes(busca) || String(r.matricula||'').toUpperCase().includes(busca))) return false
+    return true
+  })
+}
+
+// Barra horizontal EMPILHADA por situação (Em dia / A renovar / Vencido / Não realizado)
+function trStackedChart(boxId, rows, keyFn, labelFn){
+  const box = $(boxId)
+  const grupos = {}
+  rows.forEach(r=>{
+    const k = keyFn(r); if(k==null) return
+    if(!grupos[k]) grupos[k] = { 'Em dia':0, 'A renovar':0, 'Vencido':0, 'Não realizado':0 }
+    grupos[k][treinDeriv(r).situacao]++
+  })
+  const arr = Object.entries(grupos).map(([k,c])=>({
+    k, c, total: TR_SIT_ORDEM.reduce((s,sit)=>s+c[sit],0),
+    pend: c['Vencido'] + c['A renovar'] + c['Não realizado']
+  })).sort((a,b)=> b.pend-a.pend || b.total-a.total)
+  if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
+  const max = Math.max(...arr.map(a=>a.total))
+  box.innerHTML = '<div class="hbarchart">' + arr.map(a=>{
+    const segs = TR_SIT_ORDEM.map(sit=>{
+      const n = a.c[sit]; if(!n) return ''
+      const w = Math.max(2, Math.round(n/max*100))
+      return `<div class="hbarchart-seg" style="width:${w}%;background:${TR_SIT_COR[sit]}" title="${esc(sit)}: ${n}">${n}</div>`
+    }).join('')
+    return `<div class="hbarchart-row">
+      <div class="hbarchart-lbl" title="${esc(labelFn(a.k))}">${esc(labelFn(a.k))}</div>
+      <div class="hbarchart-track">${segs}</div>
+      <div class="hbarchart-total">${a.total}</div>
+    </div>`
+  }).join('') + '</div>'
+}
+
+function renderTrein(){
+  const rows = scopedTreinRows()
+  const cont = { 'Em dia':0, 'A renovar':0, 'Vencido':0, 'Não realizado':0 }
+  rows.forEach(r=>cont[treinDeriv(r).situacao]++)
+  $('tr-kpi-emdia').textContent = cont['Em dia']
+  $('tr-kpi-renovar').textContent = cont['A renovar']
+  $('tr-kpi-vencido').textContent = cont['Vencido']
+  $('tr-kpi-naoreal').textContent = cont['Não realizado']
+  $('tr-tbl-count').textContent = `${rows.length} registro${rows.length===1?'':'s'} (colaborador × treinamento)`
+
+  trStackedChart('tr-chart-trein', scopedTreinRows({trein:true}), r=>r.treinamento_id, id=>(TR_CAT_MAP[id]?TR_CAT_MAP[id].nome:'?'))
+  trStackedChart('tr-chart-filial', scopedTreinRows({filial:true}), r=>r.filial, f=>f)
+
+  const sorted = sortTreinRows(rows)
+  $('tr-tbl-empty').style.display = sorted.length ? 'none' : ''
+  $('tr-tbl-body').innerHTML = sorted.map(r=>{
+    const d = treinDeriv(r)
+    const cat = TR_CAT_MAP[r.treinamento_id]
+    return `<tr>
+      <td>${esc(r.filial)}</td>
+      <td>${esc(r.nome)}</td>
+      <td>${esc(r.matricula)}</td>
+      <td>${esc(r.funcao||'–')}</td>
+      <td>${esc(cat?cat.nome:'?')}</td>
+      <td>${fmtData(r.data_realizacao)}</td>
+      <td>${fmtData(d.vence)}</td>
+      <td>${d.dias==null?'–':d.dias}</td>
+      <td><span class="tag ${trSitClass(d.situacao)}">${esc(d.situacao)}</span></td>
+      <td><div class="row-actions">
+        <button class="act-btn edit" title="Editar / registrar reciclagem" onclick="openTreinModal(${r.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>
+        <button class="act-btn del" title="Excluir" onclick="askDeleteTrein(${r.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div></td>
+    </tr>`
+  }).join('')
+  updateTreinSortIndicators()
+}
+window.renderTrein = renderTrein
+
+// Ordenação (colunas virtuais tr_* vêm da derivação)
+function trSortValue(r, col){
+  if(col==='tr_nome'){ const c = TR_CAT_MAP[r.treinamento_id]; return c?c.nome:'' }
+  if(col==='tr_vence') return treinDeriv(r).vence||''
+  if(col==='tr_dias'){ const d = treinDeriv(r).dias; return d==null ? Infinity : d }
+  if(col==='tr_situacao') return TR_SIT_ORDEM.indexOf(treinDeriv(r).situacao)
+  return r[col]
+}
+function sortTreinRows(rows){
+  const dir = trSortDir==='asc' ? 1 : -1
+  return [...rows].sort((a,b)=>{
+    let va = trSortValue(a,trSortCol), vb = trSortValue(b,trSortCol)
+    va = va==null?'':va; vb = vb==null?'':vb
+    if(va<vb) return -1*dir
+    if(va>vb) return 1*dir
+    return 0
+  })
+}
+function sortByTrein(col){
+  if(trSortCol===col) trSortDir = trSortDir==='asc' ? 'desc' : 'asc'
+  else { trSortCol = col; trSortDir = 'asc' }
+  renderTrein()
+}
+window.sortByTrein = sortByTrein
+function updateTreinSortIndicators(){
+  document.querySelectorAll('#sec-trein .th-sort').forEach(th=>{
+    const ind = th.querySelector('.sort-ind')
+    ind.textContent = th.dataset.col===trSortCol ? (trSortDir==='asc'?'▲':'▼') : ''
+  })
+}
+
+// ── Modal de registro (novo / editar / reciclagem) ───────────────────────────
+function treinPreview(){
+  const catId = $('t-trein').value
+  const cat = TR_CAT_MAP[catId]
+  $('t-trein-hint').textContent = cat ? `${cat.periodicidade_dias===730?'Bienal':cat.periodicidade_dias===365?'Anual':cat.periodicidade_dias+' dias'} · Funções: ${cat.funcoes_obrigadas||'—'}` : ''
+  const data = $('t-data').value
+  if(!data || !cat){
+    $('t-preview').innerHTML = '<span class="tag muted">Não realizado</span>'
+    $('t-preview-hint').textContent = ''
+    return
+  }
+  const fake = { treinamento_id: Number(catId), data_realizacao: data, vencimento_override: null }
+  const d = treinDeriv(fake)
+  $('t-preview').innerHTML = `<span class="tag ${trSitClass(d.situacao)}">${esc(d.situacao)}</span>`
+  $('t-preview-hint').textContent = d.vence ? `Vence em ${fmtData(d.vence)} (${d.dias} dias)` : ''
+}
+window.treinPreview = treinPreview
+
+function openTreinModal(id){
+  treinEditId = id || null
+  $('trein-modal-title').textContent = id ? 'Editar Registro de Treinamento' : 'Novo Registro de Treinamento'
+  $('trein-msg').textContent = ''; $('trein-msg').className = 'modal-msg'
+  // filial restrita ao grupo do técnico (mesma regra do Acidentes)
+  fillSelect('t-filial', locaisPermitidos(), 'Selecione…')
+  const selTr = $('t-trein')
+  selTr.innerHTML = '<option value="">Selecione…</option>' + TR_CATALOGO.filter(c=>c.ativo).map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('')
+  document.querySelectorAll('#trein-overlay .field').forEach(f=>f.classList.remove('err'))
+  if(id){
+    const r = TR_DS.find(x=>x.id===id); if(!r) return
+    $('t-filial').value = r.filial
+    $('t-trein').value = String(r.treinamento_id)
+    $('t-nome').value = r.nome||''
+    $('t-matricula').value = r.matricula||''
+    $('t-funcao').value = r.funcao||''
+    $('t-setor').value = r.setor||''
+    $('t-data').value = r.data_realizacao||''
+    $('t-obs').value = r.obs||''
+  } else {
+    ;['t-nome','t-matricula','t-funcao','t-setor','t-data','t-obs'].forEach(i=>$(i).value='')
+    $('t-trein').value = ''
+    $('t-filial').value = (currentUser && !currentUser.ver_todas && currentUser.filial) ? currentUser.filial : ''
+  }
+  treinPreview()
+  $('trein-overlay').classList.add('open')
+}
+window.openTreinModal = openTreinModal
+function closeTreinModal(){ $('trein-overlay').classList.remove('open'); treinEditId=null }
+window.closeTreinModal = closeTreinModal
+
+async function saveTrein(){
+  let bad = false
+  bad = markErr('tw-filial', !$('t-filial').value) || bad
+  bad = markErr('tw-trein', !$('t-trein').value) || bad
+  bad = markErr('tw-nome', !$('t-nome').value.trim()) || bad
+  bad = markErr('tw-matricula', !isNumOuNA($('t-matricula').value)) || bad
+  if(bad){ $('trein-msg').textContent='Corrija os campos destacados.'; $('trein-msg').className='modal-msg err'; return }
+  const rec = {
+    filial: $('t-filial').value,
+    treinamento_id: Number($('t-trein').value),
+    nome: $('t-nome').value.trim().toUpperCase(),
+    matricula: $('t-matricula').value.trim().toUpperCase(),
+    funcao: $('t-funcao').value.trim().toUpperCase() || null,
+    setor: $('t-setor').value.trim().toUpperCase() || null,
+    data_realizacao: $('t-data').value || null,
+    vencimento_override: null,   // edição manual sempre recalcula pelo catálogo
+    obs: $('t-obs').value.trim() || null
+  }
+  $('trein-btn-save').disabled = true; $('trein-btn-save').textContent = 'Salvando…'
+  let error
+  if(treinEditId){ ({error} = await sb.from('esg_trein_registro').update(rec).eq('id', treinEditId)) }
+  else { ({error} = await sb.from('esg_trein_registro').insert(rec)) }
+  $('trein-btn-save').disabled = false; $('trein-btn-save').textContent = 'Salvar Registro'
+  if(error){ $('trein-msg').textContent = 'Erro ao salvar: '+error.message; $('trein-msg').className='modal-msg err'; return }
+  toast(treinEditId ? 'Registro atualizado.' : 'Registro criado.')
+  closeTreinModal()
+  loadTrein()
+}
+window.saveTrein = saveTrein
+
+async function askDeleteTrein(id){
+  const r = TR_DS.find(x=>x.id===id); if(!r) return
+  const cat = TR_CAT_MAP[r.treinamento_id]
+  if(!confirm(`Excluir o registro de "${r.nome}" — ${cat?cat.nome:''}?\n\nEsta ação não pode ser desfeita.`)) return
+  const {error} = await sb.from('esg_trein_registro').delete().eq('id', id)
+  if(error){ toast('Erro ao excluir: '+error.message,'err'); return }
+  toast('Registro excluído.')
+  loadTrein()
+}
+window.askDeleteTrein = askDeleteTrein
+
+// ── Importador da planilha "CONTROLE DE TREINAMENTOS" (capa INÍCIO + 1 aba/NR) ─
+// Carga inicial/reimportação: SUBSTITUI os registros das filiais presentes no arquivo.
+// A filial vem de cada linha ("1 - GUS" → CODFIL_SIGLA). Abas casam com o catálogo
+// pelo campo codigo (= nome da aba). RLS garante que o técnico só afeta seu grupo.
+async function importarTrein(inputEl){
+  const f = inputEl.files && inputEl.files[0]
+  inputEl.value = ''
+  if(!f) return
+  if(!TR_CATALOGO.length){ toast('Catálogo não carregado — abra o módulo novamente.','err'); return }
+  let wb
+  try {
+    const buf = await f.arrayBuffer()
+    wb = XLSX.read(buf, {type:'array', cellDates:true})
+  } catch(e){ toast('Não foi possível ler o arquivo: '+e.message,'err'); return }
+
+  const catPorCodigo = {}
+  TR_CATALOGO.forEach(c => catPorCodigo[c.codigo.toUpperCase().replace(/\s+/g,' ').trim()] = c)
+  const registros = []
+  const abasIgnoradas = []
+  for(const wsName of wb.SheetNames){
+    if(wsName.toUpperCase().startsWith('IN')) continue   // capa "INÍCIO"
+    const cat = catPorCodigo[wsName.toUpperCase().replace(/\s+/g,' ').trim()]
+    if(!cat){ abasIgnoradas.push(wsName); continue }
+    const arr = XLSX.utils.sheet_to_json(wb.Sheets[wsName], {header:1, raw:true, defval:null})
+    // cabeçalho na linha 7 (algumas abas têm coluna SETOR, outras não)
+    const hdr = (arr[6]||[]).map(v=>String(v??'').trim().toUpperCase())
+    const ix = {
+      nome: hdr.indexOf('NOME'), mat: hdr.indexOf('MATRÍCULA'), fun: hdr.indexOf('FUNÇÃO'),
+      setor: hdr.indexOf('SETOR'), ini: hdr.indexOf('INÍCIO DO PRAZO'), fim: hdr.indexOf('FIM DO PRAZO'),
+      obs: hdr.indexOf('OBS')
+    }
+    if(ix.nome<0 || ix.ini<0){ abasIgnoradas.push(wsName); continue }
+    for(let i=7;i<arr.length;i++){
+      const row = arr[i]
+      if(!row || row[ix.nome]==null || String(row[ix.nome]).trim()==='') continue
+      const filRaw = String(row[0]??'').trim()          // "1 - GUS"
+      const codfil = parseInt(filRaw, 10)
+      const filial = isNaN(codfil) ? filRaw : (CODFIL_SIGLA[codfil] || String(codfil))
+      const dataReal = xlsxDateToISO(row[ix.ini])
+      const fimPlan = xlsxDateToISO(row[ix.fim])
+      // guarda o fim da planilha só quando difere do cálculo data+periodicidade
+      let override = null
+      if(dataReal && fimPlan){
+        const d = new Date(dataReal+'T00:00:00'); d.setDate(d.getDate()+cat.periodicidade_dias)
+        if(d.toISOString().slice(0,10) !== fimPlan) override = fimPlan
+      }
+      registros.push({
+        filial,
+        treinamento_id: cat.id,
+        nome: String(row[ix.nome]).trim().toUpperCase(),
+        matricula: row[ix.mat]!=null ? String(row[ix.mat]).trim() : 'N/A',
+        funcao: row[ix.fun]!=null ? String(row[ix.fun]).trim().toUpperCase() : null,
+        setor: (ix.setor>=0 && row[ix.setor]!=null) ? String(row[ix.setor]).trim().toUpperCase() : null,
+        data_realizacao: dataReal,
+        vencimento_override: override,
+        obs: (ix.obs>=0 && row[ix.obs]!=null) ? String(row[ix.obs]).trim() : null
+      })
+    }
+  }
+  if(!registros.length){ toast('Nenhum registro reconhecido no arquivo. Confira se é a planilha "CONTROLE DE TREINAMENTOS".','err'); return }
+  const filiais = [...new Set(registros.map(r=>r.filial))]
+  let msg = `Importar ${registros.length} registros de "${f.name}"?\n\nFiliais: ${filiais.join(', ')}\nIsso SUBSTITUI os registros atuais dessas filiais.`
+  if(abasIgnoradas.length) msg += `\n\nAbas ignoradas (sem correspondência no catálogo): ${abasIgnoradas.join(', ')}`
+  if(!confirm(msg)) return
+
+  const {error:delErr} = await sb.from('esg_trein_registro').delete().in('filial', filiais)
+  if(delErr){ toast('Erro ao limpar registros anteriores: '+delErr.message,'err'); return }
+  const CHUNK = 200
+  for(let i=0;i<registros.length;i+=CHUNK){
+    const {error} = await sb.from('esg_trein_registro').insert(registros.slice(i,i+CHUNK))
+    if(error){ toast('Erro ao gravar registros (a partir da linha '+(i+1)+'): '+error.message,'err'); return }
+  }
+  toast(`Planilha importada: ${registros.length} registros (${filiais.join(', ')}).`)
+  loadTrein()
+}
+window.importarTrein = importarTrein
+
+function exportarExcelTrein(){
+  const rows = sortTreinRows(scopedTreinRows())
+  if(!rows.length){ toast('Nenhum registro para exportar.','err'); return }
+  const head = ['Filial','Nome','Matrícula','Função','Setor','Treinamento','Realizado em','Vence em','Dias a vencer','Situação','Obs']
+  const body = rows.map(r=>{
+    const d = treinDeriv(r); const cat = TR_CAT_MAP[r.treinamento_id]
+    return [r.filial, r.nome, r.matricula, r.funcao, r.setor, cat?cat.nome:'', fmtData(r.data_realizacao), fmtData(d.vence), d.dias==null?'':d.dias, d.situacao, r.obs]
+  })
+  const th = head.map(h=>`<th style="background:#b52d39;color:#fff;font-weight:bold">${esc(h)}</th>`).join('')
+  const trs = body.map(cols=>'<tr>'+cols.map(v=>`<td>${esc(v==null?'':v)}</td>`).join('')+'</tr>').join('')
+  const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table border="1"><tr>${th}</tr>${trs}</table></body></html>`
+  const blob = new Blob(['﻿'+html], {type:'application/vnd.ms-excel;charset=utf-8'})
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `treinamentos_${new Date().toISOString().slice(0,10)}.xls`
+  a.click()
+  URL.revokeObjectURL(a.href)
+  toast(`${rows.length} registro${rows.length===1?'':'s'} exportado${rows.length===1?'':'s'} para Excel.`)
+}
+window.exportarExcelTrein = exportarExcelTrein
+
+// ── Catálogo (corporativo): editar periodicidade/funções, adicionar, ativar/desativar
+function openCatalogo(){
+  $('cat-msg').textContent=''; $('cat-msg').className='modal-msg'
+  $('cat-tbl-body').innerHTML = TR_CATALOGO.map(c=>`
+    <tr data-id="${c.id}">
+      <td><input type="text" class="cat-nome" value="${esc(c.nome)}" style="min-width:180px"></td>
+      <td><input type="text" class="cat-dias" value="${c.periodicidade_dias}" style="width:70px"></td>
+      <td><input type="text" class="cat-func" value="${esc(c.funcoes_obrigadas||'')}" style="min-width:220px"></td>
+      <td style="text-align:center"><input type="checkbox" class="cat-ativo" ${c.ativo?'checked':''}></td>
+      <td></td>
+    </tr>`).join('')
+  $('cat-overlay').classList.add('open')
+}
+window.openCatalogo = openCatalogo
+function closeCatalogo(){ $('cat-overlay').classList.remove('open') }
+window.closeCatalogo = closeCatalogo
+function addCatalogoRow(){
+  const tb = $('cat-tbl-body')
+  const tr = document.createElement('tr')
+  tr.dataset.id = ''   // novo
+  tr.innerHTML = `
+    <td><input type="text" class="cat-nome" placeholder="Ex.: NR17 — Ergonomia" style="min-width:180px"></td>
+    <td><input type="text" class="cat-dias" value="365" style="width:70px"></td>
+    <td><input type="text" class="cat-func" placeholder="Funções obrigadas" style="min-width:220px"></td>
+    <td style="text-align:center"><input type="checkbox" class="cat-ativo" checked></td>
+    <td></td>`
+  tb.appendChild(tr)
+}
+window.addCatalogoRow = addCatalogoRow
+async function saveCatalogo(){
+  const linhas = [...$('cat-tbl-body').querySelectorAll('tr')]
+  for(const tr of linhas){
+    const nome = tr.querySelector('.cat-nome').value.trim()
+    const dias = parseInt(tr.querySelector('.cat-dias').value, 10)
+    const func = tr.querySelector('.cat-func').value.trim() || null
+    const ativo = tr.querySelector('.cat-ativo').checked
+    if(!nome) continue
+    if(!dias || dias<=0){ $('cat-msg').textContent = `Periodicidade inválida em "${nome}".`; $('cat-msg').className='modal-msg err'; return }
+    const id = tr.dataset.id
+    let error
+    if(id){ ({error} = await sb.from('esg_trein_catalogo').update({nome, periodicidade_dias:dias, funcoes_obrigadas:func, ativo}).eq('id', Number(id))) }
+    else {
+      const codigo = nome   // novos itens: codigo = nome (abas futuras da planilha podem casar por ele)
+      ;({error} = await sb.from('esg_trein_catalogo').insert({codigo, nome, periodicidade_dias:dias, funcoes_obrigadas:func, ativo, ordem: TR_CATALOGO.length+1}))
+    }
+    if(error){ $('cat-msg').textContent='Erro ao salvar "'+nome+'": '+error.message; $('cat-msg').className='modal-msg err'; return }
+  }
+  toast('Catálogo salvo.')
+  closeCatalogo()
+  loadTrein()
+}
+window.saveCatalogo = saveCatalogo
+
+// Matrícula do modal de treinamento: mesma sanitização número-ou-N/A em tempo real
+document.addEventListener('DOMContentLoaded', ()=>{
+  const tm = $('t-matricula')
+  if(tm) tm.addEventListener('input', e=>sanitizeNumNA(e.target))
+})
 
 // ── MEU PERFIL (técnico de segurança) ────────────────────────────────────────
 function getPerfil(){ try{ return JSON.parse(localStorage.getItem(PERFIL_KEY)||'null') }catch(e){ return null } }
