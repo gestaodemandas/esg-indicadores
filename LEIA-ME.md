@@ -136,9 +136,15 @@ Um técnico de segurança atende, além da sua filial-sede, os locais satélites
 
 Diferente do Acidentes, o ASO **não é um formulário**: é um **snapshot** da planilha corporativa "Relação de Próximos Exames" (controle de exames ocupacionais por colaborador). O usuário corporativo importa a planilha `.xlsx`; o parsing (ETL) roda **no próprio navegador** via SheetJS (`xlsx@0.18.5`, CDN) — não existe backend/função server-side. Cada importação grava um **novo snapshot** no banco; a versão anterior não é sobrescrita, fica de histórico. O dashboard sempre lê a versão mais recente.
 
+### Régua da análise: PESSOAS, não exames
+A régua é **quantidade de pessoas** com pendência, não de linhas de exame (um colaborador aparece várias vezes, uma por tipo de exame — 566 linhas = 341 pessoas na base de teste). A chave de pessoa é a **Ficha** (1 ficha = 1 nome, sem colisão). A **Matrícula NÃO serve** como identificador: ela se repete entre as empresas do grupo (FC, ROYAL, AME, MDC…), então o mesmo número aponta para pessoas diferentes (74 combinações filial+matrícula com nomes distintos na base de teste). Helpers `asoPersonKey`/`contarPessoas`/`contarPessoasStatus`. KPIs = pessoas com pendência / com exame vencido / vencendo em 30 dias.
+
+### Gestor = coluna "Avaliador"
+Confirmado pelo usuário (2026-07-14): o **gestor** de cada colaborador é a coluna **Avaliador** da planilha (por isso técnicos de segurança aparecem ali). `asoGestor(r)` usa `r.gestor` se um de/para explícito existir no futuro, senão cai no avaliador. Há gráfico "Pessoas com pendência por Gestor" e filtro "Gestor" na barra; a coluna da tabela e do Excel foi rotulada "Gestor".
+
 ### Modelo de dados
 - **`esg_aso_upload`**: cabeçalho de cada importação (nome do arquivo, período informado na planilha, total de linhas, quem importou, quando).
-- **`esg_aso_exame`**: uma linha por exame obrigatório de cada colaborador naquele snapshot (Filial, Ficha, Colaborador, Sexo, Cargo, Tipo de Exame, Últ. Exame, Próx. Exame, Local, Matrícula, Avaliador).
+- **`esg_aso_exame`**: uma linha por exame obrigatório de cada colaborador naquele snapshot (Filial, Ficha, Colaborador, Sexo, Cargo, Tipo de Exame, Últ. Exame, Próx. Exame, Local, Matrícula, Avaliador/gestor). Coluna `gestor` nullable reservada para um de/para futuro.
 - **Status** (Vencido / Vencendo em 30 dias / Em dia / Sem previsão) não é armazenado — é **calculado na leitura** a partir do Próx. Exame vs. hoje.
 
 ### Mapeamento de Filial (CODFIL)
@@ -172,9 +178,11 @@ Códigos fora desta tabela (confirmados nos dados reais: `601`, `701`) **ficam c
 
 ### Dashboard
 - Banner com a data/hora da última importação, quem importou e o nome do arquivo.
-- Filtros: Filial, Tipo de Exame, Status, Busca (nome/matrícula).
-- 3 cartões: Vencidos, Vencendo em 30 dias, Em dia.
-- Gráficos de barra: exames por filial e por tipo de exame (top 10).
+- Filtros: Filial, Gestor, Tipo de Exame, Status, Busca (nome/matrícula).
+- 3 cartões (contam PESSOAS): Pessoas com pendência, Com exame vencido, Vencendo em 30 dias.
+- Gráfico "Pessoas por Unidade — Realizados vs. Pendentes" (filtro próprio unidade/status, barra horizontal empilhada, ordenado por pendência). Realizados fica em 0 até haver fonte de exames realizados (`asoRealizadosPorUnidade`).
+- Gráfico "Pessoas com pendência por Gestor" (top 15) e "Exames pendentes por Tipo" (top 10, contagem de exames).
+- Todos os gráficos são barra horizontal (`.hbarchart`), mais legíveis que coluna.
 - Tabela ordenável + exportação Excel.
 
 ### Pendências conhecidas
