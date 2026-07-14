@@ -1,6 +1,6 @@
 # Aplicativo ESG — Gestão de Indicadores
 
-Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulo em produção: **Acidentes**. Os demais (Visão Geral, CIPA, Brigada, ASO, Treinamentos) aparecem na capa como "Em breve".
+Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulo em produção: **Acidentes**. Em construção: **ASO**. Os demais (Visão Geral, CIPA, Brigada, Treinamentos) aparecem na capa como "Em breve".
 
 - **Publicado em**: https://gestaodemandas.github.io/esg-indicadores/
 - **Repositório**: https://github.com/gestaodemandas/esg-indicadores
@@ -14,6 +14,7 @@ Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e anál
 | `cid10.json` | Base CID-10 usada no autocomplete quando `MODE='local'` (amostra ~30 códigos) |
 | `sql/01_schema.sql` | Cria `esg_acidentes` + `esg_cid10` (schema base) |
 | `sql/02_seed_cid10_amostra.sql` | Popula `esg_cid10` com a amostra |
+| `sql/03_migracao_form.sql` | Migração da revisão de formulário (jul/2026): coluna `tipo_equipamento_outro`, domínio ampliado de equipamentos, tabela `esg_filial_grupo` + `esg_pode_ver()` por grupo de locais |
 | `dados/` | **Fora do git** (`.gitignore` — contém nomes/e-mails/matrículas, LGPD). Scripts de carga histórica, controle de acesso e backups |
 | `.claude/launch.json` *(fora desta pasta, na raiz de Sessões Claude)* | Config do preview local (`esg-app`, porta 8734) |
 
@@ -103,23 +104,32 @@ O projeto Supabase `nkijyuartfyxrawkivmm` também hospeda o **painel executivo d
 ### Formulário
 Organizado em abas na lateral (Comunicado, Identificação, Classificação, Atestado & CAT, Relato & Lesão, Análise & Plano), cada uma com seu % de conclusão. Barra de progresso geral no rodapé.
 
+**Campos obrigatórios** (únicos que contam no % de conclusão — const `REQUIRED` no código): Filial, Data do Acidente, Nome, Matrícula, Cargo do Acidentado, Tipo de Colaborador, Tipo de Ocorrência, Tipo de Acidente, Descrição Sumária, Situação Geradora, Natureza da Lesão, Parte do Corpo Atingida, Atestado Médico, Emitida CAT, Causa, Ação Corretiva (16 campos).
+
 **Regras automáticas**:
 - Nome, Responsável, Liderança, Nome do Médico → maiúsculas ao digitar.
-- Matrícula / quantidades → só número ou `N/A`.
-- Tempo na Empresa/Cargo → campos separados Anos/Meses (número ou `N/A`).
+- Matrícula / quantidades / tempo na empresa-cargo (anos-meses) → só número ou `N/A`, filtrado **em tempo real** durante a digitação (não só na validação de envio).
 - Ocorrência ≠ Acidente → Tipo de Acidente trava em `N/A`.
-- Colaborador Próprio → Empresa trava em `FC`; não-Próprio → Função trava em `N/A`.
+- Colaborador Próprio → Empresa trava em `FC` (Cargo do Acidentado permanece editável para todos os tipos, inclusive terceirizado/cliente).
 - Atestado = Não → quantidades travam em `0`; Atestado = `N/A` → travam em `N/A`.
 - CID = Sim → autocomplete (precisa confirmar o código na lista).
-- Data do Comunicado pré-preenchida com o dia atual; Técnico de Segurança autopreenchido pela filial.
+- Tipo de Equipamento = Outros → abre campo de descrição livre (obrigatório nesse caso).
+- Data do Comunicado pré-preenchida com o dia atual; Responsável pelo Comunicado e Técnico de Segurança autopreenchidos com o usuário logado.
+- **Filial**: sempre editável (não trava mais). Técnico de filial vê no dropdown apenas os locais do seu **grupo** (sede + satélites — ver seção RLS); corporativo vê todos os locais que já têm registro.
+- **Status** não é mais um campo manual — é calculado ao salvar: `Finalizado` se completude = 100% dos obrigatórios, senão `Pendente`.
+- Situação Geradora, Natureza da Lesão e Parte do Corpo Atingida são dropdowns com as listas oficiais eSocial (Tabela 15, lista de lesões e Tabela 13, respectivamente).
 - Fechar com alterações não salvas → oferece Salvar rascunho / Descartar / Continuar editando.
 
 ### Domínios em aberto (não decididos, sinalizados no código)
-- **Espécie, Situação Geradora, Agente Causador, Natureza da Lesão** — dropdowns vazios/desabilitados, aguardando lista oficial da SST.
+- **Agente Causador** — dropdown vazio/desabilitado, aguardando lista oficial da SST (único domínio ainda pendente; Espécie foi removido do formulário e Situação Geradora/Natureza da Lesão/Parte do Corpo já têm lista oficial).
 - Causa pode ser redundante com Situação Geradora + Agente Causador.
 - Dias de Afastamento pode ser o mesmo dado que Qtd. Dias de Atestado.
 - Escala de Gravidade (Leve/Moderada/Grave) sem confirmação oficial.
 - "Cliente" em Tipo de Colaborador — aplicabilidade ao PGR em aberto.
+- **Em standby**: Atestados/Afastamento/Internação como lista repetível (botão "+", soma automática de dias) — ainda não implementado, aguardando detalhamento do que cada ocorrência deve conter.
+
+### Locais de grupo (filial-sede cobre satélites)
+Um técnico de segurança atende, além da sua filial-sede, os locais satélites do grupo: JPA → CD ALH, DEP JPA · GUS → MESTRE NILO · PAL → CD LAU · BAR → CD ST DRU. Mapeamento em `esg_filial_grupo` (tabela nova, `sql/03_migracao_form.sql`); `esg_pode_ver()` foi reescrito para considerar o grupo (RLS), não só a filial exata.
 
 ## Carga histórica
 
