@@ -1996,7 +1996,8 @@ function sortAcidentes(arr){
 
 async function dbList(){
   if(MODE==='local') return { data: sortAcidentes(lsRead()), error:null }
-  return await sb.from(TBL_ACIDENTES).select('*').order('data_acidente',{ascending:false}).order('id',{ascending:false})
+  // paginado: o PostgREST devolve no máx. 1.000 linhas por resposta (ver sbFetchAll)
+  return await sbFetchAll(TBL_ACIDENTES, q=>q.order('data_acidente',{ascending:false}).order('id',{ascending:false}))
 }
 async function dbInsert(rec){
   if(MODE==='local'){
@@ -2390,6 +2391,23 @@ function contarPessoasStatus(rows, status){
   return s.size
 }
 
+// O PostgREST (Supabase) limita cada resposta a 1.000 linhas — sem paginação, tudo que
+// passar disso fica invisível (import "funciona" mas os dados novos não aparecem).
+// Busca em páginas de 1.000 até esgotar. `filtro` recebe a query p/ aplicar eq/order.
+async function sbFetchAll(tabela, filtro){
+  const PAGE = 1000
+  const out = []
+  for(let from = 0;; from += PAGE){
+    let q = sb.from(tabela).select('*').range(from, from+PAGE-1)
+    if(filtro) q = filtro(q)
+    const {data, error} = await q
+    if(error) return {data:null, error}
+    out.push(...(data||[]))
+    if(!data || data.length < PAGE) break
+  }
+  return {data:out, error:null}
+}
+
 async function loadASO(){
   if(!sb) return
   const {data:up, error:errUp} = await sb.from('esg_aso_upload').select('*').order('enviado_em',{ascending:false}).limit(1).maybeSingle()
@@ -2405,7 +2423,7 @@ async function loadASO(){
   }
   const dt = new Date(asoUltimoUpload.enviado_em)
   $('aso-ultima-att').textContent = `${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(asoUltimoUpload.enviado_por||'—')} · ${esc(asoUltimoUpload.arquivo_nome||'')} (${asoUltimoUpload.total_linhas} linhas)`
-  const {data, error} = await sb.from('esg_aso_exame').select('*').eq('upload_id', asoUltimoUpload.id)
+  const {data, error} = await sbFetchAll('esg_aso_exame', q=>q.eq('upload_id', asoUltimoUpload.id).order('id'))
   if(error){ toast('Erro ao carregar exames: '+error.message, 'err'); return }
   ASO_DS = data||[]
   buildASOFilters()
@@ -2766,7 +2784,7 @@ async function loadTrein(){
   if(!sb) return
   const [{data:cat, error:e1}, {data:regs, error:e2}] = await Promise.all([
     sb.from('esg_trein_catalogo').select('*').order('ordem'),
-    sb.from('esg_trein_registro').select('*')
+    sbFetchAll('esg_trein_registro', q=>q.order('id'))   // >1.000 linhas: precisa paginar
   ])
   if(e1){ toast('Erro ao carregar catálogo: '+e1.message,'err'); return }
   if(e2){ toast('Erro ao carregar registros: '+e2.message,'err'); return }
