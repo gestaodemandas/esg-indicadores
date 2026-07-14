@@ -289,6 +289,39 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .trein-legend{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center}
 .tl-item{display:flex;align-items:center;gap:.35rem;font-size:.64rem;font-weight:700;color:var(--txt3)}
 .tl-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.trein-hero{display:grid;grid-template-columns:290px 1fr;gap:1.25rem;align-items:stretch}
+@media(max-width:900px){.trein-hero{grid-template-columns:1fr}}
+.conf-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.2rem 1.3rem;display:flex;flex-direction:column;gap:.55rem}
+.conf-title{font-size:.68rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3)}
+.conf-num{font-size:2.6rem;font-weight:800;line-height:1}
+.conf-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.07);overflow:hidden}
+body.dark .conf-bar{background:rgba(255,255,255,.08)}
+.conf-bar-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.conf-sub{font-size:.7rem;color:var(--txt3)}
+.conf-mini{display:flex;flex-direction:column;gap:.35rem;margin-top:.4rem}
+.conf-mini-item{display:flex;align-items:center;gap:.45rem;font-size:.72rem;color:var(--txt2);font-weight:600}
+.conf-mini-item .n{margin-left:auto;font-weight:800;color:var(--txt)}
+.acao-panel{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.1rem 1.3rem;display:flex;flex-direction:column;min-height:0}
+.acao-head{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
+.acao-title{font-size:.82rem;font-weight:700;color:var(--txt)}
+.acao-sub{font-size:.66rem;color:var(--txt3)}
+.acao-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem}
+.acao-tab{border:1px solid var(--bdr);background:none;border-radius:8px;padding:.4rem .7rem;font-size:.7rem;font-weight:700;color:var(--txt3);cursor:pointer;display:flex;align-items:center;gap:.4rem}
+.acao-tab .ct{font-weight:800}
+.acao-tab.active{border-color:var(--acid);color:var(--acid);background:var(--acid-l)}
+.acao-list{overflow-y:auto;max-height:340px;display:flex;flex-direction:column;gap:.4rem;padding-right:.2rem}
+.acao-item{display:flex;align-items:center;gap:.8rem;border:1px solid var(--bdr);border-radius:10px;padding:.55rem .8rem}
+.acao-nome{font-size:.76rem;font-weight:700;color:var(--txt)}
+.acao-fil{font-size:.6rem;font-weight:800;color:var(--txt3);background:rgba(0,0,0,.05);border-radius:5px;padding:.1rem .35rem;margin-left:.4rem}
+body.dark .acao-fil{background:rgba(255,255,255,.07)}
+.acao-trein{font-size:.66rem;color:var(--txt3);margin-top:.1rem}
+.acao-prazo{margin-left:auto;font-size:.68rem;font-weight:800;white-space:nowrap;text-align:right}
+.acao-prazo.bad{color:var(--neg)}
+.acao-prazo.warn{color:#a6741e}
+.acao-prazo.muted{color:var(--txt3)}
+.acao-reg{border:1px solid var(--bdr);background:none;border-radius:8px;padding:.35rem .7rem;font-size:.68rem;font-weight:700;color:var(--txt2);cursor:pointer;white-space:nowrap}
+.acao-reg:hover{border-color:var(--acid);color:var(--acid);background:var(--acid-l)}
+.acao-empty{padding:1.6rem;text-align:center;color:var(--txt3);font-size:.74rem}
 .chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.1rem 1.3rem 1.2rem;display:flex;flex-direction:column}
 .chart-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
 .chart-card-title{font-size:.82rem;font-weight:700;color:var(--txt)}
@@ -973,27 +1006,27 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             </div>
           </div>
 
-          <!-- Cartões de situação (contam colaborador × treinamento) -->
-          <div class="trein-kpis">
-            <div class="card card-pos">
-              <div class="card-header"><div class="card-title">Em dia</div><span class="tag good">Ok</span></div>
-              <div class="card-value" id="tr-kpi-emdia">–</div>
-              <div class="card-comp">vencimento a mais de 30 dias</div>
+          <!-- Hero do técnico: "como estou?" (conformidade) + "o que preciso fazer?" (fila de ação) -->
+          <div class="trein-hero">
+            <div class="conf-card">
+              <div class="conf-title">Conformidade da equipe</div>
+              <div class="conf-num" id="tr-conf-num">–</div>
+              <div class="conf-bar"><div class="conf-bar-fill" id="tr-conf-fill" style="width:0%"></div></div>
+              <div class="conf-sub" id="tr-conf-sub">–</div>
+              <div class="conf-mini">
+                <div class="conf-mini-item"><span class="tl-dot" style="background:var(--esg)"></span>Em dia<span class="n" id="tr-kpi-emdia">–</span></div>
+                <div class="conf-mini-item"><span class="tl-dot" style="background:#e0953a"></span>A renovar (30 dias)<span class="n" id="tr-kpi-renovar">–</span></div>
+                <div class="conf-mini-item"><span class="tl-dot" style="background:var(--acid)"></span>Vencidos<span class="n" id="tr-kpi-vencido">–</span></div>
+                <div class="conf-mini-item"><span class="tl-dot" style="background:#9aa2ab"></span>Não realizados<span class="n" id="tr-kpi-naoreal">–</span></div>
+              </div>
             </div>
-            <div class="card card-neutral">
-              <div class="card-header"><div class="card-title">A renovar</div><span class="tag warn">30 dias</span></div>
-              <div class="card-value" id="tr-kpi-renovar">–</div>
-              <div class="card-comp">vencem nos próximos 30 dias</div>
-            </div>
-            <div class="card card-neg">
-              <div class="card-header"><div class="card-title">Vencidos</div><span class="tag bad">Atenção</span></div>
-              <div class="card-value" id="tr-kpi-vencido">–</div>
-              <div class="card-comp">prazo de reciclagem estourado</div>
-            </div>
-            <div class="card card-neutral">
-              <div class="card-header"><div class="card-title">Não realizados</div><span class="tag muted">Sem registro</span></div>
-              <div class="card-value" id="tr-kpi-naoreal">–</div>
-              <div class="card-comp">nunca fizeram o treinamento</div>
+            <div class="acao-panel">
+              <div class="acao-head">
+                <span class="acao-title">O que precisa da sua ação</span>
+                <span class="acao-sub">quando o colaborador fizer o treinamento, clique em Registrar e informe a data</span>
+              </div>
+              <div class="acao-tabs" id="tr-acao-tabs"></div>
+              <div class="acao-list" id="tr-acao-list"></div>
             </div>
           </div>
 
@@ -1011,8 +1044,8 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <div id="tr-chart-trein"></div>
           </div>
 
-          <!-- Situação por filial (visão consolidada) -->
-          <div class="chart-card">
+          <!-- Situação por filial (só p/ visão corporativa; p/ o técnico é ruído) -->
+          <div class="chart-card" id="tr-chart-filial-card">
             <div class="chart-card-head">
               <span class="chart-card-title">Situação por Filial</span>
               <span class="chart-card-sub">consolidado de todos os treinamentos</span>
@@ -2853,6 +2886,42 @@ function trStackedChart(boxId, rows, keyFn, labelFn){
   }).join('') + '</div>'
 }
 
+// ── Fila de ação do técnico: pendências priorizadas por urgência, com Registrar direto ──
+let trAcaoTab = 'Vencido'
+const TR_ACAO_TABS = [ ['Vencido','Vencidos'], ['A renovar','Vencem em 30 dias'], ['Não realizado','Nunca realizados'] ]
+function setTrAcaoTab(s){ trAcaoTab = s; renderTreinAcao() }
+window.setTrAcaoTab = setTrAcaoTab
+function renderTreinAcao(){
+  // o painel tem seletor próprio de situação — ignora o filtro Situação da barra
+  const rows = scopedTreinRows({sit:true})
+  const conta = s => rows.filter(r=>treinDeriv(r).situacao===s).length
+  $('tr-acao-tabs').innerHTML = TR_ACAO_TABS.map(([s,label])=>
+    `<button class="acao-tab${trAcaoTab===s?' active':''}" onclick="setTrAcaoTab('${s}')">${label} <span class="ct">${conta(s)}</span></button>`).join('')
+  const lista = rows.map(r=>({r, d:treinDeriv(r)})).filter(x=>x.d.situacao===trAcaoTab)
+  // urgência: vencido há mais tempo primeiro; a renovar mais próximo primeiro; nunca realizado por nome
+  lista.sort((a,b)=> trAcaoTab==='Não realizado'
+    ? String(a.r.nome).localeCompare(String(b.r.nome))
+    : (a.d.dias??0)-(b.d.dias??0))
+  const prazoTxt = d => d.situacao==='Vencido' ? `venceu há ${Math.abs(d.dias)} dia${Math.abs(d.dias)===1?'':'s'}`
+    : d.situacao==='A renovar' ? `vence em ${d.dias} dia${d.dias===1?'':'s'} · ${fmtData(d.vence)}`
+    : 'sem registro'
+  const prazoCls = d => d.situacao==='Vencido' ? 'bad' : d.situacao==='A renovar' ? 'warn' : 'muted'
+  $('tr-acao-list').innerHTML = lista.length ? lista.map(({r,d})=>{
+    const cat = TR_CAT_MAP[r.treinamento_id]
+    return `<div class="acao-item">
+      <div>
+        <div class="acao-nome">${esc(r.nome)}${(currentUser&&currentUser.ver_todas)?`<span class="acao-fil">${esc(r.filial)}</span>`:''}</div>
+        <div class="acao-trein">${esc(cat?cat.nome:'?')}${r.funcao?' · '+esc(r.funcao):''}</div>
+      </div>
+      <div class="acao-prazo ${prazoCls(d)}">${prazoTxt(d)}</div>
+      <button class="acao-reg" onclick="openTreinModal(${r.id}, true)">Registrar</button>
+    </div>`
+  }).join('') : `<div class="acao-empty">${
+    trAcaoTab==='Vencido' ? 'Nenhum treinamento vencido — equipe em dia.'
+    : trAcaoTab==='A renovar' ? 'Nada vence nos próximos 30 dias.'
+    : 'Todos os colaboradores têm registro de treinamento.'}</div>`
+}
+
 function renderTrein(){
   const rows = scopedTreinRows()
   const cont = { 'Em dia':0, 'A renovar':0, 'Vencido':0, 'Não realizado':0 }
@@ -2861,9 +2930,19 @@ function renderTrein(){
   $('tr-kpi-renovar').textContent = cont['A renovar']
   $('tr-kpi-vencido').textContent = cont['Vencido']
   $('tr-kpi-naoreal').textContent = cont['Não realizado']
+  // Conformidade = registros em dia ÷ total (verde só em 100%, regra do app)
+  const total = rows.length
+  const pct = total ? Math.round(cont['Em dia']/total*100) : 0
+  $('tr-conf-num').textContent = pct+'%'
+  $('tr-conf-num').style.color = pct>=100 ? 'var(--pos)' : (pct>=50 ? '#a6741e' : 'var(--acid)')
+  $('tr-conf-fill').style.width = pct+'%'
+  $('tr-conf-fill').style.background = pct>=100 ? 'var(--pos)' : (pct>=50 ? '#e0953a' : 'var(--acid)')
+  $('tr-conf-sub').textContent = total ? `${cont['Em dia']} de ${total} registros em dia` : 'Sem registros no filtro atual'
+  renderTreinAcao()
   $('tr-tbl-count').textContent = `${rows.length} registro${rows.length===1?'':'s'} (colaborador × treinamento)`
 
   trStackedChart('tr-chart-trein', scopedTreinRows({trein:true}), r=>r.treinamento_id, id=>(TR_CAT_MAP[id]?TR_CAT_MAP[id].nome:'?'))
+  $('tr-chart-filial-card').style.display = (currentUser && currentUser.ver_todas) ? '' : 'none'
   trStackedChart('tr-chart-filial', scopedTreinRows({filial:true}), r=>r.filial, f=>f)
 
   const sorted = sortTreinRows(rows)
@@ -2940,9 +3019,9 @@ function treinPreview(){
 }
 window.treinPreview = treinPreview
 
-function openTreinModal(id){
+function openTreinModal(id, focarData){
   treinEditId = id || null
-  $('trein-modal-title').textContent = id ? 'Editar Registro de Treinamento' : 'Novo Registro de Treinamento'
+  $('trein-modal-title').textContent = focarData ? 'Registrar Reciclagem' : (id ? 'Editar Registro de Treinamento' : 'Novo Registro de Treinamento')
   $('trein-msg').textContent = ''; $('trein-msg').className = 'modal-msg'
   // filial restrita ao grupo do técnico (mesma regra do Acidentes)
   fillSelect('t-filial', locaisPermitidos(), 'Selecione…')
@@ -2966,6 +3045,8 @@ function openTreinModal(id){
   }
   treinPreview()
   $('trein-overlay').classList.add('open')
+  // vindo do botão "Registrar" da fila de ação: cursor direto no campo de data
+  if(focarData) setTimeout(()=>{ const el=$('t-data'); if(el){ el.focus(); try{ el.showPicker() }catch(e){} } }, 80)
 }
 window.openTreinModal = openTreinModal
 function closeTreinModal(){ $('trein-overlay').classList.remove('open'); treinEditId=null }
