@@ -1,6 +1,6 @@
 # Aplicativo ESG — Gestão de Indicadores
 
-Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulo em produção: **Acidentes**. Em construção: **ASO**. Os demais (Visão Geral, CIPA, Brigada, Treinamentos) aparecem na capa como "Em breve".
+Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes** e **ASO**. Os demais (Visão Geral, CIPA, Brigada, Treinamentos) aparecem na capa como "Em breve".
 
 - **Publicado em**: https://gestaodemandas.github.io/esg-indicadores/
 - **Repositório**: https://github.com/gestaodemandas/esg-indicadores
@@ -15,6 +15,7 @@ Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e anál
 | `sql/01_schema.sql` | Cria `esg_acidentes` + `esg_cid10` (schema base) |
 | `sql/02_seed_cid10_amostra.sql` | Popula `esg_cid10` com a amostra |
 | `sql/03_migracao_form.sql` | Migração da revisão de formulário (jul/2026): coluna `tipo_equipamento_outro`, domínio ampliado de equipamentos, tabela `esg_filial_grupo` + `esg_pode_ver()` por grupo de locais |
+| `sql/04_aso.sql` | Cria `esg_aso_upload` + `esg_aso_exame` (módulo ASO) e RLS — **depende de `esg_pode_ver()`, já criado por `01`/`03`; rodar depois desses** |
 | `dados/` | **Fora do git** (`.gitignore` — contém nomes/e-mails/matrículas, LGPD). Scripts de carga histórica, controle de acesso e backups |
 | `.claude/launch.json` *(fora desta pasta, na raiz de Sessões Claude)* | Config do preview local (`esg-app`, porta 8734) |
 
@@ -130,6 +131,33 @@ Organizado em abas na lateral (Comunicado, Identificação, Classificação, Ate
 
 ### Locais de grupo (filial-sede cobre satélites)
 Um técnico de segurança atende, além da sua filial-sede, os locais satélites do grupo: JPA → CD ALH, DEP JPA · GUS → MESTRE NILO · PAL → CD LAU · BAR → CD ST DRU. Mapeamento em `esg_filial_grupo` (tabela nova, `sql/03_migracao_form.sql`); `esg_pode_ver()` foi reescrito para considerar o grupo (RLS), não só a filial exata.
+
+## Módulo ASO
+
+Diferente do Acidentes, o ASO **não é um formulário**: é um **snapshot** da planilha corporativa "Relação de Próximos Exames" (controle de exames ocupacionais por colaborador). O usuário corporativo importa a planilha `.xlsx`; o parsing (ETL) roda **no próprio navegador** via SheetJS (`xlsx@0.18.5`, CDN) — não existe backend/função server-side. Cada importação grava um **novo snapshot** no banco; a versão anterior não é sobrescrita, fica de histórico. O dashboard sempre lê a versão mais recente.
+
+### Modelo de dados
+- **`esg_aso_upload`**: cabeçalho de cada importação (nome do arquivo, período informado na planilha, total de linhas, quem importou, quando).
+- **`esg_aso_exame`**: uma linha por exame obrigatório de cada colaborador naquele snapshot (Filial, Ficha, Colaborador, Sexo, Cargo, Tipo de Exame, Últ. Exame, Próx. Exame, Local, Matrícula, Avaliador).
+- **Status** (Vencido / Vencendo em 30 dias / Em dia / Sem previsão) não é armazenado — é **calculado na leitura** a partir do Próx. Exame vs. hoje.
+
+### Mapeamento de Filial (CODFIL)
+A planilha traz a filial como código numérico (CODFIL), não como sigla. Mapeamento confirmado pelo usuário (2026-07-14): `1=GUS, 2=IMB, 3=PAL, 4=TAM, 5=AJU, 6=JPA, 7=PNG, 8=CAU, 9=BAR`. Códigos fora desse conjunto (ex.: `99`, ou compostos como `4016`, `8090`, `9207`, `302`, `601`, `701` — prováveis locais satélites de uma filial-base) **ficam com o valor bruto**, sem sigla — ainda não confirmados. Isso tem uma consequência direta no RLS: só usuários com `ver_todas=true` enxergam linhas com filial não mapeada, porque `esg_pode_ver()` só casa contra siglas conhecidas.
+
+### Permissões
+- **Leitura**: mesmo escopo por filial/grupo do módulo Acidentes (reusa `esg_pode_ver()` e `esg_filial_grupo`).
+- **Importar nova planilha**: restrito a `ver_todas=true` (perfil corporativo) — o snapshot vale para todo mundo, então só quem já vê tudo pode substituí-lo. Usuários de filial não veem o botão de upload.
+
+### Dashboard
+- Banner com a data/hora da última importação, quem importou e o nome do arquivo.
+- Filtros: Filial, Tipo de Exame, Status, Busca (nome/matrícula).
+- 3 cartões: Vencidos, Vencendo em 30 dias, Em dia.
+- Gráficos de barra: exames por filial e por tipo de exame (top 10).
+- Tabela ordenável + exportação Excel.
+
+### Pendências conhecidas
+- Confirmar a sigla dos códigos CODFIL ainda não mapeados (99 e os compostos) para que o RLS por filial cubra 100% dos dados.
+- Sem interface para consultar snapshots antigos (ficam no banco, mas só a versão vigente aparece no app).
 
 ## Carga histórica
 

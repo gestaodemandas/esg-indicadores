@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ESG — Gestão de Indicadores | Ferreira Costa</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --sw:260px;--swc:72px;--th:64px;
@@ -277,6 +278,11 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .acid-top{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
 @media(max-width:900px){.acid-top{grid-template-columns:1fr}}
 .acid-col{display:flex;flex-direction:column;gap:1rem}
+.aso-banner{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1rem 1.35rem;flex-wrap:wrap}
+.aso-banner-title{font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3)}
+.aso-banner-value{font-size:1rem;font-weight:700;color:var(--txt);margin-top:.15rem}
+.aso-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+@media(max-width:900px){.aso-kpis{grid-template-columns:1fr}}
 .chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.1rem 1.3rem 1.2rem;display:flex;flex-direction:column}
 .chart-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
 .chart-card-title{font-size:.82rem;font-weight:700;color:var(--txt)}
@@ -539,10 +545,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
         <span class="sb-soon-tag">Em breve</span>
       </div>
 
-      <div class="sb-item sb-soon">
+      <div class="sb-item" data-section="aso" onclick="showSection('aso')">
         <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
         <div class="sb-item-label">ASO</div>
-        <span class="sb-soon-tag">Em breve</span>
       </div>
 
       <div class="sb-item sb-soon">
@@ -674,9 +679,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
               </div>
             </div>
 
-            <!-- 05 ASO -->
-            <div class="home-card hc-soon">
-              <div class="hc-panel hcp-gray">
+            <!-- 05 ASO (ativo) -->
+            <div class="home-card" onclick="showSection('aso')">
+              <div class="hc-panel hcp-red">
                 <span class="hc-ghost">05</span>
                 <div class="hc-chevron"></div>
                 <div class="hc-inner">
@@ -685,8 +690,8 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 </div>
               </div>
               <div class="hc-body">
-                <div class="hc-tagline">Atestados de saúde ocupacional<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
-                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="hc-tagline">Exames ocupacionais · Vencimentos<br>Snapshot da planilha de controle</div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
               </div>
             </div>
 
@@ -803,6 +808,108 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 <tbody id="tbl-body"></tbody>
               </table>
               <div class="tbl-empty" id="tbl-empty" style="display:none">Nenhum registro encontrado. Clique em <strong>+ Novo</strong> para registrar a primeira ocorrência.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══ ASO ══ -->
+        <div class="section-page" id="sec-aso">
+
+          <!-- Banner de última atualização + upload -->
+          <div class="aso-banner">
+            <div class="aso-banner-info">
+              <div class="aso-banner-title">Última atualização</div>
+              <div class="aso-banner-value" id="aso-ultima-att">Nenhum snapshot importado ainda</div>
+            </div>
+            <div class="aso-banner-actions" id="aso-upload-wrap" style="display:none">
+              <input type="file" id="aso-file" accept=".xlsx,.xls" style="display:none" onchange="uploadASO(this)">
+              <button class="btn-new" onclick="document.getElementById('aso-file').click()">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Importar nova planilha
+              </button>
+            </div>
+          </div>
+
+          <!-- Barra de filtros -->
+          <div class="acid-filterbar">
+            <div class="afb-group"><label>Filial</label><select id="aso-flt-filial" onchange="renderASO()"><option value="TODAS">Todas</option></select></div>
+            <div class="afb-group"><label>Tipo de Exame</label><select id="aso-flt-tipo" onchange="renderASO()"><option value="TODOS">Todos</option></select></div>
+            <div class="afb-group"><label>Status</label><select id="aso-flt-status" onchange="renderASO()">
+              <option value="TODOS">Todos</option><option value="Vencido">Vencido</option><option value="Vencendo">Vencendo (30 dias)</option><option value="Em dia">Em dia</option><option value="Sem previsão">Sem previsão</option>
+            </select></div>
+            <div class="afb-search"><label>Buscar</label>
+              <div class="afb-search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="aso-flt-busca" placeholder="Nome ou matrícula…" oninput="renderASO()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Cartões de status -->
+          <div class="aso-kpis">
+            <div class="card card-neg">
+              <div class="card-header"><div class="card-title">Vencidos</div><span class="tag bad">Atenção</span></div>
+              <div class="card-value" id="aso-kpi-vencido">–</div>
+              <div class="card-comp">exames com Próx. Exame no passado</div>
+            </div>
+            <div class="card card-neutral">
+              <div class="card-header"><div class="card-title">Vencendo em 30 dias</div><span class="tag warn">Vencendo</span></div>
+              <div class="card-value" id="aso-kpi-vencendo">–</div>
+              <div class="card-comp">agir com antecedência</div>
+            </div>
+            <div class="card card-pos">
+              <div class="card-header"><div class="card-title">Em dia</div><span class="tag good">Ok</span></div>
+              <div class="card-value" id="aso-kpi-emdia">–</div>
+              <div class="card-comp">dentro do prazo</div>
+            </div>
+          </div>
+
+          <div class="acid-top">
+            <div class="acid-col">
+              <div class="chart-card">
+                <div class="chart-card-head"><span class="chart-card-title">Exames por Filial</span><span class="chart-card-sub">todas as filiais</span></div>
+                <div id="aso-chart-filial"></div>
+              </div>
+            </div>
+            <div class="acid-col">
+              <div class="chart-card">
+                <div class="chart-card-head"><span class="chart-card-title">Exames por Tipo</span><span class="chart-card-sub">top 10</span></div>
+                <div id="aso-chart-tipo"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Exames Monitorados</div>
+                <div class="panel-sub" id="aso-tbl-count">–</div>
+              </div>
+              <div class="panel-tools">
+                <button class="btn-sec" onclick="exportarExcelASO()">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="12" y1="12" x2="12" y2="18"/></svg>
+                  Exportar Excel
+                </button>
+              </div>
+            </div>
+            <div class="tbl-scroll">
+              <table class="tbl">
+                <thead><tr>
+                  <th class="th-sort" data-col="filial" onclick="sortByASO('filial')">Filial <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="colaborador" onclick="sortByASO('colaborador')">Colaborador <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="matricula" onclick="sortByASO('matricula')">Matrícula <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="cargo" onclick="sortByASO('cargo')">Cargo <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="tipo_exame" onclick="sortByASO('tipo_exame')">Tipo de Exame <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="ultimo_exame" onclick="sortByASO('ultimo_exame')">Últ. Exame <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="proximo_exame" onclick="sortByASO('proximo_exame')">Próx. Exame <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="aso_status" onclick="sortByASO('aso_status')">Status <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="local" onclick="sortByASO('local')">Local <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="avaliador" onclick="sortByASO('avaliador')">Avaliador <span class="sort-ind"></span></th>
+                </tr></thead>
+                <tbody id="aso-tbl-body"></tbody>
+              </table>
+              <div class="tbl-empty" id="aso-tbl-empty" style="display:none">Nenhum exame encontrado. Importe uma planilha para começar.</div>
             </div>
           </div>
 
@@ -1467,7 +1574,7 @@ let sortCol = 'data_acidente'  // coluna de ordenação da tabela
 let sortDir = 'desc'           // 'asc' | 'desc'
 const NUM_COLS = ['completude'] // colunas comparadas numericamente
 
-const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes' }
+const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes', aso:'ASO' }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function $(id){ return document.getElementById(id) }
@@ -1614,6 +1721,7 @@ function showSection(id){
   const el = $('sec-'+id)
   if(el){ el.classList.add('show'); $('content').scrollTop=0 }
   if(id==='acidentes') renderAcidentes()
+  if(id==='aso') loadASO()
 }
 window.showSection = showSection
 
@@ -1956,6 +2064,266 @@ function exportarExcel(){
   toast(`${rows.length} registro${rows.length===1?'':'s'} exportado${rows.length===1?'':'s'} para Excel.`)
 }
 window.exportarExcel = exportarExcel
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MÓDULO ASO — snapshot da planilha "Relação de Próximos Exames"
+// Não é formulário: o usuário corporativo importa a planilha, o ETL roda no
+// próprio navegador (SheetJS) e grava um novo snapshot no banco. O dashboard
+// sempre mostra a versão mais recente; versões anteriores ficam de histórico.
+// ═══════════════════════════════════════════════════════════════════════════
+let ASO_DS = []            // exames do snapshot vigente
+let asoUltimoUpload = null // linha de esg_aso_upload do snapshot vigente
+let asoSortCol = 'proximo_exame'
+let asoSortDir = 'asc'
+
+// CODFIL (código numérico de filial na planilha) -> sigla usada no resto do app.
+// Códigos fora deste mapa (99=Corporativo, ou compostos tipo 4016/8090) ficam com o
+// valor bruto — não têm sigla confirmada ainda, então só aparecem para quem vê tudo.
+const CODFIL_SIGLA = {1:'GUS',2:'IMB',3:'PAL',4:'TAM',5:'AJU',6:'JPA',7:'PNG',8:'CAU',9:'BAR'}
+function mapFilialASO(raw){
+  const n = Number(raw)
+  return CODFIL_SIGLA[n] || String(raw??'').trim()
+}
+function xlsxDateToISO(v){
+  if(v==null || v==='') return null
+  if(v instanceof Date) return v.toISOString().slice(0,10)
+  if(typeof v === 'number' && window.XLSX && XLSX.SSF){
+    const d = XLSX.SSF.parse_date_code(v)
+    if(!d) return null
+    return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`
+  }
+  return null
+}
+// Status calculado a partir do Próx. Exame — não é armazenado, é derivado sempre na leitura.
+function asoStatus(proximoISO){
+  if(!proximoISO) return 'Sem previsão'
+  const hoje = new Date(); hoje.setHours(0,0,0,0)
+  const d = new Date(proximoISO+'T00:00:00')
+  const diffDias = Math.round((d-hoje)/86400000)
+  if(diffDias < 0) return 'Vencido'
+  if(diffDias <= 30) return 'Vencendo'
+  return 'Em dia'
+}
+function asoStatusClass(st){ return st==='Vencido'?'bad':st==='Vencendo'?'warn':st==='Em dia'?'good':'muted' }
+
+async function loadASO(){
+  if(!sb) return
+  const {data:up, error:errUp} = await sb.from('esg_aso_upload').select('*').order('enviado_em',{ascending:false}).limit(1).maybeSingle()
+  if(errUp){ toast('Erro ao carregar ASO: '+errUp.message, 'err'); return }
+  asoUltimoUpload = up || null
+  const podeImportar = !!(currentUser && currentUser.ver_todas)
+  $('aso-upload-wrap').style.display = podeImportar ? '' : 'none'
+  if(!asoUltimoUpload){
+    $('aso-ultima-att').textContent = 'Nenhum snapshot importado ainda'
+    ASO_DS = []
+    buildASOFilters(); renderASO()
+    return
+  }
+  const dt = new Date(asoUltimoUpload.enviado_em)
+  $('aso-ultima-att').textContent = `${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(asoUltimoUpload.enviado_por||'—')} · ${esc(asoUltimoUpload.arquivo_nome||'')} (${asoUltimoUpload.total_linhas} linhas)`
+  const {data, error} = await sb.from('esg_aso_exame').select('*').eq('upload_id', asoUltimoUpload.id)
+  if(error){ toast('Erro ao carregar exames: '+error.message, 'err'); return }
+  ASO_DS = data||[]
+  buildASOFilters()
+  renderASO()
+}
+window.loadASO = loadASO
+
+function buildASOFilters(){
+  const selFil = $('aso-flt-filial'); const curFil = selFil.value||'TODAS'
+  const filiais = [...new Set(ASO_DS.map(r=>r.filial).filter(Boolean))].sort()
+  selFil.innerHTML = '<option value="TODAS">Todas</option>' + filiais.map(f=>`<option>${esc(f)}</option>`).join('')
+  if([...selFil.options].some(o=>o.value===curFil)) selFil.value=curFil
+
+  const selTipo = $('aso-flt-tipo'); const curTipo = selTipo.value||'TODOS'
+  const tipos = [...new Set(ASO_DS.map(r=>r.tipo_exame).filter(Boolean))].sort()
+  selTipo.innerHTML = '<option value="TODOS">Todos</option>' + tipos.map(t=>`<option>${esc(t)}</option>`).join('')
+  if([...selTipo.options].some(o=>o.value===curTipo)) selTipo.value=curTipo
+}
+
+// Mesma lógica de scopedRows(skip) do Acidentes: cada visual ignora só a própria dimensão.
+function scopedASORows(skip){
+  skip = skip||{}
+  const filFiltro = $('aso-flt-filial').value
+  const tipoFiltro = $('aso-flt-tipo').value
+  const statusFiltro = $('aso-flt-status').value
+  const busca = ($('aso-flt-busca').value||'').trim().toUpperCase()
+  return ASO_DS.filter(r=>{
+    if(!skip.filial && filFiltro!=='TODAS' && r.filial!==filFiltro) return false
+    if(!skip.tipo && tipoFiltro!=='TODOS' && r.tipo_exame!==tipoFiltro) return false
+    if(!skip.status && statusFiltro!=='TODOS' && asoStatus(r.proximo_exame)!==statusFiltro) return false
+    if(busca && !(String(r.colaborador||'').toUpperCase().includes(busca) || String(r.matricula||'').toUpperCase().includes(busca))) return false
+    return true
+  })
+}
+function filteredASOData(){ return scopedASORows() }
+
+function asoSortValue(r, col){ return col==='aso_status' ? asoStatus(r.proximo_exame) : r[col] }
+function sortASORows(rows){
+  const dir = asoSortDir==='asc' ? 1 : -1
+  return [...rows].sort((a,b)=>{
+    let va = asoSortValue(a,asoSortCol); let vb = asoSortValue(b,asoSortCol)
+    va = va==null ? '' : va; vb = vb==null ? '' : vb
+    if(va<vb) return -1*dir
+    if(va>vb) return 1*dir
+    return 0
+  })
+}
+function sortByASO(col){
+  if(asoSortCol===col) asoSortDir = asoSortDir==='asc' ? 'desc' : 'asc'
+  else { asoSortCol = col; asoSortDir = 'asc' }
+  renderASO()
+}
+window.sortByASO = sortByASO
+function updateASOSortIndicators(){
+  document.querySelectorAll('#sec-aso .th-sort').forEach(th=>{
+    const ind = th.querySelector('.sort-ind')
+    ind.textContent = th.dataset.col===asoSortCol ? (asoSortDir==='asc'?'▲':'▼') : ''
+  })
+}
+
+function renderASOChartFilial(){
+  const box = $('aso-chart-filial')
+  const cont = {}
+  scopedASORows({filial:true}).forEach(r=>{ if(r.filial) cont[r.filial]=(cont[r.filial]||0)+1 })
+  const arr = Object.entries(cont).map(([filial,n])=>({filial,n})).sort((a,b)=>b.n-a.n)
+  if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
+  const max = Math.max(...arr.map(a=>a.n))
+  box.innerHTML = '<div class="barchart">' + arr.map(a=>{
+    const h = Math.max(3, Math.round(a.n/max*160))
+    return `<div class="barchart-col"><div class="barchart-bar" style="height:${h}px;background:${redShade(a.n,max)}"><span class="barchart-val">${a.n}</span></div><div class="barchart-lbl">${esc(a.filial)}</div></div>`
+  }).join('') + '</div>'
+}
+function renderASOChartTipo(){
+  const box = $('aso-chart-tipo')
+  const cont = {}
+  scopedASORows({tipo:true}).forEach(r=>{ if(r.tipo_exame) cont[r.tipo_exame]=(cont[r.tipo_exame]||0)+1 })
+  const arr = Object.entries(cont).map(([tipo,n])=>({tipo,n})).sort((a,b)=>b.n-a.n).slice(0,10)
+  if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
+  const max = Math.max(...arr.map(a=>a.n))
+  box.innerHTML = '<div class="barchart">' + arr.map(a=>{
+    const h = Math.max(3, Math.round(a.n/max*160))
+    return `<div class="barchart-col"><div class="barchart-bar" style="height:${h}px;background:${redShade(a.n,max)}"><span class="barchart-val">${a.n}</span></div><div class="barchart-lbl" style="font-size:.56rem">${esc(a.tipo.length>12?a.tipo.slice(0,12)+'…':a.tipo)}</div></div>`
+  }).join('') + '</div>'
+}
+
+function renderASO(){
+  const rows = scopedASORows()
+  $('aso-kpi-vencido').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Vencido').length
+  $('aso-kpi-vencendo').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Vencendo').length
+  $('aso-kpi-emdia').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Em dia').length
+  $('aso-tbl-count').textContent = `${rows.length} exame${rows.length===1?'':'s'} monitorado${rows.length===1?'':'s'}`
+  renderASOChartFilial()
+  renderASOChartTipo()
+  const sorted = sortASORows(rows)
+  $('aso-tbl-empty').style.display = sorted.length ? 'none' : ''
+  $('aso-tbl-body').innerHTML = sorted.map(r=>{
+    const st = asoStatus(r.proximo_exame)
+    return `<tr>
+      <td>${esc(r.filial)}</td>
+      <td>${esc(r.colaborador)}</td>
+      <td>${esc(r.matricula)}</td>
+      <td>${esc(r.cargo)}</td>
+      <td>${esc(r.tipo_exame)}</td>
+      <td>${fmtData(r.ultimo_exame)}</td>
+      <td>${fmtData(r.proximo_exame)}</td>
+      <td><span class="tag ${asoStatusClass(st)}">${esc(st)}</span></td>
+      <td>${esc(r.local)}</td>
+      <td>${esc(r.avaliador)}</td>
+    </tr>`
+  }).join('')
+  updateASOSortIndicators()
+}
+window.renderASO = renderASO
+
+// ── Upload + ETL (parse no navegador via SheetJS, grava snapshot no Supabase) ──
+async function uploadASO(inputEl){
+  const f = inputEl.files && inputEl.files[0]
+  inputEl.value = ''
+  if(!f) return
+  if(!currentUser || !currentUser.ver_todas){ toast('Só perfis corporativos podem importar uma nova planilha de ASO.', 'err'); return }
+  let wb
+  try {
+    const buf = await f.arrayBuffer()
+    wb = XLSX.read(buf, {type:'array', cellDates:true})
+  } catch(e){ toast('Não foi possível ler o arquivo: '+e.message, 'err'); return }
+
+  const wsName = wb.SheetNames.includes('Base') ? 'Base' : wb.SheetNames[0]
+  const ws = wb.Sheets[wsName]
+  const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null})
+
+  const headerRow = (arr[3]||[]).map(v=>String(v??'').trim())
+  if(headerRow[0]!=='Filial' || headerRow[2]!=='Colaborador'){
+    toast('Formato inesperado: a planilha não parece ser a "Relação de Próximos Exames" (aba "Base").', 'err')
+    return
+  }
+  const periodoDe = xlsxDateToISO(arr[2] && arr[2][7])
+  const periodoAte = xlsxDateToISO(arr[2] && arr[2][9])
+
+  const linhas = []
+  for(let i=4;i<arr.length;i++){
+    const row = arr[i]
+    if(!row || row[0]==null || String(row[0]).trim()==='') continue
+    linhas.push({
+      codfil: String(row[0]).trim(),
+      filial: mapFilialASO(row[0]),
+      ficha: row[1]!=null ? String(row[1]).trim() : null,
+      colaborador: row[2]!=null ? String(row[2]).trim() : null,
+      sexo: row[3]!=null ? String(row[3]).trim() : null,
+      cargo: row[4]!=null ? String(row[4]).trim() : null,
+      cod_exame: row[7]!=null ? String(row[7]).trim() : null,
+      tipo_exame: row[8]!=null ? String(row[8]).trim() : null,
+      ultimo_exame: xlsxDateToISO(row[9]),
+      proximo_exame: xlsxDateToISO(row[10]),
+      cod_local: row[11]!=null ? String(row[11]).trim() : null,
+      local: row[12]!=null ? String(row[12]).trim() : null,
+      matricula: row[14]!=null ? String(row[14]).trim() : null,
+      avaliador: row[15]!=null ? String(row[15]).trim() : null
+    })
+  }
+  if(!linhas.length){ toast('Nenhuma linha de dados encontrada na planilha.', 'err'); return }
+  if(!confirm(`Importar ${linhas.length} linhas de "${f.name}"?\n\nEssa importação vira a versão vigente do ASO — a versão anterior fica guardada como histórico.`)) return
+
+  const nomeUsuario = (currentUser && currentUser.nome) || 'ESG'
+  const {data:up, error:errUp} = await sb.from('esg_aso_upload').insert({
+    arquivo_nome: f.name, periodo_de: periodoDe, periodo_ate: periodoAte,
+    total_linhas: linhas.length, enviado_por: nomeUsuario
+  }).select().single()
+  if(errUp){ toast('Erro ao registrar a importação: '+errUp.message, 'err'); return }
+
+  const CHUNK = 200
+  for(let i=0;i<linhas.length;i+=CHUNK){
+    const bloco = linhas.slice(i,i+CHUNK).map(l => ({...l, upload_id: up.id}))
+    const {error} = await sb.from('esg_aso_exame').insert(bloco)
+    if(error){ toast('Erro ao gravar exames (linhas '+(i+1)+'–'+Math.min(i+CHUNK,linhas.length)+'): '+error.message, 'err'); return }
+  }
+  toast(`Planilha importada: ${linhas.length} exames.`)
+  loadASO()
+}
+window.uploadASO = uploadASO
+
+function exportarExcelASO(){
+  const rows = sortASORows(filteredASOData())
+  if(!rows.length){ toast('Nenhum registro para exportar.', 'err'); return }
+  const cols = [['filial','Filial'],['colaborador','Colaborador'],['matricula','Matrícula'],['cargo','Cargo'],
+    ['tipo_exame','Tipo de Exame'],['ultimo_exame','Últ. Exame'],['proximo_exame','Próx. Exame'],
+    ['local','Local'],['avaliador','Avaliador']]
+  const cell = v => `<td>${esc(v==null?'':v)}</td>`
+  const head = '<tr>' + cols.map(([,l])=>`<th style="background:#b52d39;color:#fff;font-weight:bold">${esc(l)}</th>`).join('') + '<th style="background:#b52d39;color:#fff;font-weight:bold">Status</th></tr>'
+  const body = rows.map(r=>{
+    const st = asoStatus(r.proximo_exame)
+    return '<tr>' + cols.map(([k])=>{ let v=r[k]; if(k==='ultimo_exame'||k==='proximo_exame') v=fmtData(r[k]); return cell(v) }).join('') + cell(st) + '</tr>'
+  }).join('')
+  const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table border="1">${head}${body}</table></body></html>`
+  const blob = new Blob(['﻿'+html], {type:'application/vnd.ms-excel;charset=utf-8'})
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `aso_${new Date().toISOString().slice(0,10)}.xls`
+  a.click()
+  URL.revokeObjectURL(a.href)
+  toast(`${rows.length} registro${rows.length===1?'':'s'} exportado${rows.length===1?'':'s'} para Excel.`)
+}
+window.exportarExcelASO = exportarExcelASO
 
 // ── MEU PERFIL (técnico de segurança) ────────────────────────────────────────
 function getPerfil(){ try{ return JSON.parse(localStorage.getItem(PERFIL_KEY)||'null') }catch(e){ return null } }
