@@ -296,6 +296,20 @@ body.dark .pill.muted{background:rgba(255,255,255,.07)}
 .barchart-val{position:absolute;top:-1.15rem;left:50%;transform:translateX(-50%);font-size:.68rem;font-weight:800;color:var(--txt2)}
 .barchart-lbl{margin-top:.45rem;font-size:.6rem;font-weight:700;color:var(--txt3);white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
 .barchart-lbl.hl{color:var(--acid)}
+.hbarchart{display:flex;flex-direction:column;gap:.55rem;padding:.2rem 0}
+.hbarchart-row{display:flex;align-items:center;gap:.6rem}
+.hbarchart-lbl{flex:0 0 130px;width:130px;font-size:.68rem;font-weight:700;color:var(--txt2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbarchart-track{flex:1;background:rgba(0,0,0,.05);border-radius:6px;height:24px;overflow:hidden;display:flex;min-width:0}
+body.dark .hbarchart-track{background:rgba(255,255,255,.07)}
+.hbarchart-seg{height:100%;display:flex;align-items:center;justify-content:flex-end;padding:0 .45rem;color:#fff;font-size:.66rem;font-weight:800;white-space:nowrap;overflow:hidden;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.hbarchart-total{flex:0 0 34px;width:34px;font-size:.72rem;font-weight:800;color:var(--txt)}
+.aso-uf-bar{display:flex;align-items:center;gap:.8rem;background:rgba(0,0,0,.03);border:1px solid var(--bdr);border-radius:10px;padding:.55rem .9rem;margin-bottom:1rem;flex-wrap:wrap}
+body.dark .aso-uf-bar{background:rgba(255,255,255,.04)}
+.aso-uf-label{font-size:.62rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3)}
+.aso-uf-bar select{font-size:.72rem;padding:.35rem .6rem;border-radius:7px;border:1px solid var(--bdr);background:var(--card);color:var(--txt)}
+.aso-uf-clear{font-size:.68rem;font-weight:700;color:var(--txt3);background:none;border:1px solid var(--bdr);border-radius:7px;padding:.35rem .6rem;cursor:pointer}
+.aso-uf-clear:hover{color:var(--acid);border-color:var(--acid)}
+.aso-uf-count{margin-left:auto;font-size:.68rem;color:var(--txt3);font-weight:600}
 
 /* Gráfico mensal — barras verticais vermelhas */
 .monthchart{display:flex;align-items:flex-end;gap:.4rem;height:220px;padding-top:1.4rem}
@@ -863,6 +877,26 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
               <div class="card-value" id="aso-kpi-emdia">–</div>
               <div class="card-comp">dentro do prazo</div>
             </div>
+          </div>
+
+          <!-- ASOs por Unidade — Realizados vs. Pendentes (filtro próprio, independente da barra acima) -->
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <span class="chart-card-title">ASOs por Unidade — Realizados vs. Pendentes</span>
+              <span class="chart-card-sub">Ordenado por volume de pendências · Total = Realizados + Pendentes por unidade</span>
+            </div>
+            <div class="aso-uf-bar">
+              <span class="aso-uf-label">Filtrar:</span>
+              <select id="aso-uf-unidade" onchange="renderASOChartUnidade()"><option value="TODAS">Todas as unidades</option></select>
+              <select id="aso-uf-status" onchange="renderASOChartUnidade()">
+                <option value="TODOS">Todos os status</option>
+                <option value="Pendente">Somente Pendentes</option>
+                <option value="Realizado">Somente Realizados</option>
+              </select>
+              <button class="aso-uf-clear" onclick="limparFiltroASOUnidade()">↺ Limpar</button>
+              <span class="aso-uf-count" id="aso-uf-count">–</span>
+            </div>
+            <div id="aso-chart-unidade"></div>
           </div>
 
           <div class="acid-top">
@@ -2122,7 +2156,7 @@ async function loadASO(){
   if(!asoUltimoUpload){
     $('aso-ultima-att').textContent = 'Nenhum snapshot importado ainda'
     ASO_DS = []
-    buildASOFilters(); renderASO()
+    buildASOFilters(); buildASOUnidadeFilters(); renderASO()
     return
   }
   const dt = new Date(asoUltimoUpload.enviado_em)
@@ -2131,6 +2165,7 @@ async function loadASO(){
   if(error){ toast('Erro ao carregar exames: '+error.message, 'err'); return }
   ASO_DS = data||[]
   buildASOFilters()
+  buildASOUnidadeFilters()
   renderASO()
 }
 window.loadASO = loadASO
@@ -2188,6 +2223,7 @@ function updateASOSortIndicators(){
   })
 }
 
+// Barra horizontal (linha por categoria) — mais legível que coluna quando há muitos rótulos/nomes longos.
 function renderASOChartFilial(){
   const box = $('aso-chart-filial')
   const cont = {}
@@ -2195,9 +2231,12 @@ function renderASOChartFilial(){
   const arr = Object.entries(cont).map(([filial,n])=>({filial,n})).sort((a,b)=>b.n-a.n)
   if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
   const max = Math.max(...arr.map(a=>a.n))
-  box.innerHTML = '<div class="barchart">' + arr.map(a=>{
-    const h = Math.max(3, Math.round(a.n/max*160))
-    return `<div class="barchart-col"><div class="barchart-bar" style="height:${h}px;background:${redShade(a.n,max)}"><span class="barchart-val">${a.n}</span></div><div class="barchart-lbl">${esc(a.filial)}</div></div>`
+  box.innerHTML = '<div class="hbarchart">' + arr.map(a=>{
+    const w = Math.max(2, Math.round(a.n/max*100))
+    return `<div class="hbarchart-row">
+      <div class="hbarchart-lbl" title="${esc(a.filial)}">${esc(a.filial)}</div>
+      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:${redShade(a.n,max)}">${a.n}</div></div>
+    </div>`
   }).join('') + '</div>'
 }
 function renderASOChartTipo(){
@@ -2207,11 +2246,76 @@ function renderASOChartTipo(){
   const arr = Object.entries(cont).map(([tipo,n])=>({tipo,n})).sort((a,b)=>b.n-a.n).slice(0,10)
   if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
   const max = Math.max(...arr.map(a=>a.n))
-  box.innerHTML = '<div class="barchart">' + arr.map(a=>{
-    const h = Math.max(3, Math.round(a.n/max*160))
-    return `<div class="barchart-col"><div class="barchart-bar" style="height:${h}px;background:${redShade(a.n,max)}"><span class="barchart-val">${a.n}</span></div><div class="barchart-lbl" style="font-size:.56rem">${esc(a.tipo.length>12?a.tipo.slice(0,12)+'…':a.tipo)}</div></div>`
+  box.innerHTML = '<div class="hbarchart">' + arr.map(a=>{
+    const w = Math.max(2, Math.round(a.n/max*100))
+    return `<div class="hbarchart-row">
+      <div class="hbarchart-lbl" title="${esc(a.tipo)}">${esc(a.tipo)}</div>
+      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:${redShade(a.n,max)}">${a.n}</div></div>
+    </div>`
   }).join('') + '</div>'
 }
+
+// ── ASOs por Unidade — Realizados vs. Pendentes (widget com filtro próprio) ──
+// A planilha importada ("Relação de Próximos Exames") só traz PENDÊNCIAS — não existe fonte de
+// "Realizados" ainda. Por decisão do usuário (2026-07-14), todo exame do snapshot conta como
+// Pendente por enquanto; quando houver uma base de exames já realizados, plugar aqui (por
+// matrícula + tipo_exame, por exemplo) em vez de retornar 0.
+function asoRealizadosPorUnidade(unidade){ return 0 }
+
+// Gradiente vermelho→dourado por volume de pendência (mais estágios que redShade,
+// pra diferenciar visualmente unidades com poucas pendências das com muitas)
+function pendShade(v, max){
+  const stops = ['#e8b64a','#e0953a','#d97350','#c94a3f','#b52d39','#8b1a1d']
+  if(max<=0) return stops[0]
+  const i = Math.min(stops.length-1, Math.round((v/max)*(stops.length-1)))
+  return stops[i]
+}
+
+function buildASOUnidadeFilters(){
+  const sel = $('aso-uf-unidade'); const cur = sel.value||'TODAS'
+  const unidades = [...new Set(ASO_DS.map(r=>r.filial).filter(Boolean))].sort()
+  sel.innerHTML = '<option value="TODAS">Todas as unidades</option>' + unidades.map(f=>`<option>${esc(f)}</option>`).join('')
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur
+}
+function limparFiltroASOUnidade(){
+  $('aso-uf-unidade').value = 'TODAS'
+  $('aso-uf-status').value = 'TODOS'
+  renderASOChartUnidade()
+}
+window.limparFiltroASOUnidade = limparFiltroASOUnidade
+
+function renderASOChartUnidade(){
+  const box = $('aso-chart-unidade')
+  const unidadeFiltro = $('aso-uf-unidade').value
+  const statusFiltro = $('aso-uf-status').value
+  const dados = ASO_DS.filter(r => unidadeFiltro==='TODAS' || r.filial===unidadeFiltro)
+  const cont = {}
+  dados.forEach(r => { if(r.filial) cont[r.filial] = (cont[r.filial]||0)+1 })
+  let arr = Object.entries(cont).map(([unidade,pendentes]) => ({
+    unidade, pendentes, realizados: asoRealizadosPorUnidade(unidade)
+  }))
+  if(statusFiltro==='Pendente') arr = arr.filter(a=>a.pendentes>0)
+  if(statusFiltro==='Realizado') arr = arr.filter(a=>a.realizados>0)
+  arr.sort((a,b)=>b.pendentes-a.pendentes)
+  $('aso-uf-count').textContent = `${arr.length} unidade${arr.length===1?'':'s'}`
+  if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
+  const maxTotal = Math.max(...arr.map(a=>a.pendentes+a.realizados))
+  const maxPend = Math.max(...arr.map(a=>a.pendentes))
+  box.innerHTML = '<div class="hbarchart">' + arr.map(a=>{
+    const total = a.pendentes + a.realizados
+    const wR = maxTotal ? Math.round(a.realizados/maxTotal*100) : 0
+    const wP = maxTotal ? Math.round(a.pendentes/maxTotal*100) : 0
+    return `<div class="hbarchart-row">
+      <div class="hbarchart-lbl" title="${esc(a.unidade)}">${esc(a.unidade)}</div>
+      <div class="hbarchart-track">
+        ${a.realizados>0?`<div class="hbarchart-seg" style="width:${wR}%;background:var(--esg)">${a.realizados}</div>`:''}
+        ${a.pendentes>0?`<div class="hbarchart-seg" style="width:${wP}%;background:${pendShade(a.pendentes,maxPend)}">${a.pendentes}</div>`:''}
+      </div>
+      <div class="hbarchart-total">${total}</div>
+    </div>`
+  }).join('') + '</div>'
+}
+window.renderASOChartUnidade = renderASOChartUnidade
 
 function renderASO(){
   const rows = scopedASORows()
@@ -2219,6 +2323,7 @@ function renderASO(){
   $('aso-kpi-vencendo').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Vencendo').length
   $('aso-kpi-emdia').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Em dia').length
   $('aso-tbl-count').textContent = `${rows.length} exame${rows.length===1?'':'s'} monitorado${rows.length===1?'':'s'}`
+  renderASOChartUnidade()
   renderASOChartFilial()
   renderASOChartTipo()
   const sorted = sortASORows(rows)
