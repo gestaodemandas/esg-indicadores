@@ -72,20 +72,26 @@ create policy esg_trein_reg_update on public.esg_trein_registro for update to au
 drop policy if exists esg_trein_reg_delete on public.esg_trein_registro;
 create policy esg_trein_reg_delete on public.esg_trein_registro for delete to authenticated using (public.esg_pode_ver(filial));
 
--- ── 4. Seed do catálogo (extraído da planilha CONTROLE DE TREINAMENTOS - LOJA, GUS 2026)
+-- ── 4. Seed do catálogo ───────────────────────────────────────────────────────
+-- Base: planilha de GUS + abas novas encontradas em AJU/BAR/CD Santos Drumond.
+-- Decisões do usuário (2026-07-14): NR-05 CIPA anual (365 — AJU/BAR; GUS dizia 730);
+-- NR-20 Inflamáveis trienal (1095 — AJU/BAR; CD St. Drumond dizia 365).
+-- Idempotente: re-rodar este arquivo atualiza o catálogo sem duplicar.
 insert into public.esg_trein_catalogo (codigo, nome, periodicidade_dias, funcoes_obrigadas, ordem) values
-  ('NR-05 CIPA',           'NR05 — CIPA',                     730, 'Membros eleitos da CIPA', 1),
-  ('NR-10 Básico',         'NR10 — Básico',                   730, 'Eletricista / Supervisor de Manutenção / Marceneiro / Serralheiro / Pintor / Encanador / Téc. Segurança', 2),
-  ('NR-10 SEP',            'NR10 — SEP',                      730, 'Eletricista / Supervisor de Manutenção / Téc. Segurança', 3),
+  ('NR-05 CIPA',           'NR05 — CIPA',                     365, 'Membros eleitos e suplentes da CIPA', 1),
+  ('NR-10 Básico',         'NR10 — Básico',                   730, 'Eletricista / Supervisor de Manutenção / Marceneiro / Pedreiro / Serralheiro / Pintor / Encanador / Téc. Segurança', 2),
+  ('NR-10 SEP',            'NR10 — SEP',                      730, 'Eletricista / Supervisor de Manutenção / Téc. Segurança / Aux. Adm Manutenção', 3),
   ('NR-11 Transpaleteira', 'NR11 — Transpaleteira Elétrica',  365, 'Conferente de Mercadoria / Aux. de Depósito / Separador', 4),
-  ('NR-12 Prensa',         'NR12 — Prensa',                   365, 'Aux. de Serviços Gerais / Aux. de Limpeza Sanitária', 5),
-  ('NR-12 Máquinas',       'NR12 — Máquinas e Equipamentos',  365, 'Marceneiro / Montador de Móveis / Serralheiro / Pintor / Encanador / Aux. SG / Aux. Limpeza / Téc. Segurança', 6),
-  ('NR-18 PEMT',           'NR18 — PEMT',                     730, 'Trade Marketing / Op. Computador / Marceneiro / Eletricista / Limpeza / Encanador / Pintor / Auditoria / TI / Designer / Supervisor Conservação', 7),
-  ('NR-23 Brigada',        'NR23 — Brigada de Incêndio',      365, 'Brigada de Incêndio e Emergência — designados', 8),
-  ('NR-26 Sinalização',    'NR26 — Sinalização',              365, 'Aux. de Serviços Gerais / Aux. de Limpeza Sanitária / Supervisor de Conservação', 9),
-  ('NR-34 Trab. Quente',   'NR34 — Trabalho a Quente',        365, 'Serralheiro / Soldador / Aux. de Serralheiro', 10),
-  ('NR-35 Altura',         'NR35 — Trabalho em Altura',       730, 'Trade Marketing / Op. Computador / Marceneiro / Eletricista / Limpeza / Encanador / Auditoria / TI / Pintor / Designer / Supervisor Conservação', 11),
-  ('Direção Defensiva',    'Direção Defensiva',               365, 'Cobrador / Conferente de Mercadoria', 12)
+  ('NR-11 Empilhadeira',   'NR11 — Empilhadeira',             365, 'Operador de Empilhadeira', 5),
+  ('NR-12 Prensa',         'NR12 — Prensa',                   365, 'Aux. de Serviços Gerais / Aux. de Limpeza Sanitária', 6),
+  ('NR-12 Máquinas',       'NR12 — Máquinas e Equipamentos',  365, 'Marceneiro / Montador de Móveis / Pedreiro / Serralheiro / Pintor / Encanador / Aux. SG / Aux. Limpeza / Téc. Segurança', 7),
+  ('NR-18 PEMT',           'NR18 — PEMT',                     730, 'Trade Marketing / Op. Computador / Marceneiro / Eletricista / Limpeza / Encanador / Pintor / Auditoria / TI / Designer / Supervisor Conservação', 8),
+  ('NR-20 Inflamáveis',    'NR20 — Inflamáveis',              1095, 'Aux. de Depósito / Conferente / Supervisor de Depósito', 9),
+  ('NR-23 Brigada',        'NR23 — Brigada de Incêndio',      365, 'Brigada de Incêndio e Emergência — designados', 10),
+  ('NR-26 Sinalização',    'NR26 — Sinalização',              365, 'Aux. de Serviços Gerais / Aux. de Limpeza Sanitária / Jardineiro / Supervisor de Conservação', 11),
+  ('NR-34 Trab. Quente',   'NR34 — Trabalho a Quente',        365, 'Serralheiro / Soldador / Pintor / Aux. de Serralheiro', 12),
+  ('NR-35 Altura',         'NR35 — Trabalho em Altura',       730, 'Trade Marketing / Op. Computador / Marceneiro / Eletricista / Limpeza / Encanador / Auditoria / TI / Pintor / Designer / Supervisor Conservação', 13),
+  ('Direção Defensiva',    'Direção Defensiva',               365, 'Motorista / Motorista Externo / Cobrador / Motoboy / Aux. Entrega / Conferente de Mercadoria', 14)
 on conflict (codigo) do update set
   nome = excluded.nome,
   periodicidade_dias = excluded.periodicidade_dias,

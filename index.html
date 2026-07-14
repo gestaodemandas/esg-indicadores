@@ -2641,6 +2641,11 @@ async function uploadASO(inputEl){
 
   const wsName = wb.SheetNames.includes('Base') ? 'Base' : wb.SheetNames[0]
   const ws = wb.Sheets[wsName]
+  // Teto de linhas: protege contra !ref estourado por formatação de coluna inteira
+  if(ws['!ref']){
+    const rng = XLSX.utils.decode_range(ws['!ref'])
+    if(rng.e.r > 9999){ rng.e.r = 9999; ws['!ref'] = XLSX.utils.encode_range(rng) }
+  }
   const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null})
 
   const headerRow = (arr[3]||[]).map(v=>String(v??'').trim())
@@ -2984,8 +2989,38 @@ window.askDeleteTrein = askDeleteTrein
 
 // ── Importador da planilha "CONTROLE DE TREINAMENTOS" (capa INÍCIO + 1 aba/NR) ─
 // Carga inicial/reimportação: SUBSTITUI os registros das filiais presentes no arquivo.
-// A filial vem de cada linha ("1 - GUS" → CODFIL_SIGLA). Abas casam com o catálogo
-// pelo campo codigo (= nome da aba). RLS garante que o técnico só afeta seu grupo.
+// Abas casam com o catálogo pelo campo codigo (= nome da aba), com alias para
+// variações de grafia entre filiais. RLS garante que o técnico só afeta seu grupo.
+
+// A filial vem do NOME após o traço ("92 - CD SANTOS DRUMOND" → CD ST DRU), nunca do
+// número: a numeração das planilhas de treinamento CONFLITA com a tabela CODFIL do ASO
+// (lá 92=CAB; aqui 92=CD Santos Drumond). Números puros 1–9 (sem nome) ainda são aceitos.
+const TREIN_FILIAL_ALIAS = {
+  'CD SANTOS DRUMOND':'CD ST DRU', 'CD SANTO DRUMOND':'CD ST DRU', 'CD ST DRUMOND':'CD ST DRU',
+  'CD LAURO':'CD LAU', 'CD LAURO DE FREITAS':'CD LAU',
+  'CD ALHANDRA':'CD ALH', 'DP JPA':'DEP JPA', 'DEP JPA':'DEP JPA', 'MESTRE NILO':'MESTRE NILO',
+  'CD CABO':'CABO'   // CD Cabo (202) = filial CABO/MDC já existente (confirmado 2026-07-14)
+}
+function treinFilialDeLinha(raw){
+  const s = String(raw??'').trim()
+  const m = s.match(/^\s*\d+\s*[-–]\s*(.+)$/)
+  if(m){
+    const nome = m[1].trim().toUpperCase()
+    return TREIN_FILIAL_ALIAS[nome] || nome
+  }
+  const n = parseInt(s, 10)
+  if(!isNaN(n) && CODFIL_SIGLA[n]) return CODFIL_SIGLA[n]
+  return s.toUpperCase()
+}
+// Variações de nome de aba entre filiais → codigo do catálogo (chaves em MAIÚSCULAS)
+const TREIN_ABA_ALIAS = {
+  'NR-35 TRABALHO EM ALTURA':'NR-35 ALTURA',            // CD Cabo, CD St. Drumond
+  'NR-11 TRANSPALETEIRA ELÉTRICA':'NR-11 TRANSPALETEIRA',
+  'CIPA - NR 05':'NR-05 CIPA',                          // PNG, CD Cabo
+  'NR 26':'NR-26 SINALIZAÇÃO',                          // PAL (conteúdo: FISPQ, mesmo domínio NR-26)
+  'NR-10 ELETRICIDADE':'NR-10 BÁSICO',                  // CD Cabo (não tem aba "Básico")
+  'NR-10 ELÉTRICA':'NR-10 SEP'                          // PAL (não tem aba "SEP"; mesmas pessoas do Básico, padrão Básico+SEP das demais filiais)
+}
 async function importarTrein(inputEl){
   const f = inputEl.files && inputEl.files[0]
   inputEl.value = ''
@@ -3003,25 +3038,40 @@ async function importarTrein(inputEl){
   const abasIgnoradas = []
   for(const wsName of wb.SheetNames){
     if(wsName.toUpperCase().startsWith('IN')) continue   // capa "INÍCIO"
-    const cat = catPorCodigo[wsName.toUpperCase().replace(/\s+/g,' ').trim()]
+    let chave = wsName.toUpperCase().replace(/\s+/g,' ').trim()
+    chave = TREIN_ABA_ALIAS[chave] || chave
+    const cat = catPorCodigo[chave]
     if(!cat){ abasIgnoradas.push(wsName); continue }
-    const arr = XLSX.utils.sheet_to_json(wb.Sheets[wsName], {header:1, raw:true, defval:null})
+    const ws = wb.Sheets[wsName]
+    // "Linhas fantasma": formatação de coluna inteira faz o !ref de algumas abas ir até a
+    // linha 1.048.576 (visto em PAL) — sem este teto, o parser trava o navegador
+    if(ws['!ref']){
+      const rng = XLSX.utils.decode_range(ws['!ref'])
+      if(rng.e.r > 4999){ rng.e.r = 4999; ws['!ref'] = XLSX.utils.encode_range(rng) }
+    }
+    const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null})
     // cabeçalho na linha 7 (algumas abas têm coluna SETOR, outras não)
     const hdr = (arr[6]||[]).map(v=>String(v??'').trim().toUpperCase())
+    // Cabeçalhos variam entre filiais: PNG usa "DATA DO TREINAMENTO"/"VALIDADE"
+    // no lugar de "INÍCIO DO PRAZO"/"FIM DO PRAZO" em algumas abas
+    const achaCol = (...nomes) => { for(const n of nomes){ const i = hdr.indexOf(n); if(i>=0) return i } return -1 }
     const ix = {
-      nome: hdr.indexOf('NOME'), mat: hdr.indexOf('MATRÍCULA'), fun: hdr.indexOf('FUNÇÃO'),
-      setor: hdr.indexOf('SETOR'), ini: hdr.indexOf('INÍCIO DO PRAZO'), fim: hdr.indexOf('FIM DO PRAZO'),
-      obs: hdr.indexOf('OBS')
+      nome: achaCol('NOME'), mat: achaCol('MATRÍCULA'), fun: achaCol('FUNÇÃO'),
+      setor: achaCol('SETOR'), ini: achaCol('INÍCIO DO PRAZO','DATA DO TREINAMENTO','INICIO DO PRAZO'),
+      fim: achaCol('FIM DO PRAZO','VALIDADE'),
+      trein: achaCol('TREINAMENTO'), prazo: achaCol('PRAZO (DIAS)'),
+      obs: achaCol('OBS')
     }
     if(ix.nome<0 || ix.ini<0){ abasIgnoradas.push(wsName); continue }
     for(let i=7;i<arr.length;i++){
       const row = arr[i]
       if(!row || row[ix.nome]==null || String(row[ix.nome]).trim()==='') continue
-      const filRaw = String(row[0]??'').trim()          // "1 - GUS"
-      const codfil = parseInt(filRaw, 10)
-      const filial = isNaN(codfil) ? filRaw : (CODFIL_SIGLA[codfil] || String(codfil))
-      const dataReal = xlsxDateToISO(row[ix.ini])
-      const fimPlan = xlsxDateToISO(row[ix.fim])
+      const filial = treinFilialDeLinha(row[0])          // "92 - CD SANTOS DRUMOND" → CD ST DRU
+      // Datas por "faro": só aceita células que são data de verdade. Cobre as abas com
+      // colunas deslocadas (CD Cabo): início cai na coluna TREINAMENTO e fim na PRAZO.
+      const soData = v => (v instanceof Date) ? v.toISOString().slice(0,10) : null
+      const dataReal = soData(row[ix.ini]) || (ix.trein>=0 ? soData(row[ix.trein]) : null)
+      const fimPlan = soData(row[ix.fim]) || (ix.prazo>=0 ? soData(row[ix.prazo]) : null)
       // guarda o fim da planilha só quando difere do cálculo data+periodicidade
       let override = null
       if(dataReal && fimPlan){
@@ -3042,8 +3092,17 @@ async function importarTrein(inputEl){
     }
   }
   if(!registros.length){ toast('Nenhum registro reconhecido no arquivo. Confira se é a planilha "CONTROLE DE TREINAMENTOS".','err'); return }
-  const filiais = [...new Set(registros.map(r=>r.filial))]
-  let msg = `Importar ${registros.length} registros de "${f.name}"?\n\nFiliais: ${filiais.join(', ')}\nIsso SUBSTITUI os registros atuais dessas filiais.`
+  // Cada arquivo é o controle de UMA filial. Linhas minoritárias marcadas com outra filial
+  // são tratadas como erro de digitação (decisão 2026-07-14) e ajustadas para a filial
+  // dominante — evita que o arquivo de uma filial apague dados de outra na substituição.
+  const porFilial = {}
+  registros.forEach(r=>{ porFilial[r.filial]=(porFilial[r.filial]||0)+1 })
+  const dominante = Object.entries(porFilial).sort((a,b)=>b[1]-a[1])[0][0]
+  const ajustadas = registros.filter(r=>r.filial!==dominante).length
+  registros.forEach(r=>{ r.filial = dominante })
+  const filiais = [dominante]
+  let msg = `Importar ${registros.length} registros de "${f.name}"?\n\nFilial: ${dominante}\nIsso SUBSTITUI os registros atuais dessa filial.`
+  if(ajustadas) msg += `\n\n${ajustadas} linha(s) marcadas com outra filial foram ajustadas para ${dominante}.`
   if(abasIgnoradas.length) msg += `\n\nAbas ignoradas (sem correspondência no catálogo): ${abasIgnoradas.join(', ')}`
   if(!confirm(msg)) return
 

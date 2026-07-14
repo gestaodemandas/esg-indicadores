@@ -208,7 +208,13 @@ Na planilha antiga, quase tudo era fórmula (que vivia quebrando). No app, o usu
 - Filtros: Filial, Treinamento, Situação, Busca. 4 KPIs (Em dia / A renovar / Vencido / Não realizado).
 - Gráficos de barra horizontal **empilhada por situação**: por treinamento e por filial (consolidado que não existia nas planilhas separadas), ordenados por volume de pendência.
 - Tabela ordenável com situação derivada + editar (registrar reciclagem = atualizar a data) e excluir.
-- **Importar planilha**: lê o arquivo "CONTROLE DE TREINAMENTOS" (capa INÍCIO + abas por NR), casa as abas com o catálogo pelo código, detecta a filial linha a linha ("1 - GUS" → CODFIL→sigla) e **substitui** os registros das filiais presentes no arquivo. RLS impede o técnico de afetar outra filial.
+- **Importar planilha**: lê o arquivo "CONTROLE DE TREINAMENTOS" (capa INÍCIO + abas por NR), casa as abas com o catálogo pelo código e **substitui** os registros da filial do arquivo. Robustez validada contra as 13 planilhas reais (1.810 registros):
+  - A filial vem do **nome** após o traço ("92 - CD SANTOS DRUMOND" → CD ST DRU) — a numeração das planilhas conflita com a tabela CODFIL do ASO (lá 92=CAB). Aliases: DP JPA→DEP JPA, CD CABO→CABO (confirmado: CD Cabo = filial CABO/MDC), CD LAURO→CD LAU, CD SANTOS DRUMOND→CD ST DRU.
+  - Cada arquivo é o controle de UMA filial: linhas minoritárias marcadas com outra filial (2 casos no arquivo de IMB) são tratadas como erro de digitação e ajustadas para a filial dominante — o confirm mostra quantas.
+  - Aliases de aba: CIPA - NR 05→NR-05 CIPA; NR 26 (FISPQ)→NR-26; NR-10 Eletricidade→NR-10 Básico (CD Cabo); NR-10 Elétrica→NR-10 SEP (PAL); NR-35 Trabalho em Altura→NR-35 Altura.
+  - Sinônimos de cabeçalho: DATA DO TREINAMENTO=Início do Prazo, VALIDADE=Fim do Prazo (PNG).
+  - "Faro de datas" para abas com colunas deslocadas (CD Cabo): usa a célula da coluna INÍCIO se for data, senão a da TREINAMENTO; idem FIM/PRAZO.
+  - Teto de 5.000 linhas por aba: protege contra `!ref` estourado até a linha 1.048.576 por formatação de coluna inteira (visto em PAL — travava o navegador).
 - **Catálogo** (botão visível só para corporativo): editar nome/periodicidade/funções/ativo e adicionar novos treinamentos.
 - Exportação Excel.
 
