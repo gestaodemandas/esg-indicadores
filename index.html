@@ -2076,10 +2076,16 @@ let asoUltimoUpload = null // linha de esg_aso_upload do snapshot vigente
 let asoSortCol = 'proximo_exame'
 let asoSortDir = 'asc'
 
-// CODFIL (código numérico de filial na planilha) -> sigla usada no resto do app.
-// Códigos fora deste mapa (99=Corporativo, ou compostos tipo 4016/8090) ficam com o
-// valor bruto — não têm sigla confirmada ainda, então só aparecem para quem vê tudo.
-const CODFIL_SIGLA = {1:'GUS',2:'IMB',3:'PAL',4:'TAM',5:'AJU',6:'JPA',7:'PNG',8:'CAU',9:'BAR'}
+// CODFIL (código numérico de filial na planilha) -> sigla/empresa usada no resto do app.
+// Tabela completa confirmada pelo usuário (2026-07-14). Códigos fora deste mapa ficam com o
+// valor bruto — não têm sigla confirmada, então só aparecem para quem vê tudo (ver_todas).
+const CODFIL_SIGLA = {
+  1:'GUS', 2:'IMB', 3:'PAL', 4:'TAM', 5:'AJU', 6:'JPA', 7:'PNG', 8:'CAU', 9:'BAR',
+  11:'FRT', 80:'MDC', 91:'CA2', 92:'CAB', 93:'ALH', 94:'LAU', 99:'CORP',
+  100:'ALH', 101:'ALH', 102:'ALH', 103:'ALH', 104:'ALH', 105:'ALH', 106:'ALH',
+  107:'ALH', 108:'ALH', 109:'ALH', 110:'ALH', 111:'ALH', 112:'ALH',
+  202:'CD JIQ', 302:'CD LAU', 4016:'RETAILX', 8090:'MDC', 9190:'AME', 9197:'AME', 9207:'ROYAL'
+}
 function mapFilialASO(raw){
   const n = Number(raw)
   return CODFIL_SIGLA[n] || String(raw??'').trim()

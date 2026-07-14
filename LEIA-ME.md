@@ -142,7 +142,29 @@ Diferente do Acidentes, o ASO **não é um formulário**: é um **snapshot** da 
 - **Status** (Vencido / Vencendo em 30 dias / Em dia / Sem previsão) não é armazenado — é **calculado na leitura** a partir do Próx. Exame vs. hoje.
 
 ### Mapeamento de Filial (CODFIL)
-A planilha traz a filial como código numérico (CODFIL), não como sigla. Mapeamento confirmado pelo usuário (2026-07-14): `1=GUS, 2=IMB, 3=PAL, 4=TAM, 5=AJU, 6=JPA, 7=PNG, 8=CAU, 9=BAR`. Códigos fora desse conjunto (ex.: `99`, ou compostos como `4016`, `8090`, `9207`, `302`, `601`, `701` — prováveis locais satélites de uma filial-base) **ficam com o valor bruto**, sem sigla — ainda não confirmados. Isso tem uma consequência direta no RLS: só usuários com `ver_todas=true` enxergam linhas com filial não mapeada, porque `esg_pode_ver()` só casa contra siglas conhecidas.
+A planilha traz a filial como código numérico (CODFIL), não como sigla. Tabela completa confirmada pelo usuário (2026-07-14, const `CODFIL_SIGLA` em `index.html`):
+
+| CODFIL | Sigla/Empresa | CODFIL | Sigla/Empresa |
+|---|---|---|---|
+| 1 | GUS | 99 | CORP |
+| 2 | IMB | 100–112 | ALH |
+| 3 | PAL | 202 | CD JIQ |
+| 4 | TAM | 302 | CD LAU |
+| 5 | AJU | 4016 | RETAILX |
+| 6 | JPA | 8090 | MDC |
+| 7 | PNG | 9190, 9197 | AME |
+| 8 | CAU | 9207 | ROYAL |
+| 9 | BAR | | |
+| 11 | FRT | | |
+| 80 | MDC | | |
+| 91 | CA2 | | |
+| 92 | CAB | | |
+| 93 | ALH | | |
+| 94 | LAU | | |
+
+Note que algumas siglas (ROYAL, AME, RETAILX, MDC) são **empresas do grupo**, não filiais físicas — mesmo padrão já mencionado no campo Empresa do módulo Acidentes. `93` e `100–112` mapeiam para o mesmo rótulo "ALH" (mas com grafia diferente de "CD ALH", usado no `esg_filial_grupo` do módulo Acidentes — ainda não reconciliado; um técnico de JPA não herda automaticamente visibilidade sobre linhas de ASO marcadas "ALH" por esse motivo).
+
+Códigos fora desta tabela (confirmados nos dados reais: `601`, `701`) **ficam com o valor bruto**, sem sigla. Isso tem uma consequência direta no RLS: só usuários com `ver_todas=true` enxergam linhas com filial não mapeada, porque `esg_pode_ver()` só casa contra siglas conhecidas.
 
 ### Permissões
 - **Leitura**: mesmo escopo por filial/grupo do módulo Acidentes (reusa `esg_pode_ver()` e `esg_filial_grupo`).
@@ -156,7 +178,8 @@ A planilha traz a filial como código numérico (CODFIL), não como sigla. Mapea
 - Tabela ordenável + exportação Excel.
 
 ### Pendências conhecidas
-- Confirmar a sigla dos códigos CODFIL ainda não mapeados (99 e os compostos) para que o RLS por filial cubra 100% dos dados.
+- Códigos `601` e `701` (vistos nos dados reais) não têm sigla confirmada — ficam com o valor bruto.
+- Reconciliar a grafia "ALH" (CODFIL 93, 100–112) com "CD ALH" do `esg_filial_grupo` do módulo Acidentes, se a intenção for que o mesmo técnico enxergue os dois.
 - Sem interface para consultar snapshots antigos (ficam no banco, mas só a versão vigente aparece no app).
 
 ## Carga histórica
