@@ -848,6 +848,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
           <!-- Barra de filtros -->
           <div class="acid-filterbar">
             <div class="afb-group"><label>Filial</label><select id="aso-flt-filial" onchange="renderASO()"><option value="TODAS">Todas</option></select></div>
+            <div class="afb-group"><label>Gestor</label><select id="aso-flt-gestor" onchange="renderASO()"><option value="TODOS">Todos</option></select></div>
             <div class="afb-group"><label>Tipo de Exame</label><select id="aso-flt-tipo" onchange="renderASO()"><option value="TODOS">Todos</option></select></div>
             <div class="afb-group"><label>Status</label><select id="aso-flt-status" onchange="renderASO()">
               <option value="TODOS">Todos</option><option value="Vencido">Vencido</option><option value="Vencendo">Vencendo (30 dias)</option><option value="Em dia">Em dia</option><option value="Sem previsão">Sem previsão</option>
@@ -939,7 +940,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                   <th class="th-sort" data-col="proximo_exame" onclick="sortByASO('proximo_exame')">Próx. Exame <span class="sort-ind"></span></th>
                   <th class="th-sort" data-col="aso_status" onclick="sortByASO('aso_status')">Status <span class="sort-ind"></span></th>
                   <th class="th-sort" data-col="local" onclick="sortByASO('local')">Local <span class="sort-ind"></span></th>
-                  <th class="th-sort" data-col="avaliador" onclick="sortByASO('avaliador')">Avaliador <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="avaliador" onclick="sortByASO('avaliador')">Gestor <span class="sort-ind"></span></th>
                 </tr></thead>
                 <tbody id="aso-tbl-body"></tbody>
               </table>
@@ -2192,6 +2193,11 @@ function buildASOFilters(){
   selFil.innerHTML = '<option value="TODAS">Todas</option>' + filiais.map(f=>`<option>${esc(f)}</option>`).join('')
   if([...selFil.options].some(o=>o.value===curFil)) selFil.value=curFil
 
+  const selGes = $('aso-flt-gestor'); const curGes = selGes.value||'TODOS'
+  const gestores = [...new Set(ASO_DS.map(asoGestor).filter(g=>g && g!=='(sem gestor)'))].sort()
+  selGes.innerHTML = '<option value="TODOS">Todos</option>' + gestores.map(g=>`<option>${esc(g)}</option>`).join('')
+  if([...selGes.options].some(o=>o.value===curGes)) selGes.value=curGes
+
   const selTipo = $('aso-flt-tipo'); const curTipo = selTipo.value||'TODOS'
   const tipos = [...new Set(ASO_DS.map(r=>r.tipo_exame).filter(Boolean))].sort()
   selTipo.innerHTML = '<option value="TODOS">Todos</option>' + tipos.map(t=>`<option>${esc(t)}</option>`).join('')
@@ -2202,11 +2208,13 @@ function buildASOFilters(){
 function scopedASORows(skip){
   skip = skip||{}
   const filFiltro = $('aso-flt-filial').value
+  const gesFiltro = $('aso-flt-gestor').value
   const tipoFiltro = $('aso-flt-tipo').value
   const statusFiltro = $('aso-flt-status').value
   const busca = ($('aso-flt-busca').value||'').trim().toUpperCase()
   return ASO_DS.filter(r=>{
     if(!skip.filial && filFiltro!=='TODAS' && r.filial!==filFiltro) return false
+    if(!skip.gestor && gesFiltro!=='TODOS' && asoGestor(r)!==gesFiltro) return false
     if(!skip.tipo && tipoFiltro!=='TODOS' && r.tipo_exame!==tipoFiltro) return false
     if(!skip.status && statusFiltro!=='TODOS' && asoStatus(r.proximo_exame)!==statusFiltro) return false
     if(busca && !(String(r.colaborador||'').toUpperCase().includes(busca) || String(r.matricula||'').toUpperCase().includes(busca))) return false
@@ -2240,29 +2248,35 @@ function updateASOSortIndicators(){
 }
 
 // Barra horizontal (linha por categoria) — mais legível que coluna quando há muitos rótulos/nomes longos.
-// Pessoas com pendência por GESTOR. Lê o campo r.gestor (ainda não presente na base atual —
-// a planilha "Relação de Próximos Exames" não traz gestor). Enquanto nenhuma linha tiver gestor,
-// mostra um aviso; assim que a base passar a trazer gestor (nova coluna ou de/para), o gráfico
-// acende sozinho, contando PESSOAS distintas (por ficha), não linhas de exame.
+// Pessoas com pendência por GESTOR. O usuário confirmou (2026-07-14) que o gestor é a coluna
+// "Avaliador" da planilha (por isso técnicos de segurança aparecem ali). Usa r.gestor se houver
+// um de/para explícito no futuro; senão cai no avaliador. Conta PESSOAS distintas (ficha).
+function asoGestor(r){
+  const g = r.gestor!=null ? String(r.gestor).trim() : ''
+  if(g) return g
+  const a = r.avaliador!=null ? String(r.avaliador).trim() : ''
+  return a || '(sem gestor)'
+}
 function renderASOChartGestor(){
   const box = $('aso-chart-gestor')
-  const rows = scopedASORows()
-  const temGestor = rows.some(r => r.gestor!=null && String(r.gestor).trim()!=='')
-  if(!temGestor){
-    $('aso-gestor-sub').textContent = 'aguardando base de gestor'
-    box.innerHTML = '<div class="chart-empty">A planilha atual não traz o gestor de cada colaborador.<br>Assim que a base incluir esse dado, a segmentação aparece aqui automaticamente.</div>'
+  const rows = scopedASORows({gestor:true})   // ignora o próprio filtro de Gestor p/ comparar todos
+  if(!rows.length){
+    $('aso-gestor-sub').textContent = 'colaboradores distintos'
+    box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'
     return
   }
   const porGestor = {}
   rows.forEach(r=>{
-    const g = (r.gestor!=null && String(r.gestor).trim()!=='') ? String(r.gestor).trim() : '(sem gestor)'
+    const g = asoGestor(r)
     if(!porGestor[g]) porGestor[g] = new Set()
     porGestor[g].add(asoPersonKey(r))
   })
-  const arr = Object.entries(porGestor).map(([gestor,set])=>({gestor,n:set.size})).sort((a,b)=>b.n-a.n).slice(0,15)
-  $('aso-gestor-sub').textContent = 'colaboradores distintos · top 15'
-  const max = Math.max(...arr.map(a=>a.n))
-  box.innerHTML = '<div class="hbarchart">' + arr.map(a=>{
+  const arr = Object.entries(porGestor).map(([gestor,set])=>({gestor,n:set.size})).sort((a,b)=>b.n-a.n)
+  const totalGestores = arr.length
+  const top = arr.slice(0,15)
+  $('aso-gestor-sub').textContent = `colaboradores distintos${totalGestores>15?` · top 15 de ${totalGestores}`:` · ${totalGestores} gestor${totalGestores===1?'':'es'}`}`
+  const max = Math.max(...top.map(a=>a.n))
+  box.innerHTML = '<div class="hbarchart">' + top.map(a=>{
     const w = Math.max(2, Math.round(a.n/max*100))
     return `<div class="hbarchart-row">
       <div class="hbarchart-lbl" title="${esc(a.gestor)}">${esc(a.gestor)}</div>
@@ -2457,7 +2471,7 @@ function exportarExcelASO(){
   if(!rows.length){ toast('Nenhum registro para exportar.', 'err'); return }
   const cols = [['filial','Filial'],['colaborador','Colaborador'],['matricula','Matrícula'],['cargo','Cargo'],
     ['tipo_exame','Tipo de Exame'],['ultimo_exame','Últ. Exame'],['proximo_exame','Próx. Exame'],
-    ['local','Local'],['avaliador','Avaliador']]
+    ['local','Local'],['avaliador','Gestor']]
   const cell = v => `<td>${esc(v==null?'':v)}</td>`
   const head = '<tr>' + cols.map(([,l])=>`<th style="background:#b52d39;color:#fff;font-weight:bold">${esc(l)}</th>`).join('') + '<th style="background:#b52d39;color:#fff;font-weight:bold">Status</th></tr>'
   const body = rows.map(r=>{
