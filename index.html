@@ -843,7 +843,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             </div>
             <div class="aso-banner-actions" id="aso-upload-wrap" style="display:none">
               <input type="file" id="aso-file" accept=".xlsx,.xls" style="display:none" onchange="uploadASO(this)">
-              <button class="btn-new" onclick="document.getElementById('aso-file').click()">
+              <button class="btn-new" id="aso-btn-importar" onclick="document.getElementById('aso-file').click()">
                 <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Importar nova planilha
               </button>
@@ -1032,7 +1032,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                   Catálogo
                 </button>
                 <input type="file" id="tr-file" accept=".xlsx,.xls" style="display:none" onchange="importarTrein(this)">
-                <button class="btn-sec" onclick="document.getElementById('tr-file').click()">
+                <button class="btn-sec" id="tr-btn-importar" onclick="document.getElementById('tr-file').click()">
                   <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   Importar planilha
                 </button>
@@ -2633,6 +2633,10 @@ async function uploadASO(inputEl){
   inputEl.value = ''
   if(!f) return
   if(!currentUser || !currentUser.ver_todas){ toast('Só perfis corporativos podem importar uma nova planilha de ASO.', 'err'); return }
+  const prog = btnProgresso('aso-btn-importar')
+  try {
+  prog.set('Lendo planilha…')
+  await new Promise(r=>setTimeout(r,30))
   let wb
   try {
     const buf = await f.arrayBuffer()
@@ -2681,6 +2685,7 @@ async function uploadASO(inputEl){
   if(!confirm(`Importar ${linhas.length} linhas de "${f.name}"?\n\nEssa importação vira a versão vigente do ASO — a versão anterior fica guardada como histórico.`)) return
 
   const nomeUsuario = (currentUser && currentUser.nome) || 'ESG'
+  prog.set('Registrando importação…')
   const {data:up, error:errUp} = await sb.from('esg_aso_upload').insert({
     arquivo_nome: f.name, periodo_de: periodoDe, periodo_ate: periodoAte,
     total_linhas: linhas.length, enviado_por: nomeUsuario
@@ -2689,12 +2694,14 @@ async function uploadASO(inputEl){
 
   const CHUNK = 200
   for(let i=0;i<linhas.length;i+=CHUNK){
+    prog.set(`Gravando ${Math.min(i+CHUNK,linhas.length)}/${linhas.length}…`)
     const bloco = linhas.slice(i,i+CHUNK).map(l => ({...l, upload_id: up.id}))
     const {error} = await sb.from('esg_aso_exame').insert(bloco)
     if(error){ toast('Erro ao gravar exames (linhas '+(i+1)+'–'+Math.min(i+CHUNK,linhas.length)+'): '+error.message, 'err'); return }
   }
   toast(`Planilha importada: ${linhas.length} exames.`)
   loadASO()
+  } finally { prog.fim() }
 }
 window.uploadASO = uploadASO
 
@@ -3021,11 +3028,24 @@ const TREIN_ABA_ALIAS = {
   'NR-10 ELETRICIDADE':'NR-10 BÁSICO',                  // CD Cabo (não tem aba "Básico")
   'NR-10 ELÉTRICA':'NR-10 SEP'                          // PAL (não tem aba "SEP"; mesmas pessoas do Básico, padrão Básico+SEP das demais filiais)
 }
+// Feedback visual no botão durante importações (sem isso o usuário não sabe se algo está acontecendo)
+function btnProgresso(id){
+  const btn = $(id)
+  const orig = btn ? btn.innerHTML : ''
+  return {
+    set(t){ if(btn){ btn.disabled = true; btn.textContent = t } },
+    fim(){ if(btn){ btn.disabled = false; btn.innerHTML = orig } }
+  }
+}
 async function importarTrein(inputEl){
   const f = inputEl.files && inputEl.files[0]
   inputEl.value = ''
   if(!f) return
   if(!TR_CATALOGO.length){ toast('Catálogo não carregado — abra o módulo novamente.','err'); return }
+  const prog = btnProgresso('tr-btn-importar')
+  try {
+  prog.set('Lendo planilha…')
+  await new Promise(r=>setTimeout(r,30))   // deixa o navegador pintar o estado antes do parse síncrono
   let wb
   try {
     const buf = await f.arrayBuffer()
@@ -3106,15 +3126,18 @@ async function importarTrein(inputEl){
   if(abasIgnoradas.length) msg += `\n\nAbas ignoradas (sem correspondência no catálogo): ${abasIgnoradas.join(', ')}`
   if(!confirm(msg)) return
 
+  prog.set('Substituindo registros de '+dominante+'…')
   const {error:delErr} = await sb.from('esg_trein_registro').delete().in('filial', filiais)
   if(delErr){ toast('Erro ao limpar registros anteriores: '+delErr.message,'err'); return }
   const CHUNK = 200
   for(let i=0;i<registros.length;i+=CHUNK){
+    prog.set(`Gravando ${Math.min(i+CHUNK,registros.length)}/${registros.length}…`)
     const {error} = await sb.from('esg_trein_registro').insert(registros.slice(i,i+CHUNK))
     if(error){ toast('Erro ao gravar registros (a partir da linha '+(i+1)+'): '+error.message,'err'); return }
   }
   toast(`Planilha importada: ${registros.length} registros (${filiais.join(', ')}).`)
   loadTrein()
+  } finally { prog.fim() }
 }
 window.importarTrein = importarTrein
 
