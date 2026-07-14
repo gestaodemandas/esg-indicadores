@@ -36,10 +36,14 @@ create table if not exists public.esg_aso_exame (
   proximo_exame date,
   cod_local     text,
   local         text,
-  matricula     text,
-  avaliador     text
+  matricula     text,       -- NÃO é chave de pessoa: repete entre empresas do grupo. Use ficha.
+  avaliador     text,
+  gestor        text        -- gestor responsável (fonte ainda a definir; nulo até a base trazer)
 );
 comment on table public.esg_aso_exame is 'ESG/ASO — uma linha por exame obrigatório de cada colaborador, no snapshot de um upload.';
+
+-- Patch para bases já criadas antes desta coluna existir (idempotente)
+alter table public.esg_aso_exame add column if not exists gestor text;
 
 create index if not exists idx_esg_aso_exame_upload  on public.esg_aso_exame (upload_id);
 create index if not exists idx_esg_aso_exame_filial  on public.esg_aso_exame (filial);

@@ -860,30 +860,30 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             </div>
           </div>
 
-          <!-- Cartões de status -->
+          <!-- Cartões — a régua é PESSOA (colaborador), não linha de exame -->
           <div class="aso-kpis">
             <div class="card card-neg">
-              <div class="card-header"><div class="card-title">Vencidos</div><span class="tag bad">Atenção</span></div>
+              <div class="card-header"><div class="card-title">Pessoas com pendência</div><span class="tag bad">Foco</span></div>
+              <div class="card-value" id="aso-kpi-pessoas">–</div>
+              <div class="card-comp" id="aso-kpi-pessoas-sub">colaboradores com ≥1 exame pendente</div>
+            </div>
+            <div class="card card-neg">
+              <div class="card-header"><div class="card-title">Com exame vencido</div><span class="tag bad">Atenção</span></div>
               <div class="card-value" id="aso-kpi-vencido">–</div>
-              <div class="card-comp">exames com Próx. Exame no passado</div>
+              <div class="card-comp">pessoas com ao menos 1 exame vencido</div>
             </div>
             <div class="card card-neutral">
               <div class="card-header"><div class="card-title">Vencendo em 30 dias</div><span class="tag warn">Vencendo</span></div>
               <div class="card-value" id="aso-kpi-vencendo">–</div>
-              <div class="card-comp">agir com antecedência</div>
-            </div>
-            <div class="card card-pos">
-              <div class="card-header"><div class="card-title">Em dia</div><span class="tag good">Ok</span></div>
-              <div class="card-value" id="aso-kpi-emdia">–</div>
-              <div class="card-comp">dentro do prazo</div>
+              <div class="card-comp">pessoas com exame a vencer em 30 dias</div>
             </div>
           </div>
 
           <!-- ASOs por Unidade — Realizados vs. Pendentes (filtro próprio, independente da barra acima) -->
           <div class="chart-card">
             <div class="chart-card-head">
-              <span class="chart-card-title">ASOs por Unidade — Realizados vs. Pendentes</span>
-              <span class="chart-card-sub">Ordenado por volume de pendências · Total = Realizados + Pendentes por unidade</span>
+              <span class="chart-card-title">Pessoas por Unidade — Realizados vs. Pendentes</span>
+              <span class="chart-card-sub">Nº de colaboradores (não de exames) · ordenado por volume de pendências</span>
             </div>
             <div class="aso-uf-bar">
               <span class="aso-uf-label">Filtrar:</span>
@@ -902,13 +902,13 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
           <div class="acid-top">
             <div class="acid-col">
               <div class="chart-card">
-                <div class="chart-card-head"><span class="chart-card-title">Exames por Filial</span><span class="chart-card-sub">todas as filiais</span></div>
-                <div id="aso-chart-filial"></div>
+                <div class="chart-card-head"><span class="chart-card-title">Pessoas com pendência por Gestor</span><span class="chart-card-sub" id="aso-gestor-sub">colaboradores distintos</span></div>
+                <div id="aso-chart-gestor"></div>
               </div>
             </div>
             <div class="acid-col">
               <div class="chart-card">
-                <div class="chart-card-head"><span class="chart-card-title">Exames por Tipo</span><span class="chart-card-sub">top 10</span></div>
+                <div class="chart-card-head"><span class="chart-card-title">Exames pendentes por Tipo</span><span class="chart-card-sub">top 10 · contagem de exames</span></div>
                 <div id="aso-chart-tipo"></div>
               </div>
             </div>
@@ -2146,6 +2146,22 @@ function asoStatus(proximoISO){
 }
 function asoStatusClass(st){ return st==='Vencido'?'bad':st==='Vencendo'?'warn':st==='Em dia'?'good':'muted' }
 
+// Chave de PESSOA. A Ficha é o identificador confiável de colaborador nesta base
+// (1 ficha = 1 nome, sem colisão). A Matrícula NÃO serve: se repete entre as empresas
+// do grupo (FC, ROYAL, AME, MDC…), então o mesmo número aponta para pessoas diferentes.
+// Fallback para o nome quando a ficha vier vazia.
+function asoPersonKey(r){
+  const f = r.ficha!=null ? String(r.ficha).trim() : ''
+  return f ? 'F:'+f : 'N:'+String(r.colaborador||'').trim().toUpperCase()
+}
+function contarPessoas(rows){ return new Set(rows.map(asoPersonKey)).size }
+// Pessoas que têm AO MENOS UM exame no status indicado
+function contarPessoasStatus(rows, status){
+  const s = new Set()
+  rows.forEach(r=>{ if(asoStatus(r.proximo_exame)===status) s.add(asoPersonKey(r)) })
+  return s.size
+}
+
 async function loadASO(){
   if(!sb) return
   const {data:up, error:errUp} = await sb.from('esg_aso_upload').select('*').order('enviado_em',{ascending:false}).limit(1).maybeSingle()
@@ -2224,21 +2240,37 @@ function updateASOSortIndicators(){
 }
 
 // Barra horizontal (linha por categoria) — mais legível que coluna quando há muitos rótulos/nomes longos.
-function renderASOChartFilial(){
-  const box = $('aso-chart-filial')
-  const cont = {}
-  scopedASORows({filial:true}).forEach(r=>{ if(r.filial) cont[r.filial]=(cont[r.filial]||0)+1 })
-  const arr = Object.entries(cont).map(([filial,n])=>({filial,n})).sort((a,b)=>b.n-a.n)
-  if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
+// Pessoas com pendência por GESTOR. Lê o campo r.gestor (ainda não presente na base atual —
+// a planilha "Relação de Próximos Exames" não traz gestor). Enquanto nenhuma linha tiver gestor,
+// mostra um aviso; assim que a base passar a trazer gestor (nova coluna ou de/para), o gráfico
+// acende sozinho, contando PESSOAS distintas (por ficha), não linhas de exame.
+function renderASOChartGestor(){
+  const box = $('aso-chart-gestor')
+  const rows = scopedASORows()
+  const temGestor = rows.some(r => r.gestor!=null && String(r.gestor).trim()!=='')
+  if(!temGestor){
+    $('aso-gestor-sub').textContent = 'aguardando base de gestor'
+    box.innerHTML = '<div class="chart-empty">A planilha atual não traz o gestor de cada colaborador.<br>Assim que a base incluir esse dado, a segmentação aparece aqui automaticamente.</div>'
+    return
+  }
+  const porGestor = {}
+  rows.forEach(r=>{
+    const g = (r.gestor!=null && String(r.gestor).trim()!=='') ? String(r.gestor).trim() : '(sem gestor)'
+    if(!porGestor[g]) porGestor[g] = new Set()
+    porGestor[g].add(asoPersonKey(r))
+  })
+  const arr = Object.entries(porGestor).map(([gestor,set])=>({gestor,n:set.size})).sort((a,b)=>b.n-a.n).slice(0,15)
+  $('aso-gestor-sub').textContent = 'colaboradores distintos · top 15'
   const max = Math.max(...arr.map(a=>a.n))
   box.innerHTML = '<div class="hbarchart">' + arr.map(a=>{
     const w = Math.max(2, Math.round(a.n/max*100))
     return `<div class="hbarchart-row">
-      <div class="hbarchart-lbl" title="${esc(a.filial)}">${esc(a.filial)}</div>
-      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:${redShade(a.n,max)}">${a.n}</div></div>
+      <div class="hbarchart-lbl" title="${esc(a.gestor)}">${esc(a.gestor)}</div>
+      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:${pendShade(a.n,max)}">${a.n}</div></div>
     </div>`
   }).join('') + '</div>'
 }
+window.renderASOChartGestor = renderASOChartGestor
 function renderASOChartTipo(){
   const box = $('aso-chart-tipo')
   const cont = {}
@@ -2289,10 +2321,15 @@ function renderASOChartUnidade(){
   const unidadeFiltro = $('aso-uf-unidade').value
   const statusFiltro = $('aso-uf-status').value
   const dados = ASO_DS.filter(r => unidadeFiltro==='TODAS' || r.filial===unidadeFiltro)
-  const cont = {}
-  dados.forEach(r => { if(r.filial) cont[r.filial] = (cont[r.filial]||0)+1 })
-  let arr = Object.entries(cont).map(([unidade,pendentes]) => ({
-    unidade, pendentes, realizados: asoRealizadosPorUnidade(unidade)
+  // Conta PESSOAS distintas por unidade (não linhas de exame) — a régua da análise
+  const pessoasPorUnidade = {}
+  dados.forEach(r => {
+    if(!r.filial) return
+    if(!pessoasPorUnidade[r.filial]) pessoasPorUnidade[r.filial] = new Set()
+    pessoasPorUnidade[r.filial].add(asoPersonKey(r))
+  })
+  let arr = Object.entries(pessoasPorUnidade).map(([unidade,set]) => ({
+    unidade, pendentes: set.size, realizados: asoRealizadosPorUnidade(unidade)
   }))
   if(statusFiltro==='Pendente') arr = arr.filter(a=>a.pendentes>0)
   if(statusFiltro==='Realizado') arr = arr.filter(a=>a.realizados>0)
@@ -2319,12 +2356,14 @@ window.renderASOChartUnidade = renderASOChartUnidade
 
 function renderASO(){
   const rows = scopedASORows()
-  $('aso-kpi-vencido').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Vencido').length
-  $('aso-kpi-vencendo').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Vencendo').length
-  $('aso-kpi-emdia').textContent = rows.filter(r=>asoStatus(r.proximo_exame)==='Em dia').length
-  $('aso-tbl-count').textContent = `${rows.length} exame${rows.length===1?'':'s'} monitorado${rows.length===1?'':'s'}`
+  const nPessoas = contarPessoas(rows)
+  $('aso-kpi-pessoas').textContent = nPessoas
+  $('aso-kpi-pessoas-sub').textContent = `${nPessoas} pessoa${nPessoas===1?'':'s'} · ${rows.length} exame${rows.length===1?'':'s'} pendente${rows.length===1?'':'s'}`
+  $('aso-kpi-vencido').textContent = contarPessoasStatus(rows, 'Vencido')
+  $('aso-kpi-vencendo').textContent = contarPessoasStatus(rows, 'Vencendo')
+  $('aso-tbl-count').textContent = `${nPessoas} pessoa${nPessoas===1?'':'s'} · ${rows.length} exame${rows.length===1?'':'s'}`
   renderASOChartUnidade()
-  renderASOChartFilial()
+  renderASOChartGestor()
   renderASOChartTipo()
   const sorted = sortASORows(rows)
   $('aso-tbl-empty').style.display = sorted.length ? 'none' : ''
