@@ -1,6 +1,6 @@
 # Aplicativo ESG — Gestão de Indicadores
 
-Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes**, **ASO** e **Treinamentos**. Os demais (Visão Geral, CIPA, Brigada) aparecem na capa como "Em breve".
+Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes/Incidentes**, **CIPA**, **ASO** e **Treinamentos**. Os demais (Visão Geral, Brigada) aparecem na capa como "Em breve".
 
 - **Publicado em**: https://gestaodemandas.github.io/esg-indicadores/
 - **Repositório**: https://github.com/gestaodemandas/esg-indicadores
@@ -17,6 +17,7 @@ Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e anál
 | `sql/03_migracao_form.sql` | Migração da revisão de formulário (jul/2026): coluna `tipo_equipamento_outro`, domínio ampliado de equipamentos, tabela `esg_filial_grupo` + `esg_pode_ver()` por grupo de locais |
 | `sql/04_aso.sql` | Cria `esg_aso_upload` + `esg_aso_exame` (módulo ASO) e RLS — **depende de `esg_pode_ver()`, já criado por `01`/`03`; rodar depois desses** |
 | `sql/05_treinamentos.sql` | Cria `esg_trein_catalogo` (com seed dos 12 treinamentos NR) + `esg_trein_registro` e RLS — **rodar depois de `01`/`03`/`04`** (usa `esg_pode_ver` e `esg_e_corporativo`) |
+| `sql/06_cipa.sql` | Cria `esg_cipa` (1 linha por local: status, dimensionamento NR-5, documentos) e RLS — **rodar depois de `01`/`03`**. Carga inicial em `dados/cipa_seed.sql` (fora do git — observações contêm nomes) |
 | `dados/` | **Fora do git** (`.gitignore` — contém nomes/e-mails/matrículas, LGPD). Scripts de carga histórica, controle de acesso e backups |
 | `.claude/launch.json` *(fora desta pasta, na raiz de Sessões Claude)* | Config do preview local (`esg-app`, porta 8734) |
 
@@ -132,6 +133,14 @@ Organizado em abas na lateral (Comunicado, Identificação, Classificação, Ate
 
 ### Locais de grupo (filial-sede cobre satélites)
 Um técnico de segurança atende, além da sua filial-sede, os locais satélites do grupo: JPA → CD ALH, DEP JPA · GUS → MESTRE NILO · PAL → CD LAU · BAR → CD ST DRU. Mapeamento em `esg_filial_grupo` (tabela nova, `sql/03_migracao_form.sql`); `esg_pode_ver()` foi reescrito para considerar o grupo (RLS), não só a filial exata.
+
+## Módulo CIPA
+
+Conformidade da CIPA por local, **editada direto no app** (sem planilha/import): tabela `esg_cipa`, 1 linha por local. Carga inicial veio da planilha "CIPA 3" (jul/2026) via `dados/cipa_seed.sql`. RLS: técnico edita o próprio grupo (`esg_pode_ver`); corporativo edita tudo e pode criar local.
+
+- **3 painéis** (3 visões da mesma tabela): Filiais Ativas — status (posse, renovação **derivada** vs. hoje: vencida/vence em ≤60d, conforme?); Dimensionamento NR-5 (previsão da norma × ativos × treinados, barra de cobertura e déficit); Documentos necessários × existentes (entrega de atas/recibo, ata de eleição/apuração, cédulas — pills OK/PENDENTE/NÃO/N/A + observações).
+- KPIs: CIPAs ativas, conformes, não conformes, desobrigadas (N/A — devem designar representante).
+- Nomes de local seguem as siglas do app: CD CABO→CABO, CD M. NILO→MESTRE NILO, CD SD→CD ST DRU (mapeados na carga).
 
 ## Módulo ASO
 

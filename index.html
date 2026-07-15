@@ -325,6 +325,8 @@ body.dark .acao-fil{background:rgba(255,255,255,.07)}
 .btn-pend{display:flex;align-items:center;gap:.4rem;border:1px solid var(--bdr);background:var(--card);border-radius:8px;padding:.5rem .8rem;font-size:.72rem;font-weight:700;color:var(--txt2);cursor:pointer;white-space:nowrap;transition:all .2s}
 .btn-pend:hover{border-color:var(--acid);color:var(--acid)}
 .btn-pend.active{border-color:var(--acid);color:#fff;background:var(--acid)}
+.tr-clicavel{cursor:pointer}
+.tr-clicavel:hover td{background:var(--acid-l)}
 .chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.1rem 1.3rem 1.2rem;display:flex;flex-direction:column}
 .chart-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
 .chart-card-title{font-size:.82rem;font-weight:700;color:var(--txt)}
@@ -586,13 +588,12 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
 
       <div class="sb-item" data-section="acidentes" onclick="showSection('acidentes')">
         <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-        <div class="sb-item-label">Acidentes</div>
+        <div class="sb-item-label">Acidentes/Incidentes</div>
       </div>
 
-      <div class="sb-item sb-soon">
+      <div class="sb-item" data-section="cipa" onclick="showSection('cipa')">
         <div class="sb-item-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <div class="sb-item-label">CIPA</div>
-        <span class="sb-soon-tag">Em breve</span>
       </div>
 
       <div class="sb-item sb-soon">
@@ -693,7 +694,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 <div class="hc-chevron"></div>
                 <div class="hc-inner">
                   <div class="hc-eyebrow">Módulo 02</div>
-                  <div class="hc-title">Acidentes</div>
+                  <div class="hc-title">Acidentes/Incidentes</div>
                 </div>
               </div>
               <div class="hc-body">
@@ -702,9 +703,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
               </div>
             </div>
 
-            <!-- 03 CIPA -->
-            <div class="home-card hc-soon">
-              <div class="hc-panel hcp-gray">
+            <!-- 03 CIPA (ativo) -->
+            <div class="home-card" onclick="showSection('cipa')">
+              <div class="hc-panel hcp-red">
                 <span class="hc-ghost">03</span>
                 <div class="hc-chevron"></div>
                 <div class="hc-inner">
@@ -713,8 +714,8 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 </div>
               </div>
               <div class="hc-body">
-                <div class="hc-tagline">Comissões por filial<br><span style="color:var(--warn);font-weight:700">Em breve</span></div>
-                <div class="hc-btn"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="hc-tagline">Conformidade por filial<br>Dimensionamento · Documentos</div>
+                <div class="hc-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
               </div>
             </div>
 
@@ -795,16 +796,30 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             </div>
           </div>
 
-          <!-- Dois cartões, cada um com seu visual -->
+          <!-- Cartões segmentados por tipo de ocorrência -->
+          <div class="aso-kpis">
+            <div class="card card-neg">
+              <div class="card-header"><div class="card-title">Ocorrências Registradas</div><span class="tag bad">Total</span></div>
+              <div class="card-value" id="kpi-total">–</div>
+              <div class="card-comp">acidentes + incidentes + emergências no período</div>
+            </div>
+            <div class="card card-neg">
+              <div class="card-header"><div class="card-title">Acidentes</div><span class="tag bad">Acidentes</span></div>
+              <div class="card-value" id="kpi-acidentes">–</div>
+              <div class="card-comp">tipo de ocorrência = Acidente</div>
+            </div>
+            <div class="card card-neutral">
+              <div class="card-header"><div class="card-title">Incidentes</div><span class="tag muted">Incidentes</span></div>
+              <div class="card-value" id="kpi-incidentes">–</div>
+              <div class="card-comp">tipo de ocorrência = Incidente</div>
+            </div>
+          </div>
+
+          <!-- Gráfico por filial + pendências de formulário -->
           <div class="acid-top">
             <div class="acid-col">
-              <div class="card card-neg">
-                <div class="card-header"><div class="card-title">Acidentes Registrados</div><span class="tag bad">Acidentes</span></div>
-                <div class="card-value" id="kpi-total">–</div>
-                <div class="card-comp">no período filtrado</div>
-              </div>
               <div class="chart-card">
-                <div class="chart-card-head"><span class="chart-card-title">Acidentes por Filial</span><span class="chart-card-sub">todas as filiais</span></div>
+                <div class="chart-card-head"><span class="chart-card-title">Ocorrências por Filial</span><span class="chart-card-sub">todas as filiais</span></div>
                 <div id="chart-filial"></div>
               </div>
             </div>
@@ -821,9 +836,9 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             </div>
           </div>
 
-          <!-- Acidentes mês a mês -->
+          <!-- Ocorrências mês a mês -->
           <div class="chart-card">
-            <div class="chart-card-head"><span class="chart-card-title">Acidentes por Mês</span><span class="chart-card-sub" id="chart-mensal-sub">–</span></div>
+            <div class="chart-card-head"><span class="chart-card-title">Ocorrências por Mês</span><span class="chart-card-sub" id="chart-mensal-sub">–</span></div>
             <div id="chart-mensal"></div>
           </div>
 
@@ -897,7 +912,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <div class="afb-search"><label>Buscar</label>
               <div class="afb-search-wrap">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="aso-flt-busca" placeholder="Nome ou matrícula…" oninput="renderASO()">
+                <input type="text" id="aso-flt-busca" placeholder="Nome ou ficha…" oninput="renderASO()">
               </div>
             </div>
           </div>
@@ -974,7 +989,7 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 <thead><tr>
                   <th class="th-sort" data-col="filial" onclick="sortByASO('filial')">Filial <span class="sort-ind"></span></th>
                   <th class="th-sort" data-col="colaborador" onclick="sortByASO('colaborador')">Colaborador <span class="sort-ind"></span></th>
-                  <th class="th-sort" data-col="matricula" onclick="sortByASO('matricula')">Matrícula <span class="sort-ind"></span></th>
+                  <th class="th-sort" data-col="ficha" onclick="sortByASO('ficha')">Ficha <span class="sort-ind"></span></th>
                   <th class="th-sort" data-col="cargo" onclick="sortByASO('cargo')">Cargo <span class="sort-ind"></span></th>
                   <th class="th-sort" data-col="tipo_exame" onclick="sortByASO('tipo_exame')">Tipo de Exame <span class="sort-ind"></span></th>
                   <th class="th-sort" data-col="ultimo_exame" onclick="sortByASO('ultimo_exame')">Últ. Exame <span class="sort-ind"></span></th>
@@ -1107,6 +1122,95 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
                 <tbody id="tr-tbl-body"></tbody>
               </table>
               <div class="tbl-empty" id="tr-tbl-empty" style="display:none">Nenhum registro. Clique em <strong>+ Novo</strong> ou importe a planilha da sua filial.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══ CIPA ══ -->
+        <div class="section-page" id="sec-cipa">
+
+          <!-- Cartões de conformidade -->
+          <div class="trein-kpis">
+            <div class="card card-neutral">
+              <div class="card-header"><div class="card-title">CIPAs Ativas</div><span class="tag muted">Comissões</span></div>
+              <div class="card-value" id="cipa-kpi-ativas">–</div>
+              <div class="card-comp">locais com CIPA constituída</div>
+            </div>
+            <div class="card card-pos">
+              <div class="card-header"><div class="card-title">Conformes</div><span class="tag good">Ok</span></div>
+              <div class="card-value" id="cipa-kpi-conformes">–</div>
+              <div class="card-comp">CIPA conforme = SIM</div>
+            </div>
+            <div class="card card-neg">
+              <div class="card-header"><div class="card-title">Não Conformes</div><span class="tag bad">Ação</span></div>
+              <div class="card-value" id="cipa-kpi-naoconf">–</div>
+              <div class="card-comp">com pendência de conformidade</div>
+            </div>
+            <div class="card card-neutral">
+              <div class="card-header"><div class="card-title">Desobrigadas</div><span class="tag muted">N/A</span></div>
+              <div class="card-value" id="cipa-kpi-desobrigadas">–</div>
+              <div class="card-comp">devem designar representante</div>
+            </div>
+          </div>
+
+          <!-- Painel 1: Filiais ativas -->
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Filiais Ativas — Status da CIPA</div>
+                <div class="panel-sub" id="cipa-tbl1-count">–</div>
+              </div>
+              <div class="panel-tools">
+                <button class="btn-new" id="cipa-btn-novo" style="display:none" onclick="openCipaModal()">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Novo local
+                </button>
+              </div>
+            </div>
+            <div class="tbl-scroll">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Local</th><th>CIPA Ativa</th><th>Representação</th><th>Data de Posse</th><th>Renovação</th><th>Conforme?</th><th></th>
+                </tr></thead>
+                <tbody id="cipa-tbl-status"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Painel 2: Dimensionamento NR-5 -->
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Dimensionamento — Ativos × Previsão da Norma (NR-5)</div>
+                <div class="panel-sub" id="cipa-tbl2-count">–</div>
+              </div>
+            </div>
+            <div class="tbl-scroll">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Local</th><th>Previsão (norma)</th><th>Ativos</th><th>Treinados</th><th style="min-width:180px">Cobertura</th><th>Déficit</th><th></th>
+                </tr></thead>
+                <tbody id="cipa-tbl-dim"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Painel 3: Documentos necessários × existentes -->
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Documentos Necessários × Existentes</div>
+                <div class="panel-sub">atas, recibos e cédulas por local</div>
+              </div>
+            </div>
+            <div class="tbl-scroll">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Local</th><th>Entrega Atas/Recibo</th><th>Ata Eleição/Apuração</th><th>Cédulas de Inscrição</th><th>Observação</th><th></th>
+                </tr></thead>
+                <tbody id="cipa-tbl-docs"></tbody>
+              </table>
             </div>
           </div>
 
@@ -1720,6 +1824,94 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
   </div>
 </div>
 
+<!-- MODAL: EDITAR CIPA DO LOCAL -->
+<div class="modal-overlay" id="cipa-overlay" onclick="if(event.target===this)closeCipaModal()">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span id="cipa-modal-title">Editar CIPA</span>
+      </div>
+      <button class="modal-close" onclick="closeCipaModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form">
+        <div class="form-row-3">
+          <div class="field">
+            <label>Local</label>
+            <input type="text" id="c-local" placeholder="Ex.: GUS" style="text-transform:uppercase">
+          </div>
+          <div class="field">
+            <label>CIPA Ativa</label>
+            <select id="c-ativa"><option>SIM</option><option>NÃO</option><option>N/A</option></select>
+            <div class="hint">N/A = desobrigada (designar representante)</div>
+          </div>
+          <div class="field">
+            <label>Representação</label>
+            <input type="text" id="c-repr" placeholder="FUNCIONÁRIOS" style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="fs-divider"><span>Dimensionamento (NR-5)</span></div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Previsão da norma</label>
+            <input type="text" id="c-previsao" placeholder="Nº de membros">
+          </div>
+          <div class="field">
+            <label>Ativos</label>
+            <input type="text" id="c-ativos" placeholder="Membros ativos">
+          </div>
+          <div class="field">
+            <label>Treinados</label>
+            <input type="text" id="c-treinados" placeholder="Com NR-5 em dia">
+          </div>
+        </div>
+        <div class="fs-divider"><span>Documentos</span></div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Entrega Atas/Recibo</label>
+            <input type="text" id="c-atas" placeholder="Nº ou OK / PENDENTE / N/A">
+          </div>
+          <div class="field">
+            <label>Ata Eleição/Apuração</label>
+            <select id="c-eleicao"><option value="">—</option><option>OK</option><option>PENDENTE</option><option>NÃO</option><option>N/A</option></select>
+          </div>
+          <div class="field">
+            <label>Cédulas de Inscrição</label>
+            <select id="c-cedulas"><option value="">—</option><option>OK</option><option>PENDENTE</option><option>NÃO</option><option>N/A</option></select>
+          </div>
+        </div>
+        <div class="fs-divider"><span>Vigência e conformidade</span></div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Data de Posse</label>
+            <input type="date" id="c-posse">
+          </div>
+          <div class="field">
+            <label>Data de Renovação</label>
+            <input type="date" id="c-renovacao">
+          </div>
+          <div class="field">
+            <label>CIPA Conforme?</label>
+            <select id="c-conforme"><option value="">—</option><option>SIM</option><option>NÃO</option><option>N/A</option></select>
+          </div>
+        </div>
+        <div class="field full">
+          <label>Observação</label>
+          <textarea id="c-obs" placeholder="Pendências, documentos faltantes…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-msg" id="cipa-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeCipaModal()">Cancelar</button>
+        <button class="btn-save" id="cipa-btn-save" onclick="saveCipa()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast-wrap"></div>
 
 <script>
@@ -1879,7 +2071,7 @@ let sortCol = 'data_acidente'  // coluna de ordenação da tabela
 let sortDir = 'desc'           // 'asc' | 'desc'
 const NUM_COLS = ['completude'] // colunas comparadas numericamente
 
-const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes', aso:'ASO', trein:'Treinamentos' }
+const SECTION_LABELS = { home:'Capa', acidentes:'Acidentes/Incidentes', aso:'ASO', trein:'Treinamentos', cipa:'CIPA' }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function $(id){ return document.getElementById(id) }
@@ -2028,6 +2220,7 @@ function showSection(id){
   if(id==='acidentes') renderAcidentes()
   if(id==='aso') loadASO()
   if(id==='trein') loadTrein()
+  if(id==='cipa') loadCipa()
 }
 window.showSection = showSection
 
@@ -2213,6 +2406,9 @@ function renderAcidentes(){
   const total = rows.length
   const completos = rows.filter(r => rowCompletion(r).pct >= 100).length
   $('kpi-total').textContent = total
+  // Segmentação por tipo de ocorrência (Emergências ficam contidas só no total)
+  $('kpi-acidentes').textContent = rows.filter(r => r.tipo_ocorrencia === 'Acidente').length
+  $('kpi-incidentes').textContent = rows.filter(r => r.tipo_ocorrencia === 'Incidente').length
   $('kpi-pend').textContent = total - completos
 
   // Visuais — cada um ignora apenas a própria dimensão que detalha
@@ -2506,7 +2702,8 @@ function scopedASORows(skip){
     if(!skip.gestor && gesFiltro!=='TODOS' && asoGestor(r)!==gesFiltro) return false
     if(!skip.tipo && tipoFiltro!=='TODOS' && r.tipo_exame!==tipoFiltro) return false
     if(!skip.status && statusFiltro!=='TODOS' && asoStatus(r.proximo_exame)!==statusFiltro) return false
-    if(busca && !(String(r.colaborador||'').toUpperCase().includes(busca) || String(r.matricula||'').toUpperCase().includes(busca))) return false
+    // busca por ficha (identificador do COLABORADOR) — a coluna matrícula da planilha é a do gestor
+    if(busca && !(String(r.colaborador||'').toUpperCase().includes(busca) || String(r.ficha||'').toUpperCase().includes(busca))) return false
     return true
   })
 }
@@ -2569,7 +2766,7 @@ function renderASOChartGestor(){
     const w = Math.max(2, Math.round(a.n/max*100))
     return `<div class="hbarchart-row">
       <div class="hbarchart-lbl" title="${esc(a.gestor)}">${esc(a.gestor)}</div>
-      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:${pendShade(a.n,max)}">${a.n}</div></div>
+      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:var(--acid)">${a.n}</div></div>
     </div>`
   }).join('') + '</div>'
 }
@@ -2585,7 +2782,7 @@ function renderASOChartTipo(){
     const w = Math.max(2, Math.round(a.n/max*100))
     return `<div class="hbarchart-row">
       <div class="hbarchart-lbl" title="${esc(a.tipo)}">${esc(a.tipo)}</div>
-      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:${redShade(a.n,max)}">${a.n}</div></div>
+      <div class="hbarchart-track"><div class="hbarchart-seg" style="width:${w}%;background:var(--acid)">${a.n}</div></div>
     </div>`
   }).join('') + '</div>'
 }
@@ -2597,15 +2794,8 @@ function renderASOChartTipo(){
 // matrícula + tipo_exame, por exemplo) em vez de retornar 0.
 function asoRealizadosPorUnidade(unidade){ return 0 }
 
-// Gradiente vermelho→dourado por volume de pendência (mais estágios que redShade,
-// pra diferenciar visualmente unidades com poucas pendências das com muitas)
-function pendShade(v, max){
-  const stops = ['#e8b64a','#e0953a','#d97350','#c94a3f','#b52d39','#8b1a1d']
-  if(max<=0) return stops[0]
-  const i = Math.min(stops.length-1, Math.round((v/max)*(stops.length-1)))
-  return stops[i]
-}
-
+// Paleta do ASO (decisão 2026-07-15): SEM degradê — vermelho sólido para
+// pendências/indicadores negativos, verde só para realizados.
 function buildASOUnidadeFilters(){
   const sel = $('aso-uf-unidade'); const cur = sel.value||'TODAS'
   const unidades = [...new Set(ASO_DS.map(r=>r.filial).filter(Boolean))].sort()
@@ -2640,7 +2830,6 @@ function renderASOChartUnidade(){
   $('aso-uf-count').textContent = `${arr.length} unidade${arr.length===1?'':'s'}`
   if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
   const maxTotal = Math.max(...arr.map(a=>a.pendentes+a.realizados))
-  const maxPend = Math.max(...arr.map(a=>a.pendentes))
   box.innerHTML = '<div class="hbarchart">' + arr.map(a=>{
     const total = a.pendentes + a.realizados
     const wR = maxTotal ? Math.round(a.realizados/maxTotal*100) : 0
@@ -2649,7 +2838,7 @@ function renderASOChartUnidade(){
       <div class="hbarchart-lbl" title="${esc(a.unidade)}">${esc(a.unidade)}</div>
       <div class="hbarchart-track">
         ${a.realizados>0?`<div class="hbarchart-seg" style="width:${wR}%;background:var(--esg)">${a.realizados}</div>`:''}
-        ${a.pendentes>0?`<div class="hbarchart-seg" style="width:${wP}%;background:${pendShade(a.pendentes,maxPend)}">${a.pendentes}</div>`:''}
+        ${a.pendentes>0?`<div class="hbarchart-seg" style="width:${wP}%;background:var(--acid)">${a.pendentes}</div>`:''}
       </div>
       <div class="hbarchart-total">${total}</div>
     </div>`
@@ -2675,7 +2864,7 @@ function renderASO(){
     return `<tr>
       <td>${esc(r.filial)}</td>
       <td>${esc(r.colaborador)}</td>
-      <td>${esc(r.matricula)}</td>
+      <td>${esc(r.ficha)}</td>
       <td>${esc(r.cargo)}</td>
       <td>${esc(r.tipo_exame)}</td>
       <td>${fmtData(r.ultimo_exame)}</td>
@@ -2770,7 +2959,7 @@ window.uploadASO = uploadASO
 function exportarExcelASO(){
   const rows = sortASORows(filteredASOData())
   if(!rows.length){ toast('Nenhum registro para exportar.', 'err'); return }
-  const cols = [['filial','Filial'],['colaborador','Colaborador'],['matricula','Matrícula'],['cargo','Cargo'],
+  const cols = [['filial','Filial'],['colaborador','Colaborador'],['ficha','Ficha'],['cargo','Cargo'],
     ['tipo_exame','Tipo de Exame'],['ultimo_exame','Últ. Exame'],['proximo_exame','Próx. Exame'],
     ['local','Local'],['avaliador','Gestor']]
   const cell = v => `<td>${esc(v==null?'':v)}</td>`
@@ -2975,7 +3164,7 @@ function renderTrein(){
   $('tr-tbl-body').innerHTML = sorted.map(r=>{
     const d = treinDeriv(r)
     const cat = TR_CAT_MAP[r.treinamento_id]
-    return `<tr>
+    return `<tr class="tr-clicavel" onclick="openTreinModal(${r.id})" title="Clique para editar">
       <td>${esc(r.filial)}</td>
       <td>${esc(r.nome)}</td>
       <td>${esc(r.matricula)}</td>
@@ -2985,7 +3174,7 @@ function renderTrein(){
       <td>${fmtData(d.vence)}</td>
       <td>${d.dias==null?'–':d.dias}</td>
       <td><span class="tag ${trSitClass(d.situacao)}">${esc(d.situacao)}</span></td>
-      <td><div class="row-actions">
+      <td><div class="row-actions" onclick="event.stopPropagation()">
         <button class="act-btn edit" title="Editar / registrar reciclagem" onclick="openTreinModal(${r.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>
         <button class="act-btn del" title="Excluir" onclick="askDeleteTrein(${r.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </div></td>
@@ -3344,6 +3533,149 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const tm = $('t-matricula')
   if(tm) tm.addEventListener('input', e=>sanitizeNumNA(e.target))
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MÓDULO CIPA — conformidade por local, editada DIRETO NO APP (sem planilha).
+// 3 visões da mesma tabela esg_cipa: status das filiais ativas, dimensionamento
+// NR-5 (ativos × previsão da norma) e documentos necessários × existentes.
+// RLS: técnico edita o próprio grupo; corporativo tudo (e pode criar local).
+// ═══════════════════════════════════════════════════════════════════════════
+let CIPA_DS = []
+let cipaEditLocal = null   // local em edição (null = novo)
+
+function cipaPill(v){
+  if(v==null || String(v).trim()==='') return '–'
+  const s = String(v).trim().toUpperCase()
+  if(s==='OK' || s==='SIM') return `<span class="tag good">${esc(s)}</span>`
+  if(s==='PENDENTE' || s==='NÃO') return `<span class="tag bad">${esc(s)}</span>`
+  if(s==='N/A') return `<span class="tag muted">N/A</span>`
+  return esc(String(v))   // números (qtd. de atas) e textos livres ficam neutros
+}
+// Renovação DERIVADA vs. hoje: vencida (vermelho) / vence em ≤60d (âmbar) / ok
+function cipaRenov(r){
+  if(!r.data_renovacao) return { html:'–' }
+  const hoje = new Date(); hoje.setHours(0,0,0,0)
+  const dias = Math.round((new Date(r.data_renovacao+'T00:00:00')-hoje)/86400000)
+  if(dias<0) return { html:`${fmtData(r.data_renovacao)} <span class="tag bad">vencida há ${Math.abs(dias)}d</span>` }
+  if(dias<=60) return { html:`${fmtData(r.data_renovacao)} <span class="tag warn">em ${dias}d</span>` }
+  return { html: fmtData(r.data_renovacao) }
+}
+
+async function loadCipa(){
+  if(!sb) return
+  const {data, error} = await sb.from('esg_cipa').select('*').order('local')
+  if(error){ toast('Erro ao carregar CIPA: '+error.message,'err'); return }
+  CIPA_DS = data||[]
+  $('cipa-btn-novo').style.display = (currentUser && currentUser.ver_todas) ? '' : 'none'
+  renderCipa()
+}
+window.loadCipa = loadCipa
+
+function renderCipa(){
+  const rows = CIPA_DS
+  $('cipa-kpi-ativas').textContent = rows.filter(r=>r.cipa_ativa==='SIM').length + ' / ' + rows.length
+  $('cipa-kpi-conformes').textContent = rows.filter(r=>r.conforme==='SIM').length
+  $('cipa-kpi-naoconf').textContent = rows.filter(r=>r.conforme==='NÃO').length
+  $('cipa-kpi-desobrigadas').textContent = rows.filter(r=>r.cipa_ativa==='N/A').length
+  $('cipa-tbl1-count').textContent = `${rows.length} loca${rows.length===1?'l':'is'}`
+  $('cipa-tbl2-count').textContent = `${rows.filter(r=>r.cipa_ativa==='SIM').length} loca${rows.length===1?'l':'is'} com CIPA constituída`
+
+  const btnEdit = i => `<div class="row-actions"><button class="act-btn edit" title="Editar" onclick="openCipaModal(${i})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button></div>`
+
+  // Painel 1 — status
+  $('cipa-tbl-status').innerHTML = rows.map((r,i)=>`<tr>
+    <td><strong>${esc(r.local)}</strong></td>
+    <td>${cipaPill(r.cipa_ativa)}</td>
+    <td>${esc(r.representacao||'–')}</td>
+    <td>${fmtData(r.data_posse)}</td>
+    <td>${cipaRenov(r).html}</td>
+    <td>${cipaPill(r.conforme)}</td>
+    <td>${btnEdit(i)}</td>
+  </tr>`).join('')
+
+  // Painel 2 — dimensionamento (barra de cobertura ativos ÷ previsão; verde só em 100%)
+  $('cipa-tbl-dim').innerHTML = rows.map((r,i)=>{
+    const prev = r.previsao||0, atv = r.ativos||0
+    const pct = prev ? Math.round(atv/prev*100) : 0
+    const cor = pct>=100 ? 'var(--pos)' : (pct>=50 ? '#e0953a' : 'var(--acid)')
+    const deficit = prev - atv
+    return `<tr>
+      <td><strong>${esc(r.local)}</strong></td>
+      <td>${r.previsao??'–'}</td>
+      <td>${r.ativos??'–'}</td>
+      <td>${r.treinados??'–'}</td>
+      <td><div class="conf-bar" style="max-width:170px"><div class="conf-bar-fill" style="width:${Math.min(pct,100)}%;background:${cor}"></div></div></td>
+      <td>${deficit>0 ? `<span class="tag bad">falta${deficit===1?'':'m'} ${deficit}</span>` : (prev ? '<span class="tag good">completo</span>' : '–')}</td>
+      <td>${btnEdit(i)}</td>
+    </tr>`
+  }).join('')
+
+  // Painel 3 — documentos
+  $('cipa-tbl-docs').innerHTML = rows.map((r,i)=>`<tr>
+    <td><strong>${esc(r.local)}</strong></td>
+    <td>${cipaPill(r.entrega_atas)}</td>
+    <td>${cipaPill(r.ata_eleicao)}</td>
+    <td>${cipaPill(r.cedulas)}</td>
+    <td style="max-width:340px;white-space:normal;font-size:.68rem;color:var(--txt3)">${esc(r.observacao||'–')}</td>
+    <td>${btnEdit(i)}</td>
+  </tr>`).join('')
+}
+window.renderCipa = renderCipa
+
+function openCipaModal(idx){
+  const r = (idx!=null && CIPA_DS[idx]) ? CIPA_DS[idx] : null
+  cipaEditLocal = r ? r.local : null
+  $('cipa-modal-title').textContent = r ? ('Editar CIPA — '+r.local) : 'Novo Local'
+  $('c-local').value = r ? r.local : ''
+  $('c-local').readOnly = !!r
+  $('c-ativa').value = r ? (r.cipa_ativa||'SIM') : 'SIM'
+  $('c-repr').value = r ? (r.representacao||'') : 'FUNCIONÁRIOS'
+  $('c-previsao').value = (r && r.previsao!=null) ? r.previsao : ''
+  $('c-ativos').value = (r && r.ativos!=null) ? r.ativos : ''
+  $('c-treinados').value = (r && r.treinados!=null) ? r.treinados : ''
+  $('c-atas').value = r ? (r.entrega_atas||'') : ''
+  $('c-eleicao').value = r ? (r.ata_eleicao||'') : ''
+  $('c-cedulas').value = r ? (r.cedulas||'') : ''
+  $('c-conforme').value = r ? (r.conforme||'') : ''
+  $('c-posse').value = r ? (r.data_posse||'') : ''
+  $('c-renovacao').value = r ? (r.data_renovacao||'') : ''
+  $('c-obs').value = r ? (r.observacao||'') : ''
+  $('cipa-msg').textContent=''; $('cipa-msg').className='modal-msg'
+  $('cipa-overlay').classList.add('open')
+}
+window.openCipaModal = openCipaModal
+function closeCipaModal(){ $('cipa-overlay').classList.remove('open'); cipaEditLocal=null }
+window.closeCipaModal = closeCipaModal
+
+async function saveCipa(){
+  const local = $('c-local').value.trim().toUpperCase()
+  if(!local){ $('cipa-msg').textContent='Informe o local.'; $('cipa-msg').className='modal-msg err'; return }
+  const num = v => { const s=String(v).trim(); if(s==='') return null; const n=parseInt(s,10); return isNaN(n)?null:n }
+  const rec = {
+    cipa_ativa: $('c-ativa').value,
+    representacao: $('c-repr').value.trim().toUpperCase() || null,
+    previsao: num($('c-previsao').value),
+    ativos: num($('c-ativos').value),
+    treinados: num($('c-treinados').value),
+    entrega_atas: $('c-atas').value.trim() || null,
+    ata_eleicao: $('c-eleicao').value || null,
+    cedulas: $('c-cedulas').value || null,
+    conforme: $('c-conforme').value || null,
+    data_posse: $('c-posse').value || null,
+    data_renovacao: $('c-renovacao').value || null,
+    observacao: $('c-obs').value.trim() || null
+  }
+  $('cipa-btn-save').disabled = true; $('cipa-btn-save').textContent = 'Salvando…'
+  let error
+  if(cipaEditLocal){ ({error} = await sb.from('esg_cipa').update(rec).eq('local', cipaEditLocal)) }
+  else { ({error} = await sb.from('esg_cipa').insert({local, ...rec})) }
+  $('cipa-btn-save').disabled = false; $('cipa-btn-save').textContent = 'Salvar'
+  if(error){ $('cipa-msg').textContent='Erro ao salvar: '+error.message; $('cipa-msg').className='modal-msg err'; return }
+  toast(cipaEditLocal ? `CIPA de ${cipaEditLocal} atualizada.` : `Local ${local} criado.`)
+  closeCipaModal()
+  loadCipa()
+}
+window.saveCipa = saveCipa
 
 // ── MEU PERFIL (técnico de segurança) ────────────────────────────────────────
 function getPerfil(){ try{ return JSON.parse(localStorage.getItem(PERFIL_KEY)||'null') }catch(e){ return null } }
