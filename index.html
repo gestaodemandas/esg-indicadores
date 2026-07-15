@@ -322,6 +322,9 @@ body.dark .acao-fil{background:rgba(255,255,255,.07)}
 .acao-reg{border:1px solid var(--bdr);background:none;border-radius:8px;padding:.35rem .7rem;font-size:.68rem;font-weight:700;color:var(--txt2);cursor:pointer;white-space:nowrap}
 .acao-reg:hover{border-color:var(--acid);color:var(--acid);background:var(--acid-l)}
 .acao-empty{padding:1.6rem;text-align:center;color:var(--txt3);font-size:.74rem}
+.btn-pend{display:flex;align-items:center;gap:.4rem;border:1px solid var(--bdr);background:var(--card);border-radius:8px;padding:.5rem .8rem;font-size:.72rem;font-weight:700;color:var(--txt2);cursor:pointer;white-space:nowrap;transition:all .2s}
+.btn-pend:hover{border-color:var(--acid);color:var(--acid)}
+.btn-pend.active{border-color:var(--acid);color:#fff;background:var(--acid)}
 .chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);padding:1.1rem 1.3rem 1.2rem;display:flex;flex-direction:column}
 .chart-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
 .chart-card-title{font-size:.82rem;font-weight:700;color:var(--txt)}
@@ -996,8 +999,16 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             <div class="afb-group"><label>Filial</label><select id="tr-flt-filial" onchange="renderTrein()"><option value="TODAS">Todas</option></select></div>
             <div class="afb-group"><label>Treinamento</label><select id="tr-flt-trein" onchange="renderTrein()"><option value="TODOS">Todos</option></select></div>
             <div class="afb-group"><label>Situação</label><select id="tr-flt-sit" onchange="renderTrein()">
-              <option value="TODAS">Todas</option><option value="Em dia">Em dia</option><option value="A renovar">A renovar (30 dias)</option><option value="Vencido">Vencido</option><option value="Não realizado">Não realizado</option>
+              <option value="TODAS">Todas</option>
+              <option value="PENDENTES">Pendentes (todas exceto Em dia)</option>
+              <option value="Em dia">Em dia</option><option value="A renovar">A renovar (30 dias)</option><option value="Vencido">Vencido</option><option value="Não realizado">Não realizado</option>
             </select></div>
+            <div class="afb-group"><label>&nbsp;</label>
+              <button class="btn-pend" id="tr-btn-pendentes" onclick="togglePendentes()">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Somente pendentes
+              </button>
+            </div>
             <div class="afb-search"><label>Buscar</label>
               <div class="afb-search-wrap">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -2851,7 +2862,12 @@ function scopedTreinRows(skip){
   return TR_DS.filter(r=>{
     if(!skip.filial && filFiltro!=='TODAS' && r.filial!==filFiltro) return false
     if(!skip.trein && trFiltro!=='TODOS' && String(r.treinamento_id)!==trFiltro) return false
-    if(!skip.sit && sitFiltro!=='TODAS' && treinDeriv(r).situacao!==sitFiltro) return false
+    if(!skip.sit && sitFiltro!=='TODAS'){
+      const s = treinDeriv(r).situacao
+      // PENDENTES = tudo que exige ação (Vencido + A renovar + Não realizado)
+      if(sitFiltro==='PENDENTES'){ if(s==='Em dia') return false }
+      else if(s!==sitFiltro) return false
+    }
     if(busca && !(String(r.nome||'').toUpperCase().includes(busca) || String(r.matricula||'').toUpperCase().includes(busca))) return false
     return true
   })
@@ -2885,6 +2901,14 @@ function trStackedChart(boxId, rows, keyFn, labelFn){
     </div>`
   }).join('') + '</div>'
 }
+
+// Botão "Somente pendentes": atalho que liga/desliga o filtro Situação=PENDENTES
+function togglePendentes(){
+  const sel = $('tr-flt-sit')
+  sel.value = sel.value==='PENDENTES' ? 'TODAS' : 'PENDENTES'
+  renderTrein()
+}
+window.togglePendentes = togglePendentes
 
 // ── Fila de ação do técnico: pendências priorizadas por urgência, com Registrar direto ──
 let trAcaoTab = 'Vencido'
@@ -2938,6 +2962,7 @@ function renderTrein(){
   $('tr-conf-fill').style.width = pct+'%'
   $('tr-conf-fill').style.background = pct>=100 ? 'var(--pos)' : (pct>=50 ? '#e0953a' : 'var(--acid)')
   $('tr-conf-sub').textContent = total ? `${cont['Em dia']} de ${total} registros em dia` : 'Sem registros no filtro atual'
+  $('tr-btn-pendentes').classList.toggle('active', $('tr-flt-sit').value==='PENDENTES')
   renderTreinAcao()
   $('tr-tbl-count').textContent = `${rows.length} registro${rows.length===1?'':'s'} (colaborador × treinamento)`
 
