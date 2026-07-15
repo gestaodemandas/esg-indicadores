@@ -18,6 +18,7 @@ Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e anál
 | `sql/04_aso.sql` | Cria `esg_aso_upload` + `esg_aso_exame` (módulo ASO) e RLS — **depende de `esg_pode_ver()`, já criado por `01`/`03`; rodar depois desses** |
 | `sql/05_treinamentos.sql` | Cria `esg_trein_catalogo` (com seed dos 12 treinamentos NR) + `esg_trein_registro` e RLS — **rodar depois de `01`/`03`/`04`** (usa `esg_pode_ver` e `esg_e_corporativo`) |
 | `sql/06_cipa.sql` | Cria `esg_cipa` (1 linha por local: status, dimensionamento NR-5, documentos) e RLS — **rodar depois de `01`/`03`**. Carga inicial em `dados/cipa_seed.sql` (fora do git — observações contêm nomes) |
+| `sql/07_aso_realizado.sql` | Cria `esg_aso_realizado` (exames periódicos realizados; lado "Realizados" do gráfico por unidade do ASO) e RLS — **rodar depois de `01`/`03`/`04`** |
 | `dados/` | **Fora do git** (`.gitignore` — contém nomes/e-mails/matrículas, LGPD). Scripts de carga histórica, controle de acesso e backups |
 | `.claude/launch.json` *(fora desta pasta, na raiz de Sessões Claude)* | Config do preview local (`esg-app`, porta 8734) |
 
@@ -190,7 +191,7 @@ Códigos fora desta tabela (confirmados nos dados reais: `601`, `701`) **ficam c
 - Banner com a data/hora da última importação, quem importou e o nome do arquivo.
 - Filtros: Filial, Gestor, Tipo de Exame, Status, Busca (nome/matrícula).
 - 3 cartões (contam PESSOAS): Pessoas com pendência, Com exame vencido, Vencendo em 30 dias.
-- Gráfico "Pessoas por Unidade — Realizados vs. Pendentes" (filtro próprio unidade/status, barra horizontal empilhada, ordenado por pendência). Realizados fica em 0 até haver fonte de exames realizados (`asoRealizadosPorUnidade`).
+- Gráfico "Exame Médico por Unidade — Realizados vs. Pendentes" (filtro próprio unidade/status, barra horizontal empilhada, ordenado por pendência). Escopo: **só o exame médico periódico** dos dois lados. Pendentes = pessoas com exame médico pendente no snapshot (`esg_aso_exame`, filtrado por `isExameMedico`); Realizados = pessoas no "Relatório de Exames Periódicos Realizados" (`esg_aso_realizado`, importação própria). Vermelho sólido = pendências, verde = realizados (sem degradê). Locais do relatório de realizados: CD M.NILO→MESTRE NILO, CD S.DUMONT→CD ST DRU mapeados; CD PNG/CD CAJI mantidos como estão (`REAL_FILIAL_ALIAS`).
 - Gráfico "Pessoas com pendência por Gestor" (top 15) e "Exames pendentes por Tipo" (top 10, contagem de exames).
 - Todos os gráficos são barra horizontal (`.hbarchart`), mais legíveis que coluna.
 - Tabela ordenável + exportação Excel.

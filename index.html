@@ -894,9 +894,14 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
             </div>
             <div class="aso-banner-actions" id="aso-upload-wrap" style="display:none">
               <input type="file" id="aso-file" accept=".xlsx,.xls" style="display:none" onchange="uploadASO(this)">
-              <button class="btn-new" id="aso-btn-importar" onclick="document.getElementById('aso-file').click()">
+              <button class="btn-sec" id="aso-btn-importar" onclick="document.getElementById('aso-file').click()">
                 <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Importar nova planilha
+                Pendências (Próximos Exames)
+              </button>
+              <input type="file" id="aso-file-real" accept=".xlsx,.xls" style="display:none" onchange="importarRealizados(this)">
+              <button class="btn-new" id="aso-btn-real" onclick="document.getElementById('aso-file-real').click()">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Exames Realizados
               </button>
             </div>
           </div>
@@ -939,8 +944,8 @@ body.dark .modal-tab .mt-pct{background:rgba(255,255,255,.1)}
           <!-- ASOs por Unidade — Realizados vs. Pendentes (filtro próprio, independente da barra acima) -->
           <div class="chart-card">
             <div class="chart-card-head">
-              <span class="chart-card-title">Pessoas por Unidade — Realizados vs. Pendentes</span>
-              <span class="chart-card-sub">Nº de colaboradores (não de exames) · ordenado por volume de pendências</span>
+              <span class="chart-card-title">Exame Médico por Unidade — Realizados vs. Pendentes</span>
+              <span class="chart-card-sub" id="aso-uf-sub">Nº de colaboradores · exame médico periódico</span>
             </div>
             <div class="aso-uf-bar">
               <span class="aso-uf-label">Filtrar:</span>
@@ -2574,10 +2579,15 @@ window.exportarExcel = exportarExcel
 // próprio navegador (SheetJS) e grava um novo snapshot no banco. O dashboard
 // sempre mostra a versão mais recente; versões anteriores ficam de histórico.
 // ═══════════════════════════════════════════════════════════════════════════
-let ASO_DS = []            // exames do snapshot vigente
+let ASO_DS = []            // exames do snapshot vigente (pendências)
 let asoUltimoUpload = null // linha de esg_aso_upload do snapshot vigente
+let ASO_REAL = []          // exames periódicos realizados (esg_aso_realizado)
 let asoSortCol = 'proximo_exame'
 let asoSortDir = 'asc'
+// De/para dos locais do relatório de realizados p/ as siglas do app (confirmado 2026-07-15).
+// CD PNG e CD CAJI ficam como estão (locais próprios, ainda sem grupo).
+const REAL_FILIAL_ALIAS = { 'CD M.NILO':'MESTRE NILO', 'CD S.DUMONT':'CD ST DRU' }
+function realFilial(raw){ const s = String(raw??'').trim(); return REAL_FILIAL_ALIAS[s.toUpperCase()] || s }
 
 // CODFIL (código numérico de filial na planilha) -> sigla/empresa usada no resto do app.
 // Tabela completa confirmada pelo usuário (2026-07-14). Códigos fora deste mapa ficam com o
@@ -2650,19 +2660,23 @@ async function sbFetchAll(tabela, filtro){
 
 async function loadASO(){
   if(!sb) return
+  $('aso-upload-wrap').style.display = (currentUser && currentUser.ver_todas) ? '' : 'none'
+  // Realizados (independe do snapshot de pendências existir)
+  const {data:reals} = await sbFetchAll('esg_aso_realizado', q=>q.order('id'))
+  ASO_REAL = reals || []
+
   const {data:up, error:errUp} = await sb.from('esg_aso_upload').select('*').order('enviado_em',{ascending:false}).limit(1).maybeSingle()
   if(errUp){ toast('Erro ao carregar ASO: '+errUp.message, 'err'); return }
   asoUltimoUpload = up || null
-  const podeImportar = !!(currentUser && currentUser.ver_todas)
-  $('aso-upload-wrap').style.display = podeImportar ? '' : 'none'
   if(!asoUltimoUpload){
-    $('aso-ultima-att').textContent = 'Nenhum snapshot importado ainda'
+    $('aso-ultima-att').textContent = ASO_REAL.length ? `${ASO_REAL.length} exames realizados importados` : 'Nenhum snapshot importado ainda'
     ASO_DS = []
     buildASOFilters(); buildASOUnidadeFilters(); renderASO()
     return
   }
   const dt = new Date(asoUltimoUpload.enviado_em)
-  $('aso-ultima-att').textContent = `${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(asoUltimoUpload.enviado_por||'—')} · ${esc(asoUltimoUpload.arquivo_nome||'')} (${asoUltimoUpload.total_linhas} linhas)`
+  const realTxt = ASO_REAL.length ? ` · ${ASO_REAL.length} realizados` : ''
+  $('aso-ultima-att').textContent = `${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(asoUltimoUpload.enviado_por||'—')} · ${esc(asoUltimoUpload.arquivo_nome||'')} (${asoUltimoUpload.total_linhas} linhas)${realTxt}`
   const {data, error} = await sbFetchAll('esg_aso_exame', q=>q.eq('upload_id', asoUltimoUpload.id).order('id'))
   if(error){ toast('Erro ao carregar exames: '+error.message, 'err'); return }
   ASO_DS = data||[]
@@ -2787,18 +2801,17 @@ function renderASOChartTipo(){
   }).join('') + '</div>'
 }
 
-// ── ASOs por Unidade — Realizados vs. Pendentes (widget com filtro próprio) ──
-// A planilha importada ("Relação de Próximos Exames") só traz PENDÊNCIAS — não existe fonte de
-// "Realizados" ainda. Por decisão do usuário (2026-07-14), todo exame do snapshot conta como
-// Pendente por enquanto; quando houver uma base de exames já realizados, plugar aqui (por
-// matrícula + tipo_exame, por exemplo) em vez de retornar 0.
-function asoRealizadosPorUnidade(unidade){ return 0 }
+// ── Exame Médico por Unidade — Realizados vs. Pendentes (widget com filtro próprio) ──
+// Escopo (decisão 2026-07-15): só o EXAME MÉDICO periódico dos dois lados.
+//  - Pendentes: pessoas com exame médico pendente no snapshot (esg_aso_exame).
+//  - Realizados: pessoas que realizaram o exame médico periódico (esg_aso_realizado).
+function isExameMedico(nome){ return /M[EÉ]DICO/i.test(String(nome||'')) }
 
 // Paleta do ASO (decisão 2026-07-15): SEM degradê — vermelho sólido para
 // pendências/indicadores negativos, verde só para realizados.
 function buildASOUnidadeFilters(){
   const sel = $('aso-uf-unidade'); const cur = sel.value||'TODAS'
-  const unidades = [...new Set(ASO_DS.map(r=>r.filial).filter(Boolean))].sort()
+  const unidades = [...new Set([...ASO_DS.map(r=>r.filial), ...ASO_REAL.map(r=>r.filial)].filter(Boolean))].sort()
   sel.innerHTML = '<option value="TODAS">Todas as unidades</option>' + unidades.map(f=>`<option>${esc(f)}</option>`).join('')
   if([...sel.options].some(o=>o.value===cur)) sel.value = cur
 }
@@ -2813,20 +2826,22 @@ function renderASOChartUnidade(){
   const box = $('aso-chart-unidade')
   const unidadeFiltro = $('aso-uf-unidade').value
   const statusFiltro = $('aso-uf-status').value
-  const dados = ASO_DS.filter(r => unidadeFiltro==='TODAS' || r.filial===unidadeFiltro)
-  // Conta PESSOAS distintas por unidade (não linhas de exame) — a régua da análise
-  const pessoasPorUnidade = {}
-  dados.forEach(r => {
-    if(!r.filial) return
-    if(!pessoasPorUnidade[r.filial]) pessoasPorUnidade[r.filial] = new Set()
-    pessoasPorUnidade[r.filial].add(asoPersonKey(r))
+  const inUni = u => unidadeFiltro==='TODAS' || u===unidadeFiltro
+  // Pessoas distintas por unidade, exame médico dos dois lados
+  const pend = {}, real = {}
+  ASO_DS.filter(r => r.filial && isExameMedico(r.tipo_exame) && inUni(r.filial)).forEach(r => {
+    if(!pend[r.filial]) pend[r.filial] = new Set(); pend[r.filial].add(asoPersonKey(r))
   })
-  let arr = Object.entries(pessoasPorUnidade).map(([unidade,set]) => ({
-    unidade, pendentes: set.size, realizados: asoRealizadosPorUnidade(unidade)
+  ASO_REAL.filter(r => r.filial && inUni(r.filial)).forEach(r => {
+    if(!real[r.filial]) real[r.filial] = new Set(); real[r.filial].add(asoPersonKey(r))
+  })
+  const unidades = new Set([...Object.keys(pend), ...Object.keys(real)])
+  let arr = [...unidades].map(u => ({
+    unidade: u, pendentes: pend[u]?pend[u].size:0, realizados: real[u]?real[u].size:0
   }))
   if(statusFiltro==='Pendente') arr = arr.filter(a=>a.pendentes>0)
   if(statusFiltro==='Realizado') arr = arr.filter(a=>a.realizados>0)
-  arr.sort((a,b)=>b.pendentes-a.pendentes)
+  arr.sort((a,b)=>b.pendentes-a.pendentes || b.realizados-a.realizados)
   $('aso-uf-count').textContent = `${arr.length} unidade${arr.length===1?'':'s'}`
   if(!arr.length){ box.innerHTML = '<div class="chart-empty">Sem dados no filtro atual.</div>'; return }
   const maxTotal = Math.max(...arr.map(a=>a.pendentes+a.realizados))
@@ -2955,6 +2970,63 @@ async function uploadASO(inputEl){
   } finally { prog.fim() }
 }
 window.uploadASO = uploadASO
+
+// ── Importa o "Relatório de Exames Periódicos Realizados" (snapshot: substitui tudo) ──
+// Estrutura: cabeçalho na linha 3 (Ficha, Colaborador, Exames, Filial, Origem); dados da linha 4.
+async function importarRealizados(inputEl){
+  const f = inputEl.files && inputEl.files[0]
+  inputEl.value = ''
+  if(!f) return
+  if(!currentUser || !currentUser.ver_todas){ toast('Só perfis corporativos podem importar exames realizados.', 'err'); return }
+  const prog = btnProgresso('aso-btn-real')
+  try {
+  prog.set('Lendo planilha…')
+  await new Promise(r=>setTimeout(r,30))
+  let wb
+  try { wb = XLSX.read(await f.arrayBuffer(), {type:'array', cellDates:true}) }
+  catch(e){ toast('Não foi possível ler o arquivo: '+e.message, 'err'); return }
+  const ws = wb.Sheets[wb.SheetNames[0]]
+  if(ws['!ref']){ const rng = XLSX.utils.decode_range(ws['!ref']); if(rng.e.r>19999){ rng.e.r=19999; ws['!ref']=XLSX.utils.encode_range(rng) } }
+  const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null})
+  // acha a linha de cabeçalho (tem "Ficha" e "Colaborador")
+  let h = arr.findIndex(row => (row||[]).some(v=>String(v??'').trim().toLowerCase()==='ficha') && (row||[]).some(v=>String(v??'').trim().toLowerCase()==='colaborador'))
+  if(h<0){ toast('Formato inesperado: não achei o cabeçalho (Ficha / Colaborador).', 'err'); return }
+  const hdr = arr[h].map(v=>String(v??'').trim().toLowerCase())
+  const ix = { fic: hdr.indexOf('ficha'), col: hdr.indexOf('colaborador'), ex: hdr.indexOf('exames'), fil: hdr.indexOf('filial'), org: hdr.indexOf('origem') }
+  // rótulo do período: procura "Periodo:" nas linhas acima do cabeçalho
+  let periodo = null
+  for(let i=0;i<h;i++){ const t=(arr[i]||[]).map(v=>String(v??'')).join(' '); const m=t.match(/per[ií]odo:?\s*(.+)/i); if(m){ periodo=m[1].trim(); break } }
+  const linhas = []
+  for(let i=h+1;i<arr.length;i++){
+    const row = arr[i]
+    if(!row || row[ix.col]==null || String(row[ix.col]).trim()==='') continue
+    linhas.push({
+      ficha: row[ix.fic]!=null ? String(row[ix.fic]).trim() : null,
+      colaborador: String(row[ix.col]).trim().toUpperCase(),
+      exame: (ix.ex>=0 && row[ix.ex]!=null) ? String(row[ix.ex]).trim().toUpperCase() : 'EXAME MEDICO',
+      filial: realFilial(ix.fil>=0 ? row[ix.fil] : null),
+      origem: (ix.org>=0 && row[ix.org]!=null) ? String(row[ix.org]).trim() : null,
+      periodo
+    })
+  }
+  if(!linhas.length){ toast('Nenhuma linha reconhecida no relatório de realizados.', 'err'); return }
+  if(!confirm(`Importar ${linhas.length} exames realizados${periodo?` (${periodo})`:''}?\n\nIsso SUBSTITUI a base de realizados atual.`)) return
+  const nomeUsuario = (currentUser && currentUser.nome) || 'ESG'
+  prog.set('Substituindo base de realizados…')
+  const {error:delErr} = await sb.from('esg_aso_realizado').delete().gte('id', 0)
+  if(delErr){ toast('Erro ao limpar realizados: '+delErr.message, 'err'); return }
+  const CHUNK = 300
+  for(let i=0;i<linhas.length;i+=CHUNK){
+    prog.set(`Gravando ${Math.min(i+CHUNK,linhas.length)}/${linhas.length}…`)
+    const bloco = linhas.slice(i,i+CHUNK).map(l => ({...l, importado_por: nomeUsuario}))
+    const {error} = await sb.from('esg_aso_realizado').insert(bloco)
+    if(error){ toast('Erro ao gravar realizados (a partir da linha '+(i+1)+'): '+error.message, 'err'); return }
+  }
+  toast(`Exames realizados importados: ${linhas.length}.`)
+  loadASO()
+  } finally { prog.fim() }
+}
+window.importarRealizados = importarRealizados
 
 function exportarExcelASO(){
   const rows = sortASORows(filteredASOData())
