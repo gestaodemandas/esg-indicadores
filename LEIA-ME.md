@@ -2,6 +2,8 @@
 
 Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes/Incidentes**, **CIPA**, **ASO** e **Treinamentos**. Os demais (Visão Geral, Brigada) aparecem na capa como "Em breve".
 
+> 📘 **Documentação completa** (arquitetura, modelo de dados, decisões e o plano de integração com o painel executivo): veja [`DOCUMENTACAO.md`](DOCUMENTACAO.md). Este LEIA-ME é o guia rápido de arquivos e instalação.
+
 - **Publicado em**: https://gestaodemandas.github.io/esg-indicadores/
 - **Repositório**: https://github.com/gestaodemandas/esg-indicadores
 - **Banco**: Supabase, projeto `nkijyuartfyxrawkivmm` (mesmo do painel executivo de Auditoria Corporativa — ver seção [Convivência com o painel de Auditoria](#convivência-com-o-painel-de-auditoria))
@@ -94,7 +96,7 @@ O projeto Supabase `nkijyuartfyxrawkivmm` também hospeda o **painel executivo d
 
 ### Dashboard
 - Barra de filtros: Ano, Mês, Filial, Status, Busca.
-- 2 cartões: **Acidentes Registrados** (com gráfico de barras por filial) e **Pendentes de Finalização** (com velocímetro de % de conclusão do formulário — não confundir com o campo Status).
+- 3 cartões segmentados por tipo: **Ocorrências Registradas** (total) · **Acidentes** · **Incidentes** (Emergências contam só no total). Abaixo, gráfico por filial e velocímetro de % de conclusão do formulário (não confundir com o campo Status).
 - Gráfico de barras mês a mês.
 - Todos os gráficos são HTML/CSS/SVG puro, sem biblioteca externa.
 - Cada filtro se aplica a tudo, exceto o próprio eixo que o gráfico detalha (gráfico por filial ignora o filtro de Filial; gráfico mensal ignora o filtro de Mês) — assim nada fica inconsistente entre si.
@@ -164,7 +166,7 @@ A planilha traz a filial como código numérico (CODFIL), não como sigla. Tabel
 | CODFIL | Sigla/Empresa | CODFIL | Sigla/Empresa |
 |---|---|---|---|
 | 1 | GUS | 99 | CORP |
-| 2 | IMB | 100–112 | ALH |
+| 2 | IMB | 100–112 | CD ALH |
 | 3 | PAL | 202 | CD JIQ |
 | 4 | TAM | 302 | CD LAU |
 | 5 | AJU | 4016 | RETAILX |
@@ -176,10 +178,10 @@ A planilha traz a filial como código numérico (CODFIL), não como sigla. Tabel
 | 80 | MDC | | |
 | 91 | CA2 | | |
 | 92 | CAB | | |
-| 93 | ALH | | |
+| 93 | CD ALH | | |
 | 94 | LAU | | |
 
-Note que algumas siglas (ROYAL, AME, RETAILX, MDC) são **empresas do grupo**, não filiais físicas — mesmo padrão já mencionado no campo Empresa do módulo Acidentes. `93` e `100–112` mapeiam para o mesmo rótulo "ALH" (mas com grafia diferente de "CD ALH", usado no `esg_filial_grupo` do módulo Acidentes — ainda não reconciliado; um técnico de JPA não herda automaticamente visibilidade sobre linhas de ASO marcadas "ALH" por esse motivo).
+Note que algumas siglas (ROYAL, AME, RETAILX, MDC) são **empresas do grupo**, não filiais físicas — mesmo padrão já mencionado no campo Empresa do módulo Acidentes. `93` e `100–112` mapeiam para **CD ALH** (alinhado com `esg_filial_grupo` e os demais módulos desde 15/07/2026 — o técnico de JPA herda a visibilidade via grupo). Registros importados antes desse alinhamento (gravados como "ALH") são corrigidos pela Parte 3 do `sql/diagnostico.sql`.
 
 Códigos fora desta tabela (confirmados nos dados reais: `601`, `701`) **ficam com o valor bruto**, sem sigla. Isso tem uma consequência direta no RLS: só usuários com `ver_todas=true` enxergam linhas com filial não mapeada, porque `esg_pode_ver()` só casa contra siglas conhecidas.
 
@@ -198,7 +200,6 @@ Códigos fora desta tabela (confirmados nos dados reais: `601`, `701`) **ficam c
 
 ### Pendências conhecidas
 - Códigos `601` e `701` (vistos nos dados reais) não têm sigla confirmada — ficam com o valor bruto.
-- Reconciliar a grafia "ALH" (CODFIL 93, 100–112) com "CD ALH" do `esg_filial_grupo` do módulo Acidentes, se a intenção for que o mesmo técnico enxergue os dois.
 - Sem interface para consultar snapshots antigos (ficam no banco, mas só a versão vigente aparece no app).
 
 ## Módulo Treinamentos
