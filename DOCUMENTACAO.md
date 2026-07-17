@@ -179,7 +179,9 @@ Conformidade da CIPA por local, **editada direto no app** (sem planilha recorren
 | `esg_aso_realizado` | Exames periódicos realizados | `id` | `esg_pode_ver(filial)`; insert corporativo |
 | `esg_trein_catalogo` | Catálogo de treinamentos (NRs) | `id` (`codigo` único) | leitura autenticada; escrita corporativo |
 | `esg_trein_registro` | Colaborador × treinamento | `id` | `esg_pode_ver(filial)` |
-| `esg_cipa` | Conformidade CIPA por local | `local` | `esg_pode_ver(local)`; insert/delete corporativo |
+| `esg_cipa_conformidade` | Conformidade CIPA por local | `local` | `esg_pode_ver(local)`; insert/delete corporativo |
+
+> ⚠️ A tabela do módulo CIPA chama-se **`esg_cipa_conformidade`**, não `esg_cipa`. O nome `esg_cipa` já pertence a uma tabela **agregada do painel executivo** (ver seção 8).
 
 **Princípio transversal:** o app guarda **fatos** (datas, contagens informadas) e **deriva na leitura** tudo que é status/vencimento — nunca armazena o resultado calculado. Isso evita o problema das planilhas antigas (fórmulas congeladas/quebradas).
 
@@ -198,7 +200,7 @@ Rodar no SQL Editor do Supabase, **nesta ordem** (cada um depende dos anteriores
 | 3 | `sql/03_migracao_form.sql` | `esg_filial_grupo`, reescreve `esg_pode_ver` (grupos), amplia `esg_acidentes` |
 | 4 | `sql/04_aso.sql` | `esg_aso_upload`, `esg_aso_exame`, `esg_e_corporativo` |
 | 5 | `sql/05_treinamentos.sql` | `esg_trein_catalogo` (seed), `esg_trein_registro` |
-| 6 | `sql/06_cipa.sql` + `dados/cipa_seed.sql` | `esg_cipa` + carga |
+| 6 | `sql/06_cipa.sql` + `dados/cipa_seed.sql` | `esg_cipa_conformidade` + carga |
 | 7 | `sql/07_aso_realizado.sql` | `esg_aso_realizado` |
 
 **Diagnóstico:** `sql/diagnostico.sql` (Parte 1) mostra quais tabelas/funções existem — qualquer `presente=false` indica o SQL que falta rodar. A Parte 2 confere contagens; a Parte 3 alinha `esg_aso_exame.filial` "ALH"→"CD ALH" nos registros antigos.
@@ -227,31 +229,27 @@ Mapeamento pretendido (fonte no app → objeto lido pelo painel):
 | `esg_acidentes_mensal` | `esg_acidentes` | agregação por mês |
 | `esg_treinamento_filial` | `esg_trein_registro` (+ catálogo) | situação agregada por filial |
 | `esg_treinamento_nr` | `esg_trein_registro` (+ catálogo) | situação agregada por NR |
-| `esg_aso` | `esg_aso_exame` + `esg_aso_realizado` | pendentes × realizados |
-| `esg_cipa` | `esg_cipa` (app) | ⚠️ **colisão de nome** — ver abaixo |
+| `esg_aso` | `esg_aso_exame` + `esg_aso_realizado` | pendentes × realizados por filial |
+| `esg_cipa` | `esg_cipa_conformidade` (app) | via VIEW (nomes já não colidem) |
 | `esg_brigada` | *(sem fonte)* | módulo Brigada ainda não existe no app |
 | `esg_afastamentos` | *(a definir)* | possivelmente derivável de `esg_acidentes` |
 | `esg_ma_dashboard` | *(sem fonte)* | Meio Ambiente — fora do escopo atual do app |
 
-### ⚠️ Pontos que preciso confirmar antes de construir
+### Colisão de nome resolvida (15/07/2026)
 
-1. **Colisão de nome `esg_cipa` e `esg_aso`.** O app **criou** `esg_cipa`, e o painel executivo **já lia** uma tabela `esg_cipa` (e uma `esg_aso`). Se a tabela antiga já existia com outro formato, o `create table if not exists` do `sql/06` **não** a recriou — pode ser que a carga da CIPA tenha ido para a estrutura errada, ou que estejamos com duas coisas concorrendo no mesmo nome. **Precisa verificar** (query no fim desta seção).
-2. **O HTML do painel executivo** — preciso ver o `loadAll()` dele para saber exatamente **quais colunas** cada tabela agregada expõe, senão a view não bate com o que o painel lê.
-3. **Módulos sem fonte** (Brigada, Meio Ambiente, e talvez Afastamentos): ou o painel para de exibi-los, ou mantemos as tabelas estáticas antigas para eles até existir um módulo no app.
-4. **Transição sem downtime:** trocar tabela por view exige renomear/remover a tabela antiga. Plano seguro = renomear a antiga para `*_bkp`, criar a view, validar o painel, e só então descartar o backup.
+Verificado no banco: o painel executivo **já tinha** uma tabela `esg_cipa` agregada, com colunas `id, ano, filial, previstos, treinados, status, pendencia_doc` — **diferente** da tabela rica do módulo CIPA. Como o `create table if not exists` não recria tabela existente, a `esg_cipa` do painel "venceu" e o módulo CIPA do app estava lendo/gravando na estrutura errada.
 
-### Verificação rápida da colisão (rodar no SQL Editor)
+**Correção:** a tabela do módulo CIPA foi renomeada para **`esg_cipa_conformidade`**. A `esg_cipa` antiga do painel fica intocada. As colunas dessas tabelas agregadas do painel, aliás, revelam exatamente o formato que as views precisarão produzir:
+- `esg_aso` → `(ano, periodo, filial, realizados, pendentes)`
+- `esg_cipa` → `(ano, filial, previstos, treinados, status, pendencia_doc)`
 
-```sql
--- Mostra as colunas de esg_cipa e esg_aso: se baterem com as do app (local, cipa_ativa,
--- previsao... / ficha, colaborador, exame...), não há tabela antiga concorrente.
-select table_name, ordinal_position, column_name, data_type
-from information_schema.columns
-where table_schema='public' and table_name in ('esg_cipa','esg_aso')
-order by table_name, ordinal_position;
-```
+### Pontos que ainda preciso para construir as views
 
-**Próximo passo:** com o HTML do painel + o resultado dessa query, eu monto as views (`sql/08_views_painel.sql`) e o plano de corte.
+1. **O HTML do painel executivo** (`02. Auditoria Corporativa - Indicadores.html`) — o `loadAll()` e as colunas que ele lê de **cada** tabela agregada (já conheço `esg_aso` e `esg_cipa`; faltam `esg_acidentes_filial`, `esg_acidentes_mensal`, `esg_treinamento_filial`, `esg_treinamento_nr`, `esg_brigada`, `esg_ma_dashboard`, `esg_afastamentos`).
+2. **Módulos sem fonte** (Brigada, Meio Ambiente e talvez Afastamentos): decidir se o painel para de exibi-los ou mantém as tabelas estáticas até virarem módulo.
+3. **Transição sem downtime:** renomear a tabela antiga para `*_bkp`, criar a view com o mesmo nome, validar o painel, e só então descartar o backup.
+
+**Próximo passo:** com o HTML do painel eu monto o `sql/08_views_painel.sql` (uma view por tabela agregada) + o plano de corte.
 
 ---
 

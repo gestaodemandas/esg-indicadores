@@ -9,7 +9,7 @@ select item, tipo, presente from (
     from unnest(array[
       'esg_acidentes','esg_cid10','esg_filial_grupo','esg_usuarios','esg_tecnico_filial',
       'esg_aso_upload','esg_aso_exame','esg_trein_catalogo','esg_trein_registro',
-      'esg_cipa','esg_aso_realizado']) t
+      'esg_cipa_conformidade','esg_aso_realizado']) t
   union all
   select p, 'função', (to_regprocedure('public.'||p) is not null)
     from unnest(array['esg_pode_ver(text)','esg_e_corporativo()','esg_email_por_matricula(text)']) p
@@ -20,7 +20,7 @@ select item, tipo, presente from (
 
 -- ── PARTE 2: os dados foram carregados? (rode só se a Parte 1 estiver toda true)
 -- select 'esg_acidentes' t, count(*) n from public.esg_acidentes
--- union all select 'esg_cipa',           count(*) from public.esg_cipa            -- ~16
+-- union all select 'esg_cipa_conformidade', count(*) from public.esg_cipa_conformidade  -- ~16
 -- union all select 'esg_trein_catalogo', count(*) from public.esg_trein_catalogo  -- 14
 -- union all select 'esg_trein_registro', count(*) from public.esg_trein_registro  -- ~1.800
 -- union all select 'esg_aso_exame',      count(*) from public.esg_aso_exame

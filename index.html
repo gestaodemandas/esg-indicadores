@@ -3608,7 +3608,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MÓDULO CIPA — conformidade por local, editada DIRETO NO APP (sem planilha).
-// 3 visões da mesma tabela esg_cipa: status das filiais ativas, dimensionamento
+// 3 visões da mesma tabela esg_cipa_conformidade: status das filiais ativas, dimensionamento
 // NR-5 (ativos × previsão da norma) e documentos necessários × existentes.
 // RLS: técnico edita o próprio grupo; corporativo tudo (e pode criar local).
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3635,7 +3635,7 @@ function cipaRenov(r){
 
 async function loadCipa(){
   if(!sb) return
-  const {data, error} = await sb.from('esg_cipa').select('*').order('local')
+  const {data, error} = await sb.from('esg_cipa_conformidade').select('*').order('local')
   if(error){ toast('Erro ao carregar CIPA: '+error.message,'err'); return }
   CIPA_DS = data||[]
   $('cipa-btn-novo').style.display = (currentUser && currentUser.ver_todas) ? '' : 'none'
@@ -3739,8 +3739,8 @@ async function saveCipa(){
   }
   $('cipa-btn-save').disabled = true; $('cipa-btn-save').textContent = 'Salvando…'
   let error
-  if(cipaEditLocal){ ({error} = await sb.from('esg_cipa').update(rec).eq('local', cipaEditLocal)) }
-  else { ({error} = await sb.from('esg_cipa').insert({local, ...rec})) }
+  if(cipaEditLocal){ ({error} = await sb.from('esg_cipa_conformidade').update(rec).eq('local', cipaEditLocal)) }
+  else { ({error} = await sb.from('esg_cipa_conformidade').insert({local, ...rec})) }
   $('cipa-btn-save').disabled = false; $('cipa-btn-save').textContent = 'Salvar'
   if(error){ $('cipa-msg').textContent='Erro ao salvar: '+error.message; $('cipa-msg').className='modal-msg err'; return }
   toast(cipaEditLocal ? `CIPA de ${cipaEditLocal} atualizada.` : `Local ${local} criado.`)
