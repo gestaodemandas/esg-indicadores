@@ -30,3 +30,8 @@ select item, tipo, presente from (
 -- ── PARTE 3: alinhar grafia da filial no ASO — "ALH" → "CD ALH" (decisão 2026-07-15)
 -- Corrige registros antigos já importados (imports novos já entram como CD ALH).
 -- update public.esg_aso_exame set filial = 'CD ALH' where filial = 'ALH';
+
+-- ── PARTE 4: Brigada — "DEP GUS" é a mesma unidade que "MESTRE NILO" (decisão 2026-07-15)
+-- Corrige a carga que entrou como DEP GUS (o brigada_seed.sql já foi ajustado p/ futuros imports).
+-- update public.esg_brigada_membro set filial = 'MESTRE NILO' where filial = 'DEP GUS';
+-- update public.esg_brigada_filial set filial = 'MESTRE NILO' where filial = 'DEP GUS';
