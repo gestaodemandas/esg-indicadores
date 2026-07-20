@@ -109,6 +109,20 @@ select
   end as status   -- vocabulário derivado; ajustar se o filtro do painel esperar outros valores
 from base;
 
+-- ── Brigada por filial: exigência (NBR) × ativos ────────────────────────────
+create or replace view public.esg_brigada_appview as
+with ativos as (
+  select filial, count(*)::int as n
+  from public.esg_brigada_membro where ativo group by filial
+)
+select
+  2026                                                        as ano,
+  f.filial,
+  (f.base + ceil(greatest(f.num_funcionarios-10,0)::numeric / nullif(f.divisor,0)))::int as exigencia,
+  coalesce(a.n,0)::int                                        as ativos
+from public.esg_brigada_filial f
+left join ativos a on a.filial = f.filial;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- VALIDAÇÃO (rode e compare com as tabelas atuais do painel):
 --   select * from public.esg_cipa_appview               order by filial;
@@ -117,6 +131,7 @@ from base;
 --   select * from public.esg_aso_appview                order by pendentes desc;
 --   select * from public.esg_treinamento_filial_appview order by filial;
 --   select * from public.esg_treinamento_nr_appview     order by aderencia_pct;
+--   select * from public.esg_brigada_appview            order by filial;
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ═══════════════════════════════════════════════════════════════════════════

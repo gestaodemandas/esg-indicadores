@@ -21,7 +21,7 @@ Aplicativo web para **registro e acompanhamento de indicadores de Saúde & Segur
 | 01 | Visão Geral | Em breve | — |
 | 02 | **Acidentes/Incidentes** | Produção | Formulário no app |
 | 03 | **CIPA** | Produção | Edição direta no app |
-| 04 | Brigada | Em construção | App (tabelas + carga prontas; UI pendente) |
+| 04 | **Brigada** | Produção | Edição direta no app |
 | 05 | **ASO** | Produção | Importação de planilha (snapshot) |
 | 06 | **Treinamentos** | Produção | App + importação inicial de planilha |
 
@@ -236,11 +236,11 @@ O painel lê 9 objetos ESG (todos com `.eq('ano',2026)`, exceto afastamentos e M
 | `esg_aso` | ano, periodo, filial, realizados, pendentes | `esg_aso_realizado` + `esg_aso_exame` (exame médico) | ✅ |
 | `esg_treinamento_filial` | ano, filial, planejado, realizado | `esg_trein_registro` | ✅ (planejado=exigidos, realizado=já feitos) |
 | `esg_treinamento_nr` | ano, nr, planejado, realizado, aderencia_pct, status | `esg_trein_registro` + catálogo | ✅ (`status` derivado da aderência) |
-| `esg_brigada` | ano, filial, exigencia, ativos | `esg_brigada_membro` + `esg_brigada_filial` (em construção) | 🟡 tabelas prontas; view pendente |
+| `esg_brigada` | ano, filial, exigencia, ativos | `esg_brigada_membro` + `esg_brigada_filial` | ✅ (view `esg_brigada_appview`) |
 | `esg_afastamentos` | ano, filial, cargo, motivo, data_inicio, data_termino, cid, dias | — **sem módulo de afastamentos** (auxílio-doença) | ❌ |
 | `esg_ma_dashboard` | payload jsonb (chave='dashboard') | — Meio Ambiente, blob editado à parte | ❌ |
 
-**6 views já estão escritas** em `sql/08_views_painel.sql` (cipa, acidentes_filial, acidentes_mensal, aso, treinamento_filial, treinamento_nr) como views `*_appview` (aditivas, não tocam em nada) — para você rodar e **comparar** com as tabelas atuais antes de promover. Brigada/Afastamentos/Meio Ambiente ficam de fora (sem fonte no app).
+**7 views já estão escritas** em `sql/08_views_painel.sql` (cipa, acidentes_filial, acidentes_mensal, aso, treinamento_filial, treinamento_nr, brigada) como views `*_appview` (aditivas, não tocam em nada) — para você rodar e **comparar** com as tabelas atuais antes de promover. Só Afastamentos e Meio Ambiente ficam de fora (sem fonte no app — "faremos depois").
 
 ### 3 pontos que decidem o resto
 

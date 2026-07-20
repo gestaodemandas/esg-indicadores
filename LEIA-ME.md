@@ -1,6 +1,6 @@
 # Aplicativo ESG — Gestão de Indicadores
 
-Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes/Incidentes**, **CIPA**, **ASO** e **Treinamentos**. Os demais (Visão Geral, Brigada) aparecem na capa como "Em breve".
+Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e análise de indicadores de ESG / Saúde e Segurança do Trabalho do Grupo Ferreira Costa. Módulos em produção: **Acidentes/Incidentes**, **CIPA**, **Brigada**, **ASO** e **Treinamentos**. Só a Visão Geral aparece na capa como "Em breve".
 
 > 📘 **Documentação completa** (arquitetura, modelo de dados, decisões e o plano de integração com o painel executivo): veja [`DOCUMENTACAO.md`](DOCUMENTACAO.md). Este LEIA-ME é o guia rápido de arquivos e instalação.
 
@@ -21,6 +21,8 @@ Aplicativo web (HTML/CSS/JS puro, sem framework nem build) para registro e anál
 | `sql/05_treinamentos.sql` | Cria `esg_trein_catalogo` (com seed dos 12 treinamentos NR) + `esg_trein_registro` e RLS — **rodar depois de `01`/`03`/`04`** (usa `esg_pode_ver` e `esg_e_corporativo`) |
 | `sql/06_cipa.sql` | Cria `esg_cipa_conformidade` (1 linha por local: status, dimensionamento NR-5, documentos) e RLS — **rodar depois de `01`/`03`**. Nome `_conformidade` evita colisão com a `esg_cipa` agregada do painel executivo. Carga inicial em `dados/cipa_seed.sql` (fora do git — observações contêm nomes) |
 | `sql/07_aso_realizado.sql` | Cria `esg_aso_realizado` (exames periódicos realizados; lado "Realizados" do gráfico por unidade do ASO) e RLS — **rodar depois de `01`/`03`/`04`** |
+| `sql/08_views_painel.sql` | Views `*_appview` que alimentam o painel executivo de Auditoria a partir dos dados do app (aditivas; promoção reversível comentada). Ver DOCUMENTACAO.md §8 |
+| `sql/09_brigada.sql` | Cria `esg_brigada_filial` (dimensionamento NBR) + `esg_brigada_membro` e RLS. Carga inicial em `dados/brigada_seed.sql` (fora do git — nomes) |
 | `dados/` | **Fora do git** (`.gitignore` — contém nomes/e-mails/matrículas, LGPD). Scripts de carga histórica, controle de acesso e backups |
 | `.claude/launch.json` *(fora desta pasta, na raiz de Sessões Claude)* | Config do preview local (`esg-app`, porta 8734) |
 
@@ -144,6 +146,15 @@ Conformidade da CIPA por local, **editada direto no app** (sem planilha/import):
 - **3 painéis** (3 visões da mesma tabela): Filiais Ativas — status (posse, renovação **derivada** vs. hoje: vencida/vence em ≤60d, conforme?); Dimensionamento NR-5 (previsão da norma × ativos × treinados, barra de cobertura e déficit); Documentos necessários × existentes (entrega de atas/recibo, ata de eleição/apuração, cédulas — pills OK/PENDENTE/NÃO/N/A + observações).
 - KPIs: CIPAs ativas, conformes, não conformes, desobrigadas (N/A — devem designar representante).
 - Nomes de local seguem as siglas do app: CD CABO→CABO, CD M. NILO→MESTRE NILO, CD SD→CD ST DRU (mapeados na carga).
+
+## Módulo Brigada
+
+Efetivo da brigada de incêndio × exigência da NBR-14276, **editado direto no app**. Duas tabelas: `esg_brigada_membro` (brigadistas por filial) e `esg_brigada_filial` (dimensionamento: classificação, nº funcionários, base, divisor, margem). O **exigido é derivado** (`base + ⌈max(func−10,0)/divisor⌉`), nunca armazenado — o que corrige inconsistências da planilha antiga (ex.: ALH aparecia com 39 no painel, mas o cálculo dá 13). Cargos padronizados (28 variações → conjunto canônico, preservando papéis de líder específicos); "Cargo Vago" = vaga em aberto.
+
+- **KPIs**: brigadistas ativos (vs. exigido total), filiais conformes, filiais com déficit, renovações vencidas.
+- **Gráficos**: cobertura por filial (ativos × exigido, verde = conforme / vermelho = déficit) e brigadistas ativos por cargo.
+- **Edição**: lista de brigadistas (técnico, por grupo de filial); botão **Dimensionamento** (só corporativo) para ajustar nº de funcionários/classificação e recalcular a exigência.
+- Alimenta o `esg_brigada` do painel executivo via `esg_brigada_appview`.
 
 ## Módulo ASO
 
