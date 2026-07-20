@@ -76,12 +76,47 @@ select
 from real r
 full join pend p on r.filial = p.filial;
 
+-- ── Treinamento por filial: planejado (exigidos) × realizado (já feitos) ─────
+-- Interpretação confirmada pelo usuário (2026-07-15): planejado = nº de
+-- (colaborador × treinamento) exigidos; realizado = os que já têm data.
+create or replace view public.esg_treinamento_filial_appview as
+select
+  2026                                                       as ano,
+  t.filial,
+  count(*)::int                                              as planejado,
+  count(*) filter (where t.data_realizacao is not null)::int as realizado
+from public.esg_trein_registro t
+where t.filial is not null
+group by t.filial;
+
+-- ── Treinamento por NR (usa o nome do catálogo como "nr") ────────────────────
+create or replace view public.esg_treinamento_nr_appview as
+with base as (
+  select c.nome as nr,
+    count(*)::int                                              as planejado,
+    count(*) filter (where t.data_realizacao is not null)::int as realizado
+  from public.esg_trein_registro t
+  join public.esg_trein_catalogo c on c.id = t.treinamento_id
+  group by c.nome
+)
+select
+  2026 as ano, nr, planejado, realizado,
+  round(100.0 * realizado / nullif(planejado,0))::int as aderencia_pct,
+  case
+    when round(100.0*realizado/nullif(planejado,0)) >= 80 then 'Adequado'
+    when round(100.0*realizado/nullif(planejado,0)) >= 50 then 'Atenção'
+    else 'Crítico'
+  end as status   -- vocabulário derivado; ajustar se o filtro do painel esperar outros valores
+from base;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- VALIDAÇÃO (rode e compare com as tabelas atuais do painel):
 --   select * from public.esg_cipa_appview               order by filial;
 --   select * from public.esg_cipa where ano=2026        order by filial;
 --   select * from public.esg_acidentes_filial_appview   where ano=2026 order by filial;
 --   select * from public.esg_aso_appview                order by pendentes desc;
+--   select * from public.esg_treinamento_filial_appview order by filial;
+--   select * from public.esg_treinamento_nr_appview     order by aderencia_pct;
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ═══════════════════════════════════════════════════════════════════════════

@@ -231,13 +231,13 @@ O painel lê 9 objetos ESG (todos com `.eq('ano',2026)`, exceto afastamentos e M
 | `esg_acidentes_filial` | ano, filial, trajeto, tipico | `esg_acidentes` (tipo_ocorrencia=Acidente) | ✅ |
 | `esg_acidentes_mensal` | ano, mes, mes_label, acidentes, emergencias, incidentes, trajeto, tipico | `esg_acidentes` | ✅ |
 | `esg_aso` | ano, periodo, filial, realizados, pendentes | `esg_aso_realizado` + `esg_aso_exame` (exame médico) | ✅ |
-| `esg_treinamento_filial` | ano, filial, planejado, realizado | `esg_trein_registro` | ⚠️ semântica |
-| `esg_treinamento_nr` | ano, nr, planejado, realizado, aderencia_pct, status | `esg_trein_registro` + catálogo | ⚠️ semântica |
+| `esg_treinamento_filial` | ano, filial, planejado, realizado | `esg_trein_registro` | ✅ (planejado=exigidos, realizado=já feitos) |
+| `esg_treinamento_nr` | ano, nr, planejado, realizado, aderencia_pct, status | `esg_trein_registro` + catálogo | ✅ (`status` derivado da aderência) |
 | `esg_brigada` | ano, filial, exigencia, ativos | — **sem módulo Brigada** | ❌ |
 | `esg_afastamentos` | ano, filial, cargo, motivo, data_inicio, data_termino, cid, dias | — **sem módulo de afastamentos** (auxílio-doença) | ❌ |
 | `esg_ma_dashboard` | payload jsonb (chave='dashboard') | — Meio Ambiente, blob editado à parte | ❌ |
 
-**As 4 viáveis já estão escritas** em `sql/08_views_painel.sql` como views `*_appview` (aditivas, não tocam em nada) — para você rodar e **comparar** com as tabelas atuais antes de promover.
+**6 views já estão escritas** em `sql/08_views_painel.sql` (cipa, acidentes_filial, acidentes_mensal, aso, treinamento_filial, treinamento_nr) como views `*_appview` (aditivas, não tocam em nada) — para você rodar e **comparar** com as tabelas atuais antes de promover. Brigada/Afastamentos/Meio Ambiente ficam de fora (sem fonte no app).
 
 ### 3 pontos que decidem o resto
 
