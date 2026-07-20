@@ -21,7 +21,7 @@ Aplicativo web para **registro e acompanhamento de indicadores de Saúde & Segur
 | 01 | Visão Geral | Em breve | — |
 | 02 | **Acidentes/Incidentes** | Produção | Formulário no app |
 | 03 | **CIPA** | Produção | Edição direta no app |
-| 04 | Brigada | Em breve | — |
+| 04 | Brigada | Em construção | App (tabelas + carga prontas; UI pendente) |
 | 05 | **ASO** | Produção | Importação de planilha (snapshot) |
 | 06 | **Treinamentos** | Produção | App + importação inicial de planilha |
 
@@ -202,6 +202,9 @@ Rodar no SQL Editor do Supabase, **nesta ordem** (cada um depende dos anteriores
 | 5 | `sql/05_treinamentos.sql` | `esg_trein_catalogo` (seed), `esg_trein_registro` |
 | 6 | `sql/06_cipa.sql` + `dados/cipa_seed.sql` | `esg_cipa_conformidade` + carga |
 | 7 | `sql/07_aso_realizado.sql` | `esg_aso_realizado` |
+| 8 | `sql/09_brigada.sql` + `dados/brigada_seed.sql` | `esg_brigada_filial` + `esg_brigada_membro` + carga (Brigada — em construção) |
+
+> `sql/08_views_painel.sql` (views do painel executivo) é aplicado à parte, após validação — ver §8.
 
 **Diagnóstico:** `sql/diagnostico.sql` (Parte 1) mostra quais tabelas/funções existem — qualquer `presente=false` indica o SQL que falta rodar. A Parte 2 confere contagens; a Parte 3 alinha `esg_aso_exame.filial` "ALH"→"CD ALH" nos registros antigos.
 
@@ -233,7 +236,7 @@ O painel lê 9 objetos ESG (todos com `.eq('ano',2026)`, exceto afastamentos e M
 | `esg_aso` | ano, periodo, filial, realizados, pendentes | `esg_aso_realizado` + `esg_aso_exame` (exame médico) | ✅ |
 | `esg_treinamento_filial` | ano, filial, planejado, realizado | `esg_trein_registro` | ✅ (planejado=exigidos, realizado=já feitos) |
 | `esg_treinamento_nr` | ano, nr, planejado, realizado, aderencia_pct, status | `esg_trein_registro` + catálogo | ✅ (`status` derivado da aderência) |
-| `esg_brigada` | ano, filial, exigencia, ativos | — **sem módulo Brigada** | ❌ |
+| `esg_brigada` | ano, filial, exigencia, ativos | `esg_brigada_membro` + `esg_brigada_filial` (em construção) | 🟡 tabelas prontas; view pendente |
 | `esg_afastamentos` | ano, filial, cargo, motivo, data_inicio, data_termino, cid, dias | — **sem módulo de afastamentos** (auxílio-doença) | ❌ |
 | `esg_ma_dashboard` | payload jsonb (chave='dashboard') | — Meio Ambiente, blob editado à parte | ❌ |
 
