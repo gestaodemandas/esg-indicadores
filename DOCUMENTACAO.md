@@ -221,35 +221,39 @@ Hoje esse painel e este app são **dois mundos desconectados**. O objetivo desta
 
 As tabelas transacionais do app viram a **fonte de verdade**; para cada tabela que o painel espera, criamos uma **VIEW** com o mesmo nome e as mesmas colunas que o painel já consome — assim **o HTML do painel não precisa mudar**, ele passa a ler a view em vez da tabela estática.
 
-Mapeamento pretendido (fonte no app → objeto lido pelo painel):
+### Mapeamento completo (análise do `loadAll()` do painel, 15/07/2026)
 
-| Painel espera | Fonte no app | Observação |
-|---|---|---|
-| `esg_acidentes_filial` | `esg_acidentes` | agregação por filial/ano |
-| `esg_acidentes_mensal` | `esg_acidentes` | agregação por mês |
-| `esg_treinamento_filial` | `esg_trein_registro` (+ catálogo) | situação agregada por filial |
-| `esg_treinamento_nr` | `esg_trein_registro` (+ catálogo) | situação agregada por NR |
-| `esg_aso` | `esg_aso_exame` + `esg_aso_realizado` | pendentes × realizados por filial |
-| `esg_cipa` | `esg_cipa_conformidade` (app) | via VIEW (nomes já não colidem) |
-| `esg_brigada` | *(sem fonte)* | módulo Brigada ainda não existe no app |
-| `esg_afastamentos` | *(a definir)* | possivelmente derivável de `esg_acidentes` |
-| `esg_ma_dashboard` | *(sem fonte)* | Meio Ambiente — fora do escopo atual do app |
+O painel lê 9 objetos ESG (todos com `.eq('ano',2026)`, exceto afastamentos e MA). Colunas exatas que ele consome × fonte no app:
 
-### Colisão de nome resolvida (15/07/2026)
+| Painel lê | Colunas consumidas | Fonte no app | Viável |
+|---|---|---|---|
+| `esg_cipa` | ano, filial, previstos, treinados, status, pendencia_doc | `esg_cipa_conformidade` | ✅ |
+| `esg_acidentes_filial` | ano, filial, trajeto, tipico | `esg_acidentes` (tipo_ocorrencia=Acidente) | ✅ |
+| `esg_acidentes_mensal` | ano, mes, mes_label, acidentes, emergencias, incidentes, trajeto, tipico | `esg_acidentes` | ✅ |
+| `esg_aso` | ano, periodo, filial, realizados, pendentes | `esg_aso_realizado` + `esg_aso_exame` (exame médico) | ✅ |
+| `esg_treinamento_filial` | ano, filial, planejado, realizado | `esg_trein_registro` | ⚠️ semântica |
+| `esg_treinamento_nr` | ano, nr, planejado, realizado, aderencia_pct, status | `esg_trein_registro` + catálogo | ⚠️ semântica |
+| `esg_brigada` | ano, filial, exigencia, ativos | — **sem módulo Brigada** | ❌ |
+| `esg_afastamentos` | ano, filial, cargo, motivo, data_inicio, data_termino, cid, dias | — **sem módulo de afastamentos** (auxílio-doença) | ❌ |
+| `esg_ma_dashboard` | payload jsonb (chave='dashboard') | — Meio Ambiente, blob editado à parte | ❌ |
 
-Verificado no banco: o painel executivo **já tinha** uma tabela `esg_cipa` agregada, com colunas `id, ano, filial, previstos, treinados, status, pendencia_doc` — **diferente** da tabela rica do módulo CIPA. Como o `create table if not exists` não recria tabela existente, a `esg_cipa` do painel "venceu" e o módulo CIPA do app estava lendo/gravando na estrutura errada.
+**As 4 viáveis já estão escritas** em `sql/08_views_painel.sql` como views `*_appview` (aditivas, não tocam em nada) — para você rodar e **comparar** com as tabelas atuais antes de promover.
 
-**Correção:** a tabela do módulo CIPA foi renomeada para **`esg_cipa_conformidade`**. A `esg_cipa` antiga do painel fica intocada. As colunas dessas tabelas agregadas do painel, aliás, revelam exatamente o formato que as views precisarão produzir:
-- `esg_aso` → `(ano, periodo, filial, realizados, pendentes)`
-- `esg_cipa` → `(ano, filial, previstos, treinados, status, pendencia_doc)`
+### 3 pontos que decidem o resto
 
-### Pontos que ainda preciso para construir as views
+1. **⚠️ RLS — o ponto mais crítico (precisa testar).** As tabelas `esg_*` do app têm RLS que só liberam quem está em `esg_usuarios`. **Os usuários que abrem o painel de Auditoria provavelmente NÃO estão em `esg_usuarios`** → ao ler as views, o RLS das tabelas-base pode devolver **vazio**. Como as views são **agregados** (contagens por filial, sem dado pessoal), a saída pode ser liberada com segurança — mas o mecanismo (view `security_invoker` vs. política de leitura ampla para os agregados) precisa ser definido e **testado no banco**. Isso não dá para validar sem rodar lá.
 
-1. **O HTML do painel executivo** (`02. Auditoria Corporativa - Indicadores.html`) — o `loadAll()` e as colunas que ele lê de **cada** tabela agregada (já conheço `esg_aso` e `esg_cipa`; faltam `esg_acidentes_filial`, `esg_acidentes_mensal`, `esg_treinamento_filial`, `esg_treinamento_nr`, `esg_brigada`, `esg_ma_dashboard`, `esg_afastamentos`).
-2. **Módulos sem fonte** (Brigada, Meio Ambiente e talvez Afastamentos): decidir se o painel para de exibi-los ou mantém as tabelas estáticas até virarem módulo.
-3. **Transição sem downtime:** renomear a tabela antiga para `*_bkp`, criar a view com o mesmo nome, validar o painel, e só então descartar o backup.
+2. **Treinamento — semântica diferente.** O painel espera `planejado × realizado`; o app tem *status de reciclagem* (Em dia/Vencido/…). Interpretação proposta: **planejado = nº de (colaborador×treinamento) exigidos**; **realizado = os que já têm data**; **aderência = realizado/planejado**. É uma métrica de cobertura defensável, mas **confirme** se é o que o painel deve mostrar antes de eu escrever essas 2 views.
 
-**Próximo passo:** com o HTML do painel eu monto o `sql/08_views_painel.sql` (uma view por tabela agregada) + o plano de corte.
+3. **Brigada, Afastamentos e Meio Ambiente — sem fonte no app.** Opções: (a) o painel mantém essas 3 tabelas como estão (alimentação manual) até virarem módulos; (b) criamos os módulos primeiro. Recomendo (a) por ora.
+
+### Rollout seguro (reversível, uma tabela por vez)
+
+1. Rodar `sql/08_views_painel.sql` (só cria as views `*_appview`, nada é alterado).
+2. `select` em cada view e comparar com a tabela atual do painel — validar números.
+3. Resolver o RLS (ponto 1) e confirmar que um usuário do painel lê as views.
+4. **Promover** uma por vez: `alter table esg_X rename to esg_X_bkp` + criar a view com o nome `esg_X`. Conferir o painel. Reverter é `drop view` + `rename ... to`.
+5. Depois de estável, decidir sobre treinamento (ponto 2) e os módulos sem fonte (ponto 3).
 
 ---
 
