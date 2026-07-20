@@ -2,13 +2,19 @@
 -- ESG — Views que alimentam o Painel Executivo de Auditoria a partir dos dados
 -- do APP (fonte de verdade). Projeto Supabase nkijyuartfyxrawkivmm.
 --
--- ⚠️ NÃO altera nada existente. Cria views com sufixo _appview para você COMPARAR
--- com as tabelas atuais do painel antes de qualquer troca. A promoção (fazer o
--- painel ler destas views) está comentada no fim — só rodar após validar.
+-- ⚠️ NÃO renomeia nem apaga nada. Cria views `*_appview` (aditivas) + concede leitura.
+-- O painel executivo (02. Auditoria Corporativa - Indicadores.html) foi REPONTADO para
+-- ler destas views (from('esg_cipa') → from('esg_cipa_appview'), etc.). As tabelas
+-- originais esg_* do painel ficam intactas como backup — reverter = desfazer o HTML.
 --
--- Cobre as 4 tabelas viáveis hoje: esg_cipa, esg_acidentes_filial,
--- esg_acidentes_mensal, esg_aso. As demais (treinamento, brigada, afastamentos,
--- meio ambiente) NÃO têm fonte equivalente no app — ver DOCUMENTACAO.md §8.
+-- Cobre 7 das 9 tabelas: cipa, acidentes_filial, acidentes_mensal, aso, treinamento_filial,
+-- treinamento_nr, brigada. Afastamentos e Meio Ambiente NÃO têm fonte no app (o painel
+-- segue lendo as tabelas estáticas nesses dois). Ver DOCUMENTACAO.md §8.
+--
+-- RLS: as views são AGREGADOS (contagens por filial, sem dado pessoal). Views comuns
+-- (sem security_invoker) rodam com os direitos do dono e IGNORAM o RLS das tabelas-base,
+-- então retornam todas as linhas — por isso o painel lê mesmo sem o usuário estar em
+-- esg_usuarios. Os GRANTs no fim expõem as views à API (PostgREST).
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── CIPA: 1 linha por local (esg_cipa_conformidade → formato do painel) ──────
@@ -123,6 +129,14 @@ select
 from public.esg_brigada_filial f
 left join ativos a on a.filial = f.filial;
 
+-- ── GRANTS: expõe as views à API para os papéis que abrem o painel ──────────
+grant select on
+  public.esg_cipa_appview, public.esg_acidentes_filial_appview,
+  public.esg_acidentes_mensal_appview, public.esg_aso_appview,
+  public.esg_treinamento_filial_appview, public.esg_treinamento_nr_appview,
+  public.esg_brigada_appview
+to anon, authenticated;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- VALIDAÇÃO (rode e compare com as tabelas atuais do painel):
 --   select * from public.esg_cipa_appview               order by filial;
@@ -135,15 +149,16 @@ left join ativos a on a.filial = f.filial;
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- PROMOÇÃO — SÓ APÓS VALIDAR. Faz o painel ler das views SEM alterar o HTML dele.
--- Padrão reversível: renomeia a tabela antiga p/ _bkp e cria a view com o nome
--- original. Para reverter: drop view X; alter table X_bkp rename to X;
--- Rode UMA tabela por vez, conferindo o painel a cada passo.
+-- INTEGRAÇÃO ATIVADA (caminho B — repontar o HTML). Feito em 2026-07-20:
+-- o painel foi alterado para ler destas 7 views (from('esg_X') → 'esg_X_appview').
+-- As tabelas estáticas originais (esg_cipa, esg_aso, esg_acidentes_*, esg_brigada,
+-- esg_treinamento_*) NÃO foram tocadas — ficam como backup.
 --
--- alter table public.esg_cipa            rename to esg_cipa_bkp;
--- alter view  public.esg_cipa_appview    rename to esg_cipa;              -- (recrie a view sem o _appview)
+-- Passos para o usuário:
+--   1) Rodar este arquivo inteiro (create or replace + grants — idempotente).
+--   2) Hard-refresh no painel; conferir cada seção ESG.
+--   3) Se alguma seção vier vazia/errada: restaurar o painel do backup e me avisar.
 --
--- Repetir para esg_acidentes_filial, esg_acidentes_mensal, esg_aso.
--- OBS: view herda RLS das tabelas-base; garanta que o usuário do painel tem
--- acesso de leitura às tabelas esg_* do app (política select para authenticated).
+-- Reverter só o painel: trocar de volta 'esg_X_appview' → 'esg_X' no HTML.
+-- Afastamentos e Meio Ambiente seguem lendo as tabelas estáticas (sem fonte no app).
 -- ═══════════════════════════════════════════════════════════════════════════

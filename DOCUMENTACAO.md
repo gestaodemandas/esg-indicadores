@@ -244,19 +244,15 @@ O painel lê 9 objetos ESG (todos com `.eq('ano',2026)`, exceto afastamentos e M
 
 ### 3 pontos que decidem o resto
 
-1. **⚠️ RLS — o ponto mais crítico (precisa testar).** As tabelas `esg_*` do app têm RLS que só liberam quem está em `esg_usuarios`. **Os usuários que abrem o painel de Auditoria provavelmente NÃO estão em `esg_usuarios`** → ao ler as views, o RLS das tabelas-base pode devolver **vazio**. Como as views são **agregados** (contagens por filial, sem dado pessoal), a saída pode ser liberada com segurança — mas o mecanismo (view `security_invoker` vs. política de leitura ampla para os agregados) precisa ser definido e **testado no banco**. Isso não dá para validar sem rodar lá.
+### Integração ATIVADA (2026-07-20) — caminho B: repontar o HTML
 
-2. **Treinamento — semântica diferente.** O painel espera `planejado × realizado`; o app tem *status de reciclagem* (Em dia/Vencido/…). Interpretação proposta: **planejado = nº de (colaborador×treinamento) exigidos**; **realizado = os que já têm data**; **aderência = realizado/planejado**. É uma métrica de cobertura defensável, mas **confirme** se é o que o painel deve mostrar antes de eu escrever essas 2 views.
+Escolhido o caminho mais seguro: o painel foi **repontado** para ler das 7 views `*_appview` (`from('esg_cipa')` → `from('esg_cipa_appview')`, etc.). As tabelas estáticas originais **não foram tocadas** (ficam como backup; reverter = desfazer o HTML). Usuário criou backup do painel antes.
 
-3. **Brigada, Afastamentos e Meio Ambiente — sem fonte no app.** Opções: (a) o painel mantém essas 3 tabelas como estão (alimentação manual) até virarem módulos; (b) criamos os módulos primeiro. Recomendo (a) por ora.
+- **RLS resolvido proativamente**: as views são **agregados** (contagens por filial, sem dado pessoal). Views comuns (sem `security_invoker`) rodam com os direitos do dono e **ignoram o RLS** das tabelas-base → retornam todas as linhas mesmo para quem não está em `esg_usuarios`. Os `grant select ... to anon, authenticated` no fim do `sql/08` expõem as views à API.
+- **Treinamento**: confirmado planejado = exigidos / realizado = já feitos.
+- **Afastamentos e Meio Ambiente**: seguem lendo as tabelas estáticas (sem fonte no app — "faremos depois").
 
-### Rollout seguro (reversível, uma tabela por vez)
-
-1. Rodar `sql/08_views_painel.sql` (só cria as views `*_appview`, nada é alterado).
-2. `select` em cada view e comparar com a tabela atual do painel — validar números.
-3. Resolver o RLS (ponto 1) e confirmar que um usuário do painel lê as views.
-4. **Promover** uma por vez: `alter table esg_X rename to esg_X_bkp` + criar a view com o nome `esg_X`. Conferir o painel. Reverter é `drop view` + `rename ... to`.
-5. Depois de estável, decidir sobre treinamento (ponto 2) e os módulos sem fonte (ponto 3).
+Passos para aplicar: (1) rodar `sql/08_views_painel.sql` inteiro (create-or-replace + grants, idempotente); (2) hard-refresh no painel e conferir cada seção ESG; (3) se algo vier vazio/errado, restaurar o painel do backup.
 
 ---
 
