@@ -60,18 +60,27 @@ where a.data_acidente is not null
 group by 1, 2, 3;
 
 -- ── ASO por filial: exame médico realizados × pendentes (pessoas distintas) ──
+-- FIX 2026-07-20: `pend` escaneava TODA a esg_aso_exame histórica (todos os
+-- upload_id já importados — snapshots antigos nunca são apagados, ficam de
+-- histórico por design). Isso inflava/alterava a contagem em vez de refletir
+-- só o snapshot vigente. Corrigido: restringe ao `upload_id` mais recente,
+-- exatamente como o app faz na tela (asoUltimoUpload).
 create or replace view public.esg_aso_appview as
-with real as (
+with ultimo_upload as (
+  select id from public.esg_aso_upload order by enviado_em desc limit 1
+),
+real as (
   select filial, count(distinct ficha) as n
   from public.esg_aso_realizado
   where filial is not null
   group by filial
 ),
 pend as (
-  select filial, count(distinct coalesce(nullif(trim(ficha),''), colaborador)) as n
-  from public.esg_aso_exame
-  where filial is not null and tipo_exame ~* 'M[EÉ]DICO'
-  group by filial
+  select e.filial, count(distinct coalesce(nullif(trim(e.ficha),''), e.colaborador)) as n
+  from public.esg_aso_exame e
+  join ultimo_upload u on u.id = e.upload_id
+  where e.filial is not null and e.tipo_exame ~* 'M[EÉ]DICO'
+  group by e.filial
 )
 select
   2026                                     as ano,
@@ -129,12 +138,28 @@ select
 from public.esg_brigada_filial f
 left join ativos a on a.filial = f.filial;
 
+-- ── Afastamentos: SEM nome (a view é lida sem RLS — só campos não-sensíveis) ─
+-- Painel usa "cargo" (não nome); dias é derivado (null enquanto em andamento).
+create or replace view public.esg_afastamentos_appview as
+select
+  a.ano,
+  a.filial,
+  a.funcao        as cargo,
+  a.motivo,
+  a.data_inicio,
+  a.data_termino,
+  a.cid,
+  case when a.data_termino is not null
+    then (a.data_termino - a.data_inicio)::int
+  end as dias
+from public.esg_afastamento a;
+
 -- ── GRANTS: expõe as views à API para os papéis que abrem o painel ──────────
 grant select on
   public.esg_cipa_appview, public.esg_acidentes_filial_appview,
   public.esg_acidentes_mensal_appview, public.esg_aso_appview,
   public.esg_treinamento_filial_appview, public.esg_treinamento_nr_appview,
-  public.esg_brigada_appview
+  public.esg_brigada_appview, public.esg_afastamentos_appview
 to anon, authenticated;
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -146,11 +171,15 @@ to anon, authenticated;
 --   select * from public.esg_treinamento_filial_appview order by filial;
 --   select * from public.esg_treinamento_nr_appview     order by aderencia_pct;
 --   select * from public.esg_brigada_appview            order by filial;
+--   select * from public.esg_afastamentos_appview       order by ano, data_inicio;
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- INTEGRAÇÃO ATIVADA (caminho B — repontar o HTML). Feito em 2026-07-20:
--- o painel foi alterado para ler destas 7 views (from('esg_X') → 'esg_X_appview').
+-- 7 views já ativas no painel (from('esg_X') → 'esg_X_appview'). esg_afastamentos_appview
+-- é NOVA (módulo Afastamentos construído em 2026-07-20) — ainda NÃO repontada no painel;
+-- isso fica para a outra conversa (divisão de escopo), que só precisa trocar
+-- from('esg_afastamentos') → from('esg_afastamentos_appview') no loadAll().
 -- As tabelas estáticas originais (esg_cipa, esg_aso, esg_acidentes_*, esg_brigada,
 -- esg_treinamento_*) NÃO foram tocadas — ficam como backup.
 --
