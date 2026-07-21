@@ -60,11 +60,19 @@ where a.data_acidente is not null
 group by 1, 2, 3;
 
 -- ── ASO por filial: exame médico realizados × pendentes (pessoas distintas) ──
--- FIX 2026-07-20: `pend` escaneava TODA a esg_aso_exame histórica (todos os
+-- FIX 2026-07-20 (1): `pend` escaneava TODA a esg_aso_exame histórica (todos os
 -- upload_id já importados — snapshots antigos nunca são apagados, ficam de
--- histórico por design). Isso inflava/alterava a contagem em vez de refletir
--- só o snapshot vigente. Corrigido: restringe ao `upload_id` mais recente,
+-- histórico por design). Corrigido: restringe ao upload_id mais recente,
 -- exatamente como o app faz na tela (asoUltimoUpload).
+-- FIX 2026-07-20 (2): `pend` estava restrita a exame médico. Decisão do usuário:
+-- o indicador é "colaboradores com pendência" — QUALQUER tipo de exame, não só
+-- o médico periódico. `pend` agora conta pessoa distinta com pendência de
+-- qualquer tipo (bate com o KPI "Pessoas com pendência" do próprio app).
+-- CAVEAT: `realizados` (esg_aso_realizado) só tem dado de EXAME MÉDICO — não
+-- existe fonte de "realizado" para os demais tipos (audiometria, hemograma…).
+-- Então `realizados` e `pendentes` aqui NÃO são a mesma população: pendentes
+-- é o universo completo de pendências; realizados é só a fatia rastreável
+-- hoje (exame médico). É a melhor leitura possível com os dados disponíveis.
 create or replace view public.esg_aso_appview as
 with ultimo_upload as (
   select id from public.esg_aso_upload order by enviado_em desc limit 1
@@ -79,12 +87,12 @@ pend as (
   select e.filial, count(distinct coalesce(nullif(trim(e.ficha),''), e.colaborador)) as n
   from public.esg_aso_exame e
   join ultimo_upload u on u.id = e.upload_id
-  where e.filial is not null and e.tipo_exame ~* 'M[EÉ]DICO'
+  where e.filial is not null
   group by e.filial
 )
 select
   2026                                     as ano,
-  'Exame médico periódico'                 as periodo,
+  'Todos os exames periódicos'             as periodo,
   coalesce(r.filial, p.filial)             as filial,
   coalesce(r.n, 0)::int                    as realizados,
   coalesce(p.n, 0)::int                    as pendentes
